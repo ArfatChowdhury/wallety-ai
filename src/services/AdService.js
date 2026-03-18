@@ -18,15 +18,15 @@ export const AD_UNIT_IDS = {
   NATIVE: TestIds.NATIVE_ADVANCED,
 };
 
-// Production IDs (to be replaced before release)
+// Production IDs (replace test IDs)
 export const PROD_AD_UNIT_IDS = {
-  BANNER: 'YOUR_BANNER_AD_UNIT_ID',
-  INTERSTITIAL: 'YOUR_INTERSTITIAL_AD_UNIT_ID', 
-  NATIVE: 'YOUR_NATIVE_AD_UNIT_ID',
+  BANNER: 'ca-app-pub-3315420037530922/9815413554',
+  INTERSTITIAL: 'ca-app-pub-3315420037530922/2612411656',
+  NATIVE: 'ca-app-pub-3315420037530922/1936923533',
 };
 
 // Use test IDs during development
-const USE_TEST_IDS = __DEV__;
+const USE_TEST_IDS = false; // Set to false to use production IDs
 const AD_IDS = USE_TEST_IDS ? AD_UNIT_IDS : PROD_AD_UNIT_IDS;
 
 export class AdService {
