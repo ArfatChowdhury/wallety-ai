@@ -1,0 +1,273 @@
+=======================================================
+  EXPENSE TRACKER APP — ADMOB AD PLACEMENT PLAN
+  For React Native CLI (Android — Google Play Store)
+  AI Agent Implementation Guide
+=======================================================
+
+PACKAGE TO INSTALL:
+-------------------
+  npm install react-native-google-mobile-ads
+
+  Then add to android/app/build.gradle:
+    implementation 'com.google.android.gms:play-services-ads:22.0.0'
+
+  Then add to AndroidManifest.xml inside <application> tag:
+    <meta-data
+      android:name="com.google.android.gms.ads.APPLICATION_ID"
+      android:value="YOUR_ADMOB_APP_ID_HERE"/>
+
+
+=======================================================
+  ADMOB AD UNIT TYPES USED IN THIS APP
+=======================================================
+
+  1. BANNER AD       → Small fixed strip (320x50 or adaptive)
+  2. INTERSTITIAL AD → Full screen ad, dismissed by user or auto
+  3. NATIVE AD       → Custom styled card matching app UI
+
+
+=======================================================
+  SCREEN-BY-SCREEN AD PLACEMENT INSTRUCTIONS
+=======================================================
+
+-------------------------------------------------------
+SCREEN 1: APP OPEN (Splash / App Launch)
+-------------------------------------------------------
+  AD TYPE     : Interstitial
+  TRIGGER     : Once per day on app launch (not every open)
+  FREQUENCY   : Max 1 time per 24 hours — use AsyncStorage
+                to save last shown timestamp and compare
+  BEHAVIOR    : Show interstitial after splash screen
+                before home screen loads
+  DISMISS     : User closes it manually
+  DO NOT SHOW : If user opened app less than 24hrs ago
+
+  CODE HINT:
+    const lastShown = await AsyncStorage.getItem('last_interstitial');
+    const now = Date.now();
+    if (!lastShown || now - parseInt(lastShown) > 86400000) {
+      interstitialAd.show();
+      await AsyncStorage.setItem('last_interstitial', now.toString());
+    }
+
+-------------------------------------------------------
+SCREEN 2: HOME SCREEN (Transaction List)
+-------------------------------------------------------
+  AD TYPE     : Banner Ad (Adaptive Banner)
+  POSITION    : Fixed at bottom, just above the bottom navbar
+  SIZE        : Adaptive banner (full width)
+  BEHAVIOR    : Always visible while on this screen
+  STYLE HINT  : Add paddingBottom to FlatList equal to banner
+                height so last transaction isn't hidden behind ad
+
+  CODE HINT:
+    import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+
+    <View style={{ flex: 1 }}>
+      <FlatList ... />
+      <BannerAd
+        unitId="YOUR_BANNER_AD_UNIT_ID"
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        requestOptions={{ requestNonPersonalizedAdsOnly: true }}
+      />
+    </View>
+
+-------------------------------------------------------
+SCREEN 3: NEW TRANSACTION SCREEN (Create Expense/Income)
+-------------------------------------------------------
+  AD TYPE     : Banner Ad (Adaptive Banner)
+  POSITION    : Fixed at bottom, just above the bottom navbar
+  SIZE        : Adaptive banner (full width)
+  BEHAVIOR    : Always visible, static — does NOT interfere
+                with form inputs (amount, title, category)
+  IMPORTANT   : Make sure banner is BELOW the Add Expense
+                button and above the navbar — not between
+                form fields. User should never accidentally
+                tap ad while filling form.
+
+  CODE HINT:
+    <View style={{ flex: 1 }}>
+      <ScrollView> {/* form fields here */} </ScrollView>
+      <TouchableOpacity onPress={handleSubmit}>
+        <Text>Add Expense</Text>
+      </TouchableOpacity>
+      <BannerAd
+        unitId="YOUR_BANNER_AD_UNIT_ID"
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+      />
+    </View>
+
+-------------------------------------------------------
+SCREEN 4: BUDGETING SCREEN
+-------------------------------------------------------
+  AD TYPE     : Native Ad Card
+  POSITION    : Inserted between budget category items
+                (e.g. after every 3rd budget card in the list)
+  STYLE       : Must match budget card style —
+                same border radius, same shadow, same padding
+                Add small "Ad" or "Sponsored" label in corner
+                to comply with AdMob policies
+  BEHAVIOR    : Scrolls with the list naturally
+
+  CODE HINT:
+    const budgetListWithAds = budgetItems.flatMap((item, index) => {
+      if ((index + 1) % 3 === 0) {
+        return [item, { type: 'AD', id: `ad_${index}` }];
+      }
+      return [item];
+    });
+
+    // In renderItem:
+    if (item.type === 'AD') return <NativeAdCard />;
+    return <BudgetCard item={item} />;
+
+-------------------------------------------------------
+SCREEN 5: HISTORY & INSIGHTS SCREEN
+-------------------------------------------------------
+  AD TYPE     : Banner Ad (Adaptive Banner)
+  POSITION    : Fixed at bottom, just above the bottom navbar
+  SIZE        : Adaptive banner (full width)
+  BEHAVIOR    : Always visible while on this screen
+  NOTE        : This screen has charts and category breakdown —
+                banner at bottom is completely non-intrusive
+
+  CODE HINT: (same as Home Screen banner — reuse component)
+
+-------------------------------------------------------
+SCREEN 6: RECEIPT SCANNER SCREEN (Groq AI Scan)
+-------------------------------------------------------
+  AD TYPE     : Interstitial
+  TRIGGER     : Immediately after user taps "Take Receipt Photo"
+                or "Pick from Gallery" and scan begins
+  BEHAVIOR    : Show interstitial while Groq AI is processing
+                Display fake progress bar in background:
+                  0-3s  → "Reading receipt layout..."
+                  3-8s  → "Extracting text..."
+                  8-13s → "Identifying total & merchant..."
+                  13-15s→ "Almost done..."
+                Auto-dismiss interstitial when Groq API
+                returns response (or after 15s max)
+  IMPORTANT   : Pre-load the interstitial ad BEFORE user taps
+                scan button so it shows instantly with no delay
+  DO NOT SHOW : If Groq API returns in under 5 seconds,
+                still show ad for minimum 8 seconds so it
+                doesn't flash too quickly
+
+  CODE HINT:
+    // Preload on screen mount
+    useEffect(() => {
+      interstitialAd.load();
+    }, []);
+
+    const handleScan = async () => {
+      interstitialAd.show(); // show immediately
+      const result = await callGroqAPI(imageUri); // runs in background
+      // when done, navigate away (ad auto-dismissed on navigation)
+      navigation.navigate('AddExpense', { scannedData: result });
+    };
+
+-------------------------------------------------------
+SCREEN 7: PDF EXPORT SCREEN
+-------------------------------------------------------
+  AD TYPE     : Interstitial
+  TRIGGER     : When user taps "Export PDF" or "Save PDF"
+                Show ad BEFORE the PDF is generated/saved
+  BEHAVIOR    : User taps export → ad shows → user closes ad
+                → PDF saves/downloads
+  FEELS LIKE  : A natural "loading" moment
+  PRE-LOAD    : Load interstitial when user enters this screen
+
+  CODE HINT:
+    const handleExport = async () => {
+      await interstitialAd.show();
+      // ad closed callback:
+      interstitialAd.addAdEventListener(AdEventType.CLOSED, () => {
+        generateAndSavePDF();
+      });
+    };
+
+-------------------------------------------------------
+SCREEN 8: ACCOUNT SCREEN
+-------------------------------------------------------
+  AD TYPE     : None
+  REASON      : Settings and account screens feel very
+                personal and private. Ads here feel invasive
+                and reduce trust in the app.
+
+
+=======================================================
+  ADMOB POLICY COMPLIANCE CHECKLIST
+=======================================================
+
+  [ ] Never show ads on splash screen before app loads
+  [ ] Never place banner inside scrollable form fields
+  [ ] Always label native ads with "Ad" or "Sponsored"
+  [ ] Never auto-click or fake-click ads programmatically
+  [ ] Never show interstitial more than once per 30 seconds
+  [ ] Test with TEST AD UNIT IDs during development
+  [ ] Switch to real Ad Unit IDs only before release build
+
+
+=======================================================
+  TEST AD UNIT IDs (USE DURING DEVELOPMENT ONLY)
+=======================================================
+
+  Banner:
+    ca-app-pub-3940256099942544/6300978111
+
+  Interstitial:
+    ca-app-pub-3940256099942544/1033173712
+
+  Native Advanced:
+    ca-app-pub-3940256099942544/2247696110
+
+  Replace these with your real Ad Unit IDs from
+  AdMob dashboard before publishing to Play Store.
+
+
+=======================================================
+  FALLBACK BEHAVIOR (IF AD FAILS TO LOAD / AD BLOCKED)
+=======================================================
+
+  If any ad fails to load (no fill, ad blocked, no internet):
+  - Banner       → Show nothing, remove empty space
+  - Interstitial → Skip ad silently, proceed with action
+  - Native card  → Show a "Go Premium - Remove Ads" promo card
+
+  CODE HINT:
+    adRequest.onAdFailedToLoad((error) => {
+      setShowAd(false); // hide ad slot cleanly
+    });
+
+
+=======================================================
+  REVENUE ESTIMATE (1000 USERS, SOUTH ASIA)
+=======================================================
+
+  App open interstitial      → ~$6/month
+  Home banner                → ~$4/month
+  Insights banner            → ~$3/month
+  Create Transaction banner  → ~$2/month
+  Budget native card         → ~$3/month
+  Receipt scan interstitial  → ~$4/month
+  PDF export interstitial    → ~$2/month
+  ─────────────────────────────────────────
+  TOTAL ESTIMATE             → ~$24/month
+
+  At 10,000 users            → ~$240/month
+  At 50,000 users            → ~$1200/month
+
+
+=======================================================
+  FUTURE: PREMIUM PLAN (REMOVE ADS)
+=======================================================
+
+  Suggested premium price: $1.99 - $2.99/month
+  Users who block ads are most likely to pay for premium.
+  Use react-native-purchases (RevenueCat) for subscriptions.
+  If user is premium: skip all ad logic entirely.
+
+
+=======================================================
+  END OF AD PLACEMENT PLAN
+=======================================================
