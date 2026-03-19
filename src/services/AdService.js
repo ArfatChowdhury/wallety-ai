@@ -1,13 +1,20 @@
-import { 
-  InterstitialAd, 
-  AdEventType, 
+import {
+  InterstitialAd,
+  AdEventType,
   TestIds,
   BannerAd,
   BannerAdSize,
   NativeAdView,
   NativeMediaView,
+  HeadlineView,
+  TaglineView,
+  CallToActionButton,
+  IconView,
+  AppOpenAd,
+  useNativeAd,
   useForeground
 } from 'react-native-google-mobile-ads';
+import { View, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
 
@@ -26,7 +33,7 @@ export const PROD_AD_UNIT_IDS = {
 };
 
 // Use test IDs during development
-const USE_TEST_IDS = false; // Set to false to use production IDs
+const USE_TEST_IDS = true; // SET TO TRUE FOR DEVELOPMENT
 const AD_IDS = USE_TEST_IDS ? AD_UNIT_IDS : PROD_AD_UNIT_IDS;
 
 export class AdService {
@@ -35,6 +42,7 @@ export class AdService {
   static receiptScanInterstitial = null;
   static pdfExportInterstitial = null;
   static budgetInterstitial = null;
+  static appOpenAd = null;
 
   // Load interstitial ads
   static loadInterstitial(type) {
@@ -66,34 +74,39 @@ export class AdService {
     }
   }
 
-  // Initialize all interstitial ads
+  // Initialize all ads
   static initializeAds() {
     this.appOpenInterstitial = this.loadInterstitial('app-open');
     this.receiptScanInterstitial = this.loadInterstitial('receipt-scan');
     this.pdfExportInterstitial = this.loadInterstitial('pdf-export');
     this.budgetInterstitial = this.loadInterstitial('budget');
+
+    // Initialize App Open Ad
+    this.appOpenAd = AppOpenAd.createForAdRequest(AD_IDS.INTERSTITIAL, {
+      requestNonPersonalizedAdsOnly: true,
+    });
+    this.appOpenAd.load();
   }
 
-  // Show app open interstitial (once per 24 hours)
+  // Show app open ad (once per 24 hours)
   static async showAppOpenAd() {
     try {
       const lastShown = await AsyncStorage.getItem('last_interstitial');
       const now = Date.now();
-      
+
       if (!lastShown || now - parseInt(lastShown) > 86400000) { // 24 hours
-        if (this.appOpenInterstitial?.loaded) {
-          await this.appOpenInterstitial.show();
+        if (this.appOpenAd?.loaded) {
+          await this.appOpenAd.show();
           await AsyncStorage.setItem('last_interstitial', now.toString());
-          console.log('[AdService] App open interstitial shown');
+          console.log('[AdService] App open ad shown');
           return true;
         } else {
           console.log('[AdService] App open ad not loaded yet');
+          this.appOpenAd?.load(); // Try loading for next time
           return false;
         }
-      } else {
-        console.log('[AdService] App open ad shown recently, skipping');
-        return false;
       }
+      return false;
     } catch (error) {
       console.error('[AdService] Error showing app open ad:', error);
       return false;
@@ -160,7 +173,7 @@ export class AdService {
   static isAdReady(type) {
     switch (type) {
       case 'app-open':
-        return this.appOpenInterstitial?.loaded || false;
+        return this.appOpenAd?.loaded || false;
       case 'receipt-scan':
         return this.receiptScanInterstitial?.loaded || false;
       case 'pdf-export':
@@ -174,24 +187,25 @@ export class AdService {
 // Banner Ad Component with fallback
 export const BannerAdComponent = ({ style = {} }) => {
   const [showAd, setShowAd] = React.useState(true);
-  
+
   try {
     return showAd ? (
-      <BannerAd
-        unitId={AD_IDS.BANNER}
-        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-        requestOptions={{
-          requestNonPersonalizedAdsOnly: true,
-        }}
-        onAdFailedToLoad={(error) => {
-          console.log('[AdService] Banner ad failed to load:', error);
-          setShowAd(false); // Hide ad slot if it fails
-        }}
-        onAdLoaded={() => {
-          setShowAd(true); // Show ad when loaded
-        }}
-        style={[{ width: '100%', alignItems: 'center' }, style]}
-      />
+      <View style={[{ width: '100%', alignItems: 'center' }, style]}>
+        <BannerAd
+          unitId={AD_IDS.BANNER}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+          requestOptions={{
+            requestNonPersonalizedAdsOnly: true,
+          }}
+          onAdFailedToLoad={(error) => {
+            console.log('[AdService] Banner ad failed to load:', error);
+            setShowAd(false); // Hide ad slot if it fails
+          }}
+          onAdLoaded={() => {
+            setShowAd(true); // Show ad when loaded
+          }}
+        />
+      </View>
     ) : null;
   } catch (error) {
     console.error('[AdService] Banner ad error:', error);
@@ -199,87 +213,81 @@ export const BannerAdComponent = ({ style = {} }) => {
   }
 };
 
-// Native Ad Component for Lists with fallback
+// Native Ad Component for Lists with safe implementation
 export const NativeAdComponent = ({ style = {} }) => {
-  const [showAd, setShowAd] = React.useState(true);
-  const nativeAdViewRef = React.useRef(null);
-  
-  try {
-    return showAd ? (
-      <NativeAdView
-        ref={nativeAdViewRef}
-        unitId={AD_IDS.NATIVE}
-        requestOptions={{
-          requestNonPersonalizedAdsOnly: true,
-        }}
-        onAdFailedToLoad={(error) => {
-          console.log('[AdService] Native ad failed to load:', error);
-          setShowAd(false); // Hide ad slot if it fails
-        }}
-        onAdLoaded={() => {
-          setShowAd(true); // Show ad when loaded
-        }}
-        style={[{ width: '100%', borderRadius: 12, overflow: 'hidden' }, style]}
-      >
-        <View style={{ 
-          backgroundColor: '#fff', 
-          borderRadius: 12, 
-          padding: 16, 
-          marginVertical: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }}>
-          {/* Small "Ad" label for compliance */}
-          <View style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            backgroundColor: '#e2e8f0',
-            paddingHorizontal: 6,
-            paddingVertical: 2,
-            borderRadius: 4,
-            zIndex: 1,
-          }}>
-            <Text style={{ color: '#64748b', fontSize: 10, fontWeight: 'bold' }}>Ad</Text>
-          </View>
+  const { nativeAd, load } = useNativeAd(AD_IDS.NATIVE, {
+    requestNonPersonalizedAdsOnly: true,
+  });
 
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            {/* Note: NativeAdView subcomponents are integrated by the library */}
-            {/* Headline, Tagline, Icon, etc. are handled internally or via specific child components if version 16+ */}
-            {/* For 16.3.0, custom layouts are typically handled within NativeAdView */}
-            <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#f1f5f9' }} />
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1e293b' }}>Sponsored</Text>
-              <Text style={{ fontSize: 14, color: '#64748b', marginTop: 2 }}>Featured offer for you</Text>
-            </View>
-          </View>
-          
-          <NativeMediaView style={{ 
-            width: '100%', 
-            height: 120, 
-            borderRadius: 8, 
-            marginTop: 12 
-          }} />
-          
-          <View style={{
-            backgroundColor: '#16a34a',
-            padding: 12,
-            borderRadius: 8,
-            alignItems: 'center',
-            marginTop: 12,
-          }}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Learn More</Text>
+  React.useEffect(() => {
+    load();
+  }, []);  // ← empty deps, load() on mount only
+
+  // nativeAd is undefined until the native layer is ready
+  if (!nativeAd) {
+    return (
+      <View style={[{
+        height: 100,
+        backgroundColor: '#f8fafc',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: 8,
+      }, style]}>
+        <Text style={{ color: '#94a3b8', fontSize: 12 }}>Loading Sponsored...</Text>
+      </View>
+    );
+  }
+
+  return (
+    <NativeAdView
+      nativeAd={nativeAd}  // ← this is the correct API with the hook
+      style={[{ width: '100%', borderRadius: 12, overflow: 'hidden' }, style]}
+    >
+      <View style={{
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginVertical: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }}>
+        <View style={{
+          position: 'absolute', top: 8, right: 8,
+          backgroundColor: '#f1f5f9', paddingHorizontal: 6,
+          paddingVertical: 2, borderRadius: 4, zIndex: 1,
+          borderWidth: 1, borderColor: '#e2e8f0',
+        }}>
+          <Text style={{ color: '#64748b', fontSize: 10, fontWeight: 'bold' }}>AD</Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <IconView style={{ width: 48, height: 48, borderRadius: 10 }} />
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <HeadlineView style={{ fontSize: 16, fontWeight: 'bold', color: '#1e293b' }} />
+            <TaglineView numberOfLines={2} style={{ fontSize: 13, color: '#64748b', marginTop: 2 }} />
           </View>
         </View>
-      </NativeAdView>
-    ) : null;
-  } catch (error) {
-    console.error('[AdService] Native ad error:', error);
-    return null;
-  }
+
+        <NativeMediaView style={{
+          width: '100%', height: 180, borderRadius: 12,
+          marginTop: 12, backgroundColor: '#f8fafc',
+        }} />
+
+        <CallToActionButton
+          style={{
+            backgroundColor: '#22C55E', paddingHorizontal: 20,
+            paddingVertical: 12, borderRadius: 12,
+            alignItems: 'center', marginTop: 12,
+          }}
+          textStyle={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}
+        />
+      </View>
+    </NativeAdView>
+  );
 };
 
 // Helper to insert ads into transaction list with fallback

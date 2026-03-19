@@ -12,7 +12,7 @@ import { useContext } from 'react';
 import { AppContext } from '../Contex/ContextApi';
 import { scanReceipt } from '../services/OCRService';
 import { COLORS } from '../theme';
-import AdService from '../services/AdService';
+import AdService, { BannerAdComponent } from '../services/AdService';
 
 const { width: W, height: H } = Dimensions.get('window');
 const FRAME_SIZE = W * 0.72;
