@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { COLORS, SHADOW } from '../theme'
 import RenderInsightitem from '../components/RenderInsightitem'
-import { BannerAdComponent } from '../services/AdService'
+import { BannerAdComponent, NativeAdComponent, insertAdsIntoBudgetList } from '../services/AdService'
 
 const Insight = () => {
   const { filteredExpenses, expenses, totalSpent, totalIncome, balance, categoriesList, currencySymbol } = useContext(AppContext)
@@ -58,6 +58,8 @@ const Insight = () => {
       amount
     }
   }).sort((a, b) => b.amount - a.amount)
+
+  const insightListWithAds = insertAdsIntoBudgetList(flatListData)
 
   const ListHeader = () => (
     <View style={styles.header}>
@@ -117,10 +119,19 @@ const Insight = () => {
       <StatusBar barStyle="dark-content" />
       <View style={{ flex: 1 }}>
         <FlatList
-          data={filteredFlatData}
-          keyExtractor={(item) => item.id}
+          data={selectedCategory ? filteredFlatData : insightListWithAds}
+          keyExtractor={(item, index) => item.id || `ad_${index}`}
           ListHeaderComponent={<ListHeader />}
-          renderItem={({ item }) => <RenderInsightitem item={item} />}
+          renderItem={({ item }) => {
+            if (item.type === 'AD') {
+              return (
+                <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+                  <NativeAdComponent />
+                </View>
+              );
+            }
+            return <RenderInsightitem item={item} />;
+          }}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />

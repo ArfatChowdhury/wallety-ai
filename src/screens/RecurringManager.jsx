@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import tailwind from 'twrnc'
 import { COLORS, SHADOW } from '../theme'
 import { AppContext } from '../Contex/ContextApi'
+import { BannerAdComponent } from '../services/AdService'
 
 const RecurringManager = ({ navigation }) => {
     const { recurringTransactions, deleteRecurringTransaction, updateRecurringTransaction, currencySymbol } = useContext(AppContext);
@@ -159,6 +160,11 @@ const RecurringManager = ({ navigation }) => {
                         </KeyboardAvoidingView>
                     </View>
                 </Modal>
+            </View>
+
+            {/* Banner Ad at bottom */}
+            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
+                <BannerAdComponent />
             </View>
         </SafeAreaView>
     )

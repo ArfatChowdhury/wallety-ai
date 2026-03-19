@@ -4,7 +4,7 @@ import {
   TestIds,
   BannerAd,
   BannerAdSize,
-  NativeAd,
+  NativeAdView,
   NativeMediaView,
   useForeground
 } from 'react-native-google-mobile-ads';
@@ -34,6 +34,7 @@ export class AdService {
   static appOpenInterstitial = null;
   static receiptScanInterstitial = null;
   static pdfExportInterstitial = null;
+  static budgetInterstitial = null;
 
   // Load interstitial ads
   static loadInterstitial(type) {
@@ -70,6 +71,7 @@ export class AdService {
     this.appOpenInterstitial = this.loadInterstitial('app-open');
     this.receiptScanInterstitial = this.loadInterstitial('receipt-scan');
     this.pdfExportInterstitial = this.loadInterstitial('pdf-export');
+    this.budgetInterstitial = this.loadInterstitial('budget');
   }
 
   // Show app open interstitial (once per 24 hours)
@@ -136,6 +138,24 @@ export class AdService {
     }
   }
 
+  // Show Budget interstitial
+  static async showBudgetAd() {
+    try {
+      if (this.budgetInterstitial?.loaded) {
+        await this.budgetInterstitial.show();
+        console.log('[AdService] Budget interstitial shown');
+        return true;
+      } else {
+        console.log('[AdService] Budget ad not loaded yet');
+        this.budgetInterstitial = this.loadInterstitial('budget');
+        return false;
+      }
+    } catch (error) {
+      console.error('[AdService] Error showing budget ad:', error);
+      return false;
+    }
+  }
+
   // Check if any ad is ready
   static isAdReady(type) {
     switch (type) {
@@ -179,13 +199,15 @@ export const BannerAdComponent = ({ style = {} }) => {
   }
 };
 
-// Native Ad Component for Budget Screen with fallback
+// Native Ad Component for Lists with fallback
 export const NativeAdComponent = ({ style = {} }) => {
   const [showAd, setShowAd] = React.useState(true);
+  const nativeAdViewRef = React.useRef(null);
   
   try {
     return showAd ? (
-      <NativeAd
+      <NativeAdView
+        ref={nativeAdViewRef}
         unitId={AD_IDS.NATIVE}
         requestOptions={{
           requestNonPersonalizedAdsOnly: true,
@@ -199,7 +221,7 @@ export const NativeAdComponent = ({ style = {} }) => {
         }}
         style={[{ width: '100%', borderRadius: 12, overflow: 'hidden' }, style]}
       >
-        <NativeAd.View style={{ 
+        <View style={{ 
           backgroundColor: '#fff', 
           borderRadius: 12, 
           padding: 16, 
@@ -210,53 +232,49 @@ export const NativeAdComponent = ({ style = {} }) => {
           shadowRadius: 4,
           elevation: 3,
         }}>
-          <NativeAd.IconView style={{ width: 50, height: 50, borderRadius: 8 }} />
-          <NativeAd.HeadlineView style={{ 
-            fontSize: 16, 
-            fontWeight: 'bold', 
-            color: '#1e293b',
-            marginTop: 8,
-          }} />
-          <NativeAd.TaglineView style={{ 
-            fontSize: 14, 
-            color: '#64748b',
-            marginTop: 4,
-          }} />
-          <NativeAd.AdvertiserView style={{ 
-            fontSize: 12, 
-            color: '#94a3b8',
-            marginTop: 4,
-          }} />
-          <NativeMediaView style={{ 
-            width: '100%', 
-            height: 120, 
-            borderRadius: 8, 
-            marginTop: 8 
-          }} />
-          <NativeAd.CallToActionView style={{
-            backgroundColor: '#16a34a',
-            color: '#fff',
-            padding: 12,
-            borderRadius: 8,
-            alignItems: 'center',
-            marginTop: 12,
-            fontSize: 16,
-            fontWeight: 'bold',
-          }} />
           {/* Small "Ad" label for compliance */}
-          <NativeAd.AdBadgeView style={{
+          <View style={{
             position: 'absolute',
             top: 8,
             right: 8,
             backgroundColor: '#e2e8f0',
-            color: '#64748b',
-            fontSize: 10,
             paddingHorizontal: 6,
             paddingVertical: 2,
             borderRadius: 4,
+            zIndex: 1,
+          }}>
+            <Text style={{ color: '#64748b', fontSize: 10, fontWeight: 'bold' }}>Ad</Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {/* Note: NativeAdView subcomponents are integrated by the library */}
+            {/* Headline, Tagline, Icon, etc. are handled internally or via specific child components if version 16+ */}
+            {/* For 16.3.0, custom layouts are typically handled within NativeAdView */}
+            <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#f1f5f9' }} />
+            <View style={{ flex: 1, marginLeft: 12 }}>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1e293b' }}>Sponsored</Text>
+              <Text style={{ fontSize: 14, color: '#64748b', marginTop: 2 }}>Featured offer for you</Text>
+            </View>
+          </View>
+          
+          <NativeMediaView style={{ 
+            width: '100%', 
+            height: 120, 
+            borderRadius: 8, 
+            marginTop: 12 
           }} />
-        </NativeAd.View>
-      </NativeAd>
+          
+          <View style={{
+            backgroundColor: '#16a34a',
+            padding: 12,
+            borderRadius: 8,
+            alignItems: 'center',
+            marginTop: 12,
+          }}>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>Learn More</Text>
+          </View>
+        </View>
+      </NativeAdView>
     ) : null;
   } catch (error) {
     console.error('[AdService] Native ad error:', error);
@@ -264,18 +282,36 @@ export const NativeAdComponent = ({ style = {} }) => {
   }
 };
 
+// Helper to insert ads into transaction list with fallback
+export const insertAdsIntoTransactionList = (transactions) => {
+  try {
+    if (!transactions || transactions.length === 0) return [];
+    return transactions.flatMap((item, index) => {
+      // Insert an ad after every 5th transaction
+      if ((index + 1) === 4) { // Only one ad for now as requested "like one of transaction"
+        return [item, { type: 'AD', id: `trans_ad_${index}` }];
+      }
+      return [item];
+    });
+  } catch (error) {
+    console.error('[AdService] Error inserting ads into transaction list:', error);
+    return transactions;
+  }
+};
+
 // Helper to insert ads into budget list with fallback
 export const insertAdsIntoBudgetList = (budgetItems) => {
   try {
+    if (!budgetItems || budgetItems.length === 0) return [];
     return budgetItems.flatMap((item, index) => {
-      if ((index + 1) % 3 === 0) {
+      if ((index + 1) % 4 === 0) {
         return [item, { type: 'AD', id: `ad_${index}` }];
       }
       return [item];
     });
   } catch (error) {
     console.error('[AdService] Error inserting ads into budget list:', error);
-    return budgetItems; // Return original list if error occurs
+    return budgetItems;
   }
 };
 

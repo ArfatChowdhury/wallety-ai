@@ -13,7 +13,7 @@ import tailwind from 'twrnc'
 import { auth } from '../services/firebase'
 import { scheduleCustomReminder, getActiveReminders, cancelReminder } from '../services/NotificationService'
 import DateTimePicker from '@react-native-community/datetimepicker'
-import { BannerAdComponent } from '../services/AdService'
+import { BannerAdComponent, NativeAdComponent, insertAdsIntoTransactionList, AdService } from '../services/AdService'
 const Home = ({ navigation }) => {
   const {
     totalSpent, balance, expenses, allTransactions, handleEdit, handleDelete,
@@ -116,6 +116,11 @@ const Home = ({ navigation }) => {
       return true; // 'all'
     });
   }, [allTransactions, selectedPeriod, selectedMonth]);
+
+  // Insert Native Ads every 5th item
+  const transactionsWithAds = useMemo(() => {
+    return insertAdsIntoTransactionList(filteredTransactions);
+  }, [filteredTransactions]);
 
   // Dynamic Totals based on filter
   const displayTotals = useMemo(() => {
@@ -368,16 +373,25 @@ const Home = ({ navigation }) => {
       <StatusBar barStyle="dark-content" />
       <View style={{ flex: 1 }}>
         <FlatList
-          data={filteredTransactions}
-          keyExtractor={item => item.id}
+          data={transactionsWithAds}
+          keyExtractor={(item, index) => item.id || `ad_${index}`}
           ListHeaderComponent={<ListHeader />}
-          renderItem={({ item }) => (
-            <ExpenseItemCard
-              item={item}
-              onEdit={handleEditExpense}
-              onDelete={handleDeleteRecord}
-            />
-          )}
+          renderItem={({ item }) => {
+            if (item.type === 'AD') {
+              return (
+                <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
+                  <NativeAdComponent />
+                </View>
+              );
+            }
+            return (
+              <ExpenseItemCard
+                item={item}
+                onEdit={handleEditExpense}
+                onDelete={handleDeleteRecord}
+              />
+            );
+          }}
           ListEmptyComponent={<EmptyList />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -581,6 +595,12 @@ const Home = ({ navigation }) => {
                         {new Date(rem.trigger?.value).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </Text>
                     </View>
+
+                    {/* Banner Ad inside Reminders Modal */}
+                    <View style={tailwind`my-4 items-center`}>
+                      <BannerAdComponent />
+                    </View>
+
                     <TouchableOpacity
                       style={tailwind`bg-red-50 p-2 rounded-lg ml-2`}
                       onPress={async () => {

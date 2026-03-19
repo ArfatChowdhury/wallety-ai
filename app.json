@@ -51,7 +51,12 @@
     "plugins": [
       "expo-web-browser",
       "expo-font",
-      "expo-updates"
+      "expo-updates",
+      "react-native-google-mobile-ads"
     ]
+  },
+  "react-native-google-mobile-ads": {
+    "android_app_id": "ca-app-pub-3315420037530922~4770136289",
+    "ios_app_id": "ca-app-pub-3315420037530922~4770136289"
   }
 }

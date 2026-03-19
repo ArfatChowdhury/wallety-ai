@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
+import { BannerAdComponent } from '../services/AdService'
 import { COLORS, SHADOW } from '../theme'
 import { auth } from '../services/firebase'
 import { updateProfile } from 'firebase/auth'
@@ -79,7 +80,7 @@ const Settings = ({ navigation }) => {
         )
     }
 
-    const handleExportCSV = () => {
+    const handleExportCSV = async () => {
         const header = 'Type,Title/Source,Amount,Category,Date\n'
         const expenseRows = expenses.map(e =>
             `Expense,"${e.title}",${e.amount},"${e.category?.name || ''}",${e.date}`
@@ -89,10 +90,12 @@ const Settings = ({ navigation }) => {
         ).join('\n')
         const csv = header + expenseRows + (incomeRows ? '\n' + incomeRows : '')
 
-        Share.share({
-            message: csv,
-            title: 'My Expense Data',
-        })
+            // Show interstitial ad before exporting CSV
+            await AdService.showPdfExportAd(); // Reusing the same interstitial logic for now
+            Share.share({
+                message: csv,
+                title: 'My Expense Data',
+            })
     }
 
     const handleExportPDF = async () => {
@@ -285,6 +288,11 @@ const Settings = ({ navigation }) => {
                     </View>
                 </View>
             </Modal>
+            
+            {/* Banner Ad at bottom */}
+            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
+                <BannerAdComponent />
+            </View>
         </SafeAreaView>
     )
 }

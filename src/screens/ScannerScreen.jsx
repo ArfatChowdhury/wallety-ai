@@ -338,6 +338,11 @@ const ScannerScreen = ({ navigation }) => {
 
             {/* Action Buttons */}
             <View style={actionStyle.container}>
+                {/* Banner Ad above CTA */}
+                <View style={{ marginBottom: 10, alignItems: 'center' }}>
+                    <BannerAdComponent />
+                </View>
+
                 <TouchableOpacity style={actionStyle.primaryBtn} onPress={takePhoto} disabled={scanning}>
                     <LinearGradient colors={['#22C55E', '#16a34a']} style={actionStyle.btnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
                         <Ionicons name="camera" size={24} color="white" />

@@ -5,12 +5,16 @@ import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
 import { categories } from '../Data/categoriesData'
 import { COLORS, SHADOW } from '../theme'
-import { NativeAdComponent, insertAdsIntoBudgetList } from '../services/AdService'
+import { NativeAdComponent, insertAdsIntoBudgetList, AdService } from '../services/AdService'
 
 const Budget = () => {
     const { expenses, budgets, setBudget, categoriesList, currencySymbol } = useContext(AppContext)
     const [editingCat, setEditingCat] = useState(null)
     const [inputValue, setInputValue] = useState('')
+
+    React.useEffect(() => {
+        AdService.showBudgetAd();
+    }, []);
 
     // Date Logic
     const now = new Date()

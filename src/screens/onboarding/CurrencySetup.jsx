@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import tailwind from 'twrnc'
 import { COLORS, SHADOW } from '../../theme'
+import { BannerAdComponent } from '../../services/AdService'
 import { AppContext } from '../../Contex/ContextApi'
 
 import { currencies } from '../../constants/currencies'
@@ -116,6 +117,11 @@ const CurrencySetup = ({ navigation, route }) => {
                     <Text style={styles.btnText}>{isSettings ? 'Save Changes' : 'Continue'}</Text>
                     <Ionicons name={isSettings ? "checkmark-done" : "arrow-forward"} size={24} color={COLORS.white} />
                 </TouchableOpacity>
+            </View>
+
+            {/* Banner Ad at bottom */}
+            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
+                <BannerAdComponent />
             </View>
         </SafeAreaView>
     )
