@@ -186,14 +186,14 @@ const ScannerScreen = ({ navigation }) => {
             return;
         }
         
-        // Show interstitial ad before picking image
+        // Show interstitial ad and WAIT before picking image
         await AdService.showReceiptScanAd();
         
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             quality: 1,
-            base64: true, // We need the base64 string for the Vision API
+            base64: true, 
         });
         if (!result.canceled) {
             processImage(result.assets[0].uri, result.assets[0].base64);
@@ -207,13 +207,13 @@ const ScannerScreen = ({ navigation }) => {
             return;
         }
         
-        // Show interstitial ad before taking photo
+        // Show interstitial ad and WAIT before taking photo
         await AdService.showReceiptScanAd();
         
         const result = await ImagePicker.launchCameraAsync({
             allowsEditing: true,
             quality: 1,
-            base64: true, // We need to base64 string for Vision API
+            base64: true, 
         });
         if (!result.canceled) {
             processImage(result.assets[0].uri, result.assets[0].base64);

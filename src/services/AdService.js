@@ -87,6 +87,39 @@ export class AdService {
     this.appOpenAd.load();
   }
 
+  // Helper to show interstitial and wait for it to close
+  static showInterstitialAndWait(ad, type) {
+    if (!ad || !ad.loaded) {
+      console.log(`[AdService] ${type} ad not loaded, skipping flow wait`);
+      ad?.load(); // Start loading for next time
+      return Promise.resolve(false);
+    }
+
+    return new Promise((resolve) => {
+      let isResolved = false;
+
+      const finish = (result) => {
+        if (isResolved) return;
+        isResolved = true;
+        closedSub();
+        errorSub();
+        resolve(result);
+      };
+
+      const closedSub = ad.addAdEventListener(AdEventType.CLOSED, () => {
+        console.log(`[AdService] ${type} ad closed, continuing...`);
+        finish(true);
+      });
+
+      const errorSub = ad.addAdEventListener(AdEventType.ERROR, (error) => {
+        console.error(`[AdService] ${type} ad error:`, error);
+        finish(false);
+      });
+
+      ad.show();
+    });
+  }
+
   // Show app open ad (once per 24 hours)
   static async showAppOpenAd() {
     try {
@@ -95,10 +128,12 @@ export class AdService {
 
       if (!lastShown || now - parseInt(lastShown) > 86400000) { // 24 hours
         if (this.appOpenAd?.loaded) {
-          await this.appOpenAd.show();
-          await AsyncStorage.setItem('last_interstitial', now.toString());
-          console.log('[AdService] App open ad shown');
-          return true;
+          const success = await this.showInterstitialAndWait(this.appOpenAd, 'app-open');
+          if (success) {
+            await AsyncStorage.setItem('last_interstitial', now.toString());
+            console.log('[AdService] App open ad shown');
+          }
+          return success;
         } else {
           console.log('[AdService] App open ad not loaded yet');
           this.appOpenAd?.load(); // Try loading for next time
@@ -114,58 +149,17 @@ export class AdService {
 
   // Show receipt scan interstitial
   static async showReceiptScanAd() {
-    try {
-      if (this.receiptScanInterstitial?.loaded) {
-        await this.receiptScanInterstitial.show();
-        console.log('[AdService] Receipt scan interstitial shown');
-        return true;
-      } else {
-        console.log('[AdService] Receipt scan ad not loaded yet');
-        // Reload for next time
-        this.receiptScanInterstitial = this.loadInterstitial('receipt-scan');
-        return false;
-      }
-    } catch (error) {
-      console.error('[AdService] Error showing receipt scan ad:', error);
-      return false;
-    }
+    return this.showInterstitialAndWait(this.receiptScanInterstitial, 'receipt-scan');
   }
 
   // Show PDF export interstitial
   static async showPdfExportAd() {
-    try {
-      if (this.pdfExportInterstitial?.loaded) {
-        await this.pdfExportInterstitial.show();
-        console.log('[AdService] PDF export interstitial shown');
-        return true;
-      } else {
-        console.log('[AdService] PDF export ad not loaded yet');
-        // Reload for next time
-        this.pdfExportInterstitial = this.loadInterstitial('pdf-export');
-        return false;
-      }
-    } catch (error) {
-      console.error('[AdService] Error showing PDF export ad:', error);
-      return false;
-    }
+    return this.showInterstitialAndWait(this.pdfExportInterstitial, 'pdf-export');
   }
 
   // Show Budget interstitial
   static async showBudgetAd() {
-    try {
-      if (this.budgetInterstitial?.loaded) {
-        await this.budgetInterstitial.show();
-        console.log('[AdService] Budget interstitial shown');
-        return true;
-      } else {
-        console.log('[AdService] Budget ad not loaded yet');
-        this.budgetInterstitial = this.loadInterstitial('budget');
-        return false;
-      }
-    } catch (error) {
-      console.error('[AdService] Error showing budget ad:', error);
-      return false;
-    }
+    return this.showInterstitialAndWait(this.budgetInterstitial, 'budget');
   }
 
   // Check if any ad is ready
@@ -220,8 +214,8 @@ export const insertAdsIntoTransactionList = (transactions) => {
   try {
     if (!transactions || transactions.length === 0) return [];
     return transactions.flatMap((item, index) => {
-      // Insert an ad after every 5th transaction
-      if ((index + 1) === 4) { // Only one ad for now as requested "like one of transaction"
+      // Insert an ad after every 3rd transaction
+      if ((index + 1) % 3 === 0) {
         return [item, { type: 'AD', id: `trans_ad_${index}` }];
       }
       return [item];
@@ -237,7 +231,8 @@ export const insertAdsIntoBudgetList = (budgetItems) => {
   try {
     if (!budgetItems || budgetItems.length === 0) return [];
     return budgetItems.flatMap((item, index) => {
-      if ((index + 1) % 4 === 0) {
+      // Insert every 3rd item
+      if ((index + 1) % 3 === 0) {
         return [item, { type: 'AD', id: `ad_${index}` }];
       }
       return [item];

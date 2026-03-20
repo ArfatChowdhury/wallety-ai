@@ -264,7 +264,7 @@ const Home = ({ navigation }) => {
             </View>
           )}
           <View>
-            <Text style={styles.greeting}>Hi, {auth.currentUser?.displayName?.split(" ")[0] || "User"} 👋</Text>
+            <Text style={styles.greeting}>Hi, {auth.currentUser?.displayName?.split(" ").pop() || "User"} 👋</Text>
             <Text style={styles.subGreeting}>Welcome back!</Text>
           </View>
         </View>
@@ -397,8 +397,8 @@ const Home = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
         />
         
-        {/* Banner Ad at bottom */}
-        <View style={{ backgroundColor: COLORS.background }}>
+        {/* Banner Ad at bottom - shifted up to avoid floating tabbar */}
+        <View style={{ backgroundColor: COLORS.background, marginBottom: 110 }}>
           <BannerAdComponent />
         </View>
       </View>

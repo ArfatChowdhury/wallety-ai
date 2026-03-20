@@ -136,8 +136,8 @@ const Insight = () => {
           showsVerticalScrollIndicator={false}
         />
         
-        {/* Banner Ad at bottom */}
-        <View style={{ backgroundColor: COLORS.background }}>
+        {/* Banner Ad at bottom - shifted up to avoid floating tabbar */}
+        <View style={{ backgroundColor: COLORS.background, marginBottom: 110 }}>
           <BannerAdComponent />
         </View>
       </View>

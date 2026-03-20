@@ -1,4 +1,4 @@
-import { Alert, Share, Switch, Text, TouchableOpacity, View, StyleSheet, ScrollView, StatusBar, Image, TextInput, Modal, ActivityIndicator } from 'react-native'
+import { Alert, Share, Switch, Text, TouchableOpacity, View, StyleSheet, ScrollView, StatusBar, Image, TextInput, Modal, ActivityIndicator, Linking } from 'react-native'
 import React, { useContext } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,6 +23,9 @@ const Settings = ({ navigation }) => {
     const [isEditModalVisible, setEditModalVisible] = React.useState(false)
     const [newName, setNewName] = React.useState(auth.currentUser?.displayName || '')
     const [isUpdating, setIsUpdating] = React.useState(false)
+
+    const [isFeedbackModalVisible, setFeedbackModalVisible] = React.useState(false)
+    const [feedbackMessage, setFeedbackMessage] = React.useState('')
 
     const onLogoutPress = () => {
         Alert.alert(
@@ -79,6 +82,32 @@ const Settings = ({ navigation }) => {
             ]
         )
     }
+
+    const handleFeedback = () => {
+        setFeedbackMessage('');
+        setFeedbackModalVisible(true);
+    };
+
+    const handleSendFeedback = () => {
+        if (!feedbackMessage.trim()) {
+            Alert.alert('Empty Message', 'Please write something before sending.');
+            return;
+        }
+
+        const email = 'limnersapp@gmail.com';
+        const subject = 'App Feedback / Support';
+        const body = feedbackMessage.trim();
+        const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        
+        Linking.canOpenURL(url).then(supported => {
+            if (supported) {
+                Linking.openURL(url);
+                setFeedbackModalVisible(false);
+            } else {
+                Alert.alert('Error', 'Email app is not available.');
+            }
+        });
+    };
 
     const handleExportCSV = async () => {
         const header = 'Type,Title/Source,Amount,Category,Date\n'
@@ -192,12 +221,19 @@ const Settings = ({ navigation }) => {
                         onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
                         customIcon={currencySymbol}
                     />
-                    {/* <MenuItem
-                        icon="moon-outline"
-                        label="Dark Mode"
-                        subtitle={isDarkMode ? 'Appearance is Dark' : 'Appearance is Light'}
-                        isSwitch
-                    /> */}
+                    <BannerAdComponent style={{ marginTop: 10 }} />
+                </View>
+
+                {/* Support Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionHeader}>Support & Feedback</Text>
+                    <MenuItem
+                        icon="chatbubble-outline"
+                        label="Give Feedback"
+                        subtitle="Share suggestions or report bugs"
+                        onPress={handleFeedback}
+                    />
+                    <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
                 {/* Recurring Items Section */}
@@ -209,6 +245,7 @@ const Settings = ({ navigation }) => {
                         subtitle={`${recurringTransactions.length} items auto-logged monthly`}
                         onPress={() => navigation.navigate('RecurringManager')}
                     />
+                    <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
                 {/* Actions Section */}
@@ -240,10 +277,11 @@ const Settings = ({ navigation }) => {
                         onPress={onLogoutPress}
                         danger
                     />
+                    <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
                 {/* Footer */}
-                <View style={styles.footer}>
+                <View style={[styles.footer, { paddingBottom: 20 }]}>
                     <Text style={styles.footerApp}>WALLET APP v1.0.0</Text>
                     <Text style={styles.footerMoto}>Premium Financial Tracking</Text>
                 </View>
@@ -289,8 +327,47 @@ const Settings = ({ navigation }) => {
                 </View>
             </Modal>
             
-            {/* Banner Ad at bottom */}
-            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
+            {/* Feedback Modal */}
+            <Modal
+                visible={isFeedbackModalVisible}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setFeedbackModalVisible(false)}
+            >
+                <View style={styles.modalBackdrop}>
+                    <View style={styles.modalContent}>
+                        <View style={tailwind`flex-row justify-between items-center mb-4`}>
+                            <Text style={styles.modalTitle}>Share Feedback</Text>
+                            <TouchableOpacity onPress={() => setFeedbackModalVisible(false)}>
+                                <Ionicons name="close" size={24} color={COLORS.textSub} />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={tailwind`text-xs text-gray-500 mb-4 font-bold uppercase tracking-wider`}>Your message to the developers</Text>
+                        
+                        <TextInput
+                            style={[styles.input, { height: 120, textAlignVertical: 'top', paddingTop: 15 }]}
+                            value={feedbackMessage}
+                            onChangeText={setFeedbackMessage}
+                            placeholder="Type your feedback here..."
+                            placeholderTextColor={COLORS.gray400}
+                            multiline
+                            autoFocus
+                        />
+                        
+                        <TouchableOpacity
+                            style={[styles.modalBtn, styles.saveBtn, { flexDirection: 'row', gap: 8, marginTop: 10 }]}
+                            onPress={handleSendFeedback}
+                        >
+                            <Ionicons name="send" size={18} color="white" />
+                            <Text style={styles.saveBtnText}>Send via Email</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+            
+            {/* Final Banner Ad at bottom - shifted up for tabbar */}
+            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center', marginBottom: 110 }}>
                 <BannerAdComponent />
             </View>
         </SafeAreaView>
