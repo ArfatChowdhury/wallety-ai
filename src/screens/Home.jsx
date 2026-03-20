@@ -1,8 +1,8 @@
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View, StatusBar, ImageBackground, Modal, ScrollView as RNScrollView, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View, StatusBar, ImageBackground, Modal, ScrollView as RNScrollView, Image, TextInput, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native'
 import React, { useContext, useMemo, useCallback } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons, AntDesign } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
 import { COLORS, SHADOW } from '../theme'
@@ -15,10 +15,15 @@ import { scheduleCustomReminder, getActiveReminders, cancelReminder } from '../s
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoTransactionList, AdService } from '../services/AdService'
 const Home = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const BOTTOM_AD_MARGIN = 20 + 70 + 8;
+
+
+
   const {
     totalSpent, balance, expenses, allTransactions, handleEdit, handleDelete,
     handleDeleteIncome, categoriesWithBudget, currencySymbol, monthlySummary, appNotifications, logAppNotification,
-    prevMonthSummary, checkAndResetMonth, getLocalDate, getYearMonth
+    prevMonthSummary, checkAndResetMonth, getLocalDate, getYearMonth, refreshData
   } = useContext(AppContext)
 
   const [selectedPeriod, setSelectedPeriod] = React.useState('month')
@@ -36,6 +41,14 @@ const Home = ({ navigation }) => {
   const [reminderDate, setReminderDate] = React.useState(new Date())
   const [showPicker, setShowPicker] = React.useState(false)
   const [pickerMode, setPickerMode] = React.useState('date')
+
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  }, [refreshData]);
 
   const fetchReminders = async () => {
     const reminders = await getActiveReminders()
@@ -393,12 +406,21 @@ const Home = ({ navigation }) => {
             );
           }}
           ListEmptyComponent={<EmptyList />}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={{ paddingBottom: BOTTOM_AD_MARGIN + 60 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#000000']} />
+          }
         />
-        
-        {/* Banner Ad at bottom - shifted up to avoid floating tabbar */}
-        <View style={{ backgroundColor: COLORS.background, marginBottom: 110 }}>
+
+        {/* Banner Ad — dynamically positioned just above floating tab bar */}
+        <View style={{
+          position: 'absolute',
+          bottom: BOTTOM_AD_MARGIN,
+          left: 0,
+          right: 0,
+          backgroundColor: COLORS.background,
+        }}>
           <BannerAdComponent />
         </View>
       </View>
@@ -477,6 +499,11 @@ const Home = ({ navigation }) => {
             <Text style={styles.summarySub}>
               {monthlySummary.isDebt ? 'over your budget this month' : 'saved in your pocket!'}
             </Text>
+
+            <View style={{ marginVertical: 15, alignItems: 'center', width: '100%' }}>
+              <BannerAdComponent />
+            </View>
+
 
             <View style={styles.tipBox}>
               <Ionicons name="bulb" size={20} color={COLORS.primary} />
@@ -580,6 +607,11 @@ const Home = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
 
+              {/* Banner Ad inside Reminders Modal */}
+              <View style={[tailwind`my-4 items-center`, { width: '100%' }]}>
+                <BannerAdComponent />
+              </View>
+
               <Text style={tailwind`text-gray-500 font-bold text-xs mb-2 uppercase`}>Active Scheduled Reminders</Text>
               {activeReminders.length === 0 ? (
                 <Text style={tailwind`text-gray-400 text-sm font-semibold mb-6`}>No custom reminders coming up.</Text>
@@ -629,7 +661,7 @@ const Home = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background },
-  listContent: { paddingBottom: 100 },
+
 
   headerContainer: { paddingHorizontal: 20, paddingTop: 10 },
 

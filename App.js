@@ -7,10 +7,51 @@ import { AppContextProvider, AppContext } from './src/Contex/ContextApi';
 import { useContext, useEffect } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
-import { Platform } from 'react-native';
+import { Platform, AppState } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { categories } from './src/Data/categoriesData';
 
 function AppContent() {
-  const { isLoading } = useContext(AppContext);
+  const { isLoading, handleAddExpense } = useContext(AppContext);
+
+  useEffect(() => {
+    const checkWidgetExpense = async () => {
+      try {
+        const raw = await AsyncStorage.getItem('widget_pending_expense');
+        if (!raw) return;
+        const expense = JSON.parse(raw);
+        if (expense?.pending) {
+          const catObj = categories.find(c => c.name === expense.category) || categories.find(c => c.name === 'Other') || categories[0];
+          
+          handleAddExpense({
+            title: expense.note || 'Widget Expense',
+            amount: expense.amount.toString(),
+            category: catObj,
+            date: expense.date,
+          });
+          
+          await AsyncStorage.removeItem('widget_pending_expense');
+        }
+      } catch (err) {
+        console.error('Error checking widget expense:', err);
+      }
+    };
+
+    // Check on mount
+    checkWidgetExpense();
+
+    // Check on app state change to active
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        checkWidgetExpense();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [handleAddExpense]);
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' }}>

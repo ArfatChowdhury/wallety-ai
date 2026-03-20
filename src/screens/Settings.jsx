@@ -12,6 +12,7 @@ import tailwind from 'twrnc'
 import { exportTransactionsToPDF } from '../services/ExportService'
 import { currencies } from '../constants/currencies'
 import AdService from '../services/AdService'
+import { requestWidgetUpdate } from 'react-native-android-widget'
 
 const Settings = ({ navigation }) => {
     const {
@@ -137,6 +138,20 @@ const Settings = ({ navigation }) => {
         }
     }
 
+    const promptAddWidget = async () => {
+        try {
+            await requestWidgetUpdate({
+                widgetName: 'ExpenseWidget',
+                renderWidget: () => <TextWidget text="Quick Expense" />, // Fallback/Basic update call to trigger pinning if supported
+            });
+            // Note: direct requestPinAppWidget call is preferred if available in the package
+            // But since the prompt specifically mentioned requestWidgetUpdate for this task:
+            Alert.alert("Widget", "To add the widget, long press your home screen and find 'Expense Tracker' in the widgets list.");
+        } catch (error) {
+            console.error("Error prompting widget:", error);
+        }
+    }
+
     const MenuItem = ({ icon, label, subtitle, onPress, danger, isSwitch, customIcon }) => (
         <TouchableOpacity
             onPress={onPress}
@@ -220,6 +235,12 @@ const Settings = ({ navigation }) => {
                         subtitle={`Currently using ${currency} (${currencySymbol})`}
                         onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
                         customIcon={currencySymbol}
+                    />
+                    <MenuItem
+                        icon="apps-outline"
+                        label="Add Home Screen Widget"
+                        subtitle="Log expenses without opening the app"
+                        onPress={promptAddWidget}
                     />
                     <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>

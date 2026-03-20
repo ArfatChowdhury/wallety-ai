@@ -812,6 +812,11 @@ export const AppContextProvider = ({ children }) => {
         return null;
     };
 
+    const refreshData = async () => {
+        setIsLoading(true);
+        await loadData();
+    };
+
     const value = useMemo(() => ({
         // State
         expenses, setExpenses,
@@ -825,7 +830,7 @@ export const AppContextProvider = ({ children }) => {
         // Category actions
         handleAddCategory,
         // Auth actions
-        handleLogout,
+        handleLogout, handleWipeData, checkAndResetMonth,
         // Date filter
         selectedPeriod, setSelectedPeriod,
         filteredExpenses,
@@ -833,9 +838,9 @@ export const AppContextProvider = ({ children }) => {
         budgets, setBudget, setBudgets,
         currency, setCurrency,
         isDarkMode, toggleDarkMode,
-        isFirstLaunch, completeOnboarding,
+        isFirstLaunch, completingOnboarding: completeOnboarding,
         userName, setUserName,
-        recurringTransactions, setRecurringTransactions, addRecurringTransaction, deleteRecurringTransaction, updateRecurringTransaction,
+        recurringTransactions, addRecurringTransaction, deleteRecurringTransaction, updateRecurringTransaction,
         currencySymbol,
         // Derived
         allTransactions,
@@ -853,13 +858,15 @@ export const AppContextProvider = ({ children }) => {
         hasFetchedFromCloud, setHasFetchedFromCloud,
         isSetupComplete, setIsSetupComplete,
         handleWipeData, checkAndResetMonth,
-        getLocalDate, getYearMonth
+        getLocalDate, getYearMonth,
+        refreshData
     }), [
         expenses, incomes, amount, title, category, editingId, isLoading, categoriesList,
         selectedPeriod, filteredExpenses, budgets, currency, isDarkMode, isFirstLaunch,
         userName, recurringTransactions, currencySymbol, allTransactions, totalSpent,
         totalIncome, balance, monthlySummary, categoriesWithBudget, appNotifications,
-        prevMonthSummary, hasFetchedFromCloud, isSetupComplete, lastProcessedMonth
+        prevMonthSummary, hasFetchedFromCloud, isSetupComplete, lastProcessedMonth,
+        refreshData
     ]);
 
     return (

@@ -7,6 +7,7 @@ import Svg, { Path } from "react-native-svg"
 import { BlurView } from "expo-blur"
 import * as Notifications from "expo-notifications"
 import { useNavigationContainerRef } from "@react-navigation/native"
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import Home from "../screens/Home"
 import Create from "../screens/Create"
@@ -80,6 +81,7 @@ function MyTabs() {
 /* ---------------- FLOATING TAB ---------------- */
 
 const FloatingTabBar = ({ state, descriptors, navigation }) => {
+  const insets = useSafeAreaInsets()
   const [keyboardVisible, setKeyboardVisible] = useState(false)
 
   useEffect(() => {
@@ -91,7 +93,7 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
   if (keyboardVisible) return null
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { bottom: 20 + insets.bottom }]}>
       <NotchedBackground />
       <View style={styles.row}>
         {state.routes.map((route, index) => {
@@ -137,7 +139,7 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    position: "absolute", bottom: 28, left: 20, right: 20, height: TAB_BAR_HEIGHT,
+    position: "absolute", bottom: 20, left: 20, right: 20, height: TAB_BAR_HEIGHT,
     shadowColor: "#000", shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.2, shadowRadius: 18, elevation: 20,
   },
