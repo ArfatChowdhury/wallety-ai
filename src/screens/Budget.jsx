@@ -168,13 +168,28 @@ const Budget = () => {
                 <Text style={styles.subtitle}>Manage your monthly limits</Text>
             </View>
 
-            <FlatList
-                data={budgetListWithAds}
-                keyExtractor={(item, index) => item.name + index || item.id}
-                renderItem={renderItem}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-            />
+            <View style={{ flex: 1 }}>
+                <FlatList
+                    data={budgetListWithAds}
+                    keyExtractor={(item, index) => item.name + index || item.id}
+                    renderItem={renderItem}
+                    contentContainerStyle={[styles.listContent, { paddingBottom: 120 + 70 + 8 }]}
+                    showsVerticalScrollIndicator={false}
+                />
+
+                {/* Fixed Banner Ad — above floating tab bar */}
+                <View style={{
+                    position: 'absolute',
+                    bottom: 20 + 70 + 8, // Matching Home.jsx BOTTOM_AD_MARGIN
+                    left: 0,
+                    right: 0,
+                    backgroundColor: COLORS.background,
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                }}>
+                    <BannerAdComponent />
+                </View>
+            </View>
         </SafeAreaView>
     )
 }
