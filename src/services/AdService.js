@@ -1,6 +1,6 @@
-import {
-  InterstitialAd,
-  AdEventType,
+import { 
+  InterstitialAd, 
+  AdEventType, 
   TestIds,
   BannerAd,
   BannerAdSize,
@@ -11,7 +11,6 @@ import {
   CallToActionButton,
   IconView,
   AppOpenAd,
-  useNativeAd,
   useForeground
 } from 'react-native-google-mobile-ads';
 import { View, Text } from 'react-native';
@@ -214,81 +213,7 @@ export const BannerAdComponent = ({ style = {} }) => {
 };
 
 // Native Ad Component for Lists with safe implementation
-export const NativeAdComponent = ({ style = {} }) => {
-  const { nativeAd, load } = useNativeAd(AD_IDS.NATIVE, {
-    requestNonPersonalizedAdsOnly: true,
-  });
-
-  React.useEffect(() => {
-    load();
-  }, []);  // ← empty deps, load() on mount only
-
-  // nativeAd is undefined until the native layer is ready
-  if (!nativeAd) {
-    return (
-      <View style={[{
-        height: 100,
-        backgroundColor: '#f8fafc',
-        borderRadius: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginVertical: 8,
-      }, style]}>
-        <Text style={{ color: '#94a3b8', fontSize: 12 }}>Loading Sponsored...</Text>
-      </View>
-    );
-  }
-
-  return (
-    <NativeAdView
-      nativeAd={nativeAd}  // ← this is the correct API with the hook
-      style={[{ width: '100%', borderRadius: 12, overflow: 'hidden' }, style]}
-    >
-      <View style={{
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 16,
-        marginVertical: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
-      }}>
-        <View style={{
-          position: 'absolute', top: 8, right: 8,
-          backgroundColor: '#f1f5f9', paddingHorizontal: 6,
-          paddingVertical: 2, borderRadius: 4, zIndex: 1,
-          borderWidth: 1, borderColor: '#e2e8f0',
-        }}>
-          <Text style={{ color: '#64748b', fontSize: 10, fontWeight: 'bold' }}>AD</Text>
-        </View>
-
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <IconView style={{ width: 48, height: 48, borderRadius: 10 }} />
-          <View style={{ flex: 1, marginLeft: 12 }}>
-            <HeadlineView style={{ fontSize: 16, fontWeight: 'bold', color: '#1e293b' }} />
-            <TaglineView numberOfLines={2} style={{ fontSize: 13, color: '#64748b', marginTop: 2 }} />
-          </View>
-        </View>
-
-        <NativeMediaView style={{
-          width: '100%', height: 180, borderRadius: 12,
-          marginTop: 12, backgroundColor: '#f8fafc',
-        }} />
-
-        <CallToActionButton
-          style={{
-            backgroundColor: '#22C55E', paddingHorizontal: 20,
-            paddingVertical: 12, borderRadius: 12,
-            alignItems: 'center', marginTop: 12,
-          }}
-          textStyle={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}
-        />
-      </View>
-    </NativeAdView>
-  );
-};
+export const NativeAdComponent = ({ style = {} }) => null;
 
 // Helper to insert ads into transaction list with fallback
 export const insertAdsIntoTransactionList = (transactions) => {

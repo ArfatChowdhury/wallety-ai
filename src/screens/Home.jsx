@@ -380,7 +380,7 @@ const Home = ({ navigation }) => {
             if (item.type === 'AD') {
               return (
                 <View style={{ marginHorizontal: 20, marginBottom: 16 }}>
-                  <NativeAdComponent />
+                  <BannerAdComponent />
                 </View>
               );
             }

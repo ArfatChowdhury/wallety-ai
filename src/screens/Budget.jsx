@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
 import { categories } from '../Data/categoriesData'
 import { COLORS, SHADOW } from '../theme'
-import { NativeAdComponent, insertAdsIntoBudgetList, AdService } from '../services/AdService'
+import { BannerAdComponent, NativeAdComponent, insertAdsIntoBudgetList, AdService } from '../services/AdService'
 
 const Budget = () => {
     const { expenses, budgets, setBudget, categoriesList, currencySymbol } = useContext(AppContext)
@@ -89,7 +89,7 @@ const Budget = () => {
     const renderItem = ({ item }) => {
         // Render native ad if item type is AD
         if (item.type === 'AD') {
-            return <NativeAdComponent />
+            return <BannerAdComponent />
         }
 
         const budget = item.budget || 0
