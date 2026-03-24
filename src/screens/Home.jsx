@@ -14,7 +14,7 @@ import { auth } from '../services/firebase'
 import { scheduleCustomReminder, getActiveReminders, cancelReminder } from '../services/NotificationService'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoTransactionList, AdService } from '../services/AdService'
-import { Tooltip } from 'react-native-walkthrough-tooltip';
+import Tooltip from 'react-native-walkthrough-tooltip';
 const Home = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const BOTTOM_AD_MARGIN = 20 + 70 + 8;
@@ -383,7 +383,7 @@ const Home = ({ navigation }) => {
                   </View>
                 )}
               </View>
-              <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.spent).toFixed(2)}</Text>
+              <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.balance).toFixed(2)}</Text>
 
               {/* Budget Progress Bar */}
               <View style={styles.progressContainer}>
@@ -392,14 +392,16 @@ const Home = ({ navigation }) => {
                     styles.progressBarFill,
                     {
                       width: `${Math.min((totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) * 100, 100)}%`,
-                      backgroundColor: (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.9 ? COLORS.expense : COLORS.primary
+                      backgroundColor: 
+                        (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.85 ? COLORS.expense :
+                        (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.5 ? '#EAB308' : COLORS.income
                     }
                   ]} />
                 </View>
                 <View style={tailwind`flex-row justify-between mt-1`}>
-                  <Text style={styles.progressLabel}>Budget Usage</Text>
+                  <Text style={styles.progressLabel}>Income Used</Text>
                   <Text style={styles.progressValue}>
-                    {(totalSpent + balance > 0)
+                    {totalSpent + balance > 0
                       ? `${Math.round((totalSpent / (totalSpent + balance)) * 100)}%`
                       : '0%'}
                   </Text>
@@ -467,7 +469,7 @@ const Home = ({ navigation }) => {
         </Tooltip>
       </View>
     )
-  }, [selectedPeriod, selectedMonth, displayTotals, monthlySummary, prevMonthSummary, currencySymbol, totalSpent, balance, overBudgetCategories, isBudgetWarningDismissed, hasSeenPreClosingThisMonth, hasDismissedSummaryBanner, tourStep]);
+  }, [selectedPeriod, selectedMonth, displayTotals, monthlySummary, prevMonthSummary, currencySymbol, overBudgetCategories, isBudgetWarningDismissed, hasSeenPreClosingThisMonth, hasDismissedSummaryBanner, tourStep]);
 
   return (
     <SafeAreaView style={styles.root}>

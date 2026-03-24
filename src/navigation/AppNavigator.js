@@ -115,6 +115,7 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
             if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name)
           }
 
+          if (isCreate) {
             return (
               <View key={index} style={styles.centerWrapper}>
                 <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.centerButton}>
@@ -122,7 +123,8 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
                 </TouchableOpacity>
               </View>
             )
-
+          }
+           
           return (
             <TouchableOpacity key={index} style={styles.tab} onPress={onPress} activeOpacity={0.7}>
               <Ionicons name={icon} size={22} color={isFocused ? "#000" : "#9CA3AF"} />

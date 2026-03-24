@@ -164,8 +164,8 @@ export const AppContextProvider = ({ children }) => {
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                if (data.expenses) setExpenses(data.expenses);
-                if (data.incomes) setIncomes(data.incomes);
+                if (data.expenses && (data.expenses.length > 0 || expenses.length === 0)) setExpenses(data.expenses);
+                if (data.incomes && (data.incomes.length > 0 || incomes.length === 0)) setIncomes(data.incomes);
                 if (data.budgets) setBudgets(data.budgets);
                 if (data.userName) setUserNameState(data.userName);
                 if (data.currency) setCurrencyState(data.currency);
@@ -185,8 +185,8 @@ export const AppContextProvider = ({ children }) => {
 
                 // Also update local storage to stay in sync
                 await AsyncStorage.multiSet([
-                    ['expenses', JSON.stringify(data.expenses || [])],
-                    ['incomes', JSON.stringify(data.incomes || [])],
+                    ['expenses', JSON.stringify(data.expenses || expenses)],
+                    ['incomes', JSON.stringify(data.incomes || incomes)],
                     ['budgets', JSON.stringify(data.budgets || {})],
                     ['userName', data.userName || ''],
                     ['currency', data.currency || 'USD'],
@@ -452,7 +452,7 @@ export const AppContextProvider = ({ children }) => {
 
             // 1. Process recurring items immediately so they appear on dashboard
             if (recurringTransactions.length > 0) {
-                processRecurring(recurringTransactions, currentMonth);
+                await processRecurring(recurringTransactions, currentMonth);
             }
 
             // 2. Persist onboarding status
