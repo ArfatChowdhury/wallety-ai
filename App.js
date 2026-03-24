@@ -71,8 +71,8 @@ export default function App() {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
     // Platform-specific API keys
-    const iosApiKey = 'test_XaITxtCPZAxAbSQnKReDGZejkKy';
-    const androidApiKey = 'test_XaITxtCPZAxAbSQnKReDGZejkKy';
+    const iosApiKey = 'goog_cIydRbvmVFxaEmXSfGczPyQNrLN';
+    const androidApiKey = 'goog_cIydRbvmVFxaEmXSfGczPyQNrLN';
 
     if (Platform.OS === 'ios') {
       Purchases.configure({ apiKey: iosApiKey });

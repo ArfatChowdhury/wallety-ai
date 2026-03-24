@@ -14,8 +14,7 @@ import { auth } from '../services/firebase'
 import { scheduleCustomReminder, getActiveReminders, cancelReminder } from '../services/NotificationService'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoTransactionList, AdService } from '../services/AdService'
-import { CopilotStep } from 'react-native-copilot'
-import { useWalletyTour, WalkthroughableTouchableOpacity, WalkthroughableView, WalkthroughableText } from '../components/WalletyTour'
+import { Tooltip } from 'react-native-walkthrough-tooltip';
 const Home = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const BOTTOM_AD_MARGIN = 20 + 70 + 8;
@@ -52,14 +51,8 @@ const Home = ({ navigation }) => {
     setRefreshing(false);
   }, [refreshData]);
 
-  const { maybeStartTour } = useWalletyTour(navigation);
+  const [tourStep, setTourStep] = React.useState(-1); // -1 = inactive, 0-3 = steps
 
-  useFocusEffect(
-    useCallback(() => {
-      // Check if we should start the tour (flag set by Finish Setup button)
-      maybeStartTour();
-    }, [])
-  );
 
   const fetchReminders = async () => {
     const reminders = await getActiveReminders()
@@ -92,6 +85,16 @@ const Home = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       checkAndResetMonth();
+
+      const checkTour = async () => {
+        const shouldStart = await AsyncStorage.getItem('shouldStartTour');
+        const hasCompleted = await AsyncStorage.getItem('hasCompletedTour');
+        if (shouldStart === 'true' && hasCompleted !== 'true') {
+          setTourStep(0);
+          await AsyncStorage.removeItem('shouldStartTour');
+        }
+      };
+      checkTour();
     }, [])
   );
 
@@ -294,35 +297,65 @@ const Home = ({ navigation }) => {
             </View>
           </View>
           <View style={styles.headerActions}>
-            <CopilotStep
-              text="Tap here to scan any receipt. Our AI will automatically read and log the expense for you in seconds."
-              order={1}
-              name="AI Receipt Scanner"
+            <Tooltip
+              isVisible={tourStep === 0}
+              content={
+                <View style={styles.tooltipContent}>
+                  <Text style={styles.tooltipText}>Tap here to scan any receipt. Our AI will automatically log the expense for you.</Text>
+                  <View style={styles.tooltipButtons}>
+                    <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.nextBtn} onPress={() => setTourStep(1)}><Text style={styles.nextBtnText}>Next</Text></TouchableOpacity>
+                  </View>
+                </View>
+              }
+              placement="bottom"
+              onClose={() => setTourStep(-1)}
+              contentStyle={styles.tooltipContainer}
             >
-              <WalkthroughableTouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Scanner')}>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Scanner')}>
                 <AntDesign name="scan" size={22} color={COLORS.textMain} />
-              </WalkthroughableTouchableOpacity>
-            </CopilotStep>
+              </TouchableOpacity>
+            </Tooltip>
 
-            <CopilotStep
-              text="Set custom reminders so you never forget to log an expense or check your budget."
-              order={2}
-              name="Smart Reminders"
+            <Tooltip
+              isVisible={tourStep === 1}
+              content={
+                <View style={styles.tooltipContent}>
+                  <Text style={styles.tooltipText}>Set custom reminders so you never forget to log an expense or check your budget.</Text>
+                  <View style={styles.tooltipButtons}>
+                    <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
+                    <TouchableOpacity style={styles.nextBtn} onPress={() => setTourStep(2)}><Text style={styles.nextBtnText}>Next</Text></TouchableOpacity>
+                  </View>
+                </View>
+              }
+              placement="bottom"
+              onClose={() => setTourStep(-1)}
+              contentStyle={styles.tooltipContainer}
             >
-              <WalkthroughableTouchableOpacity style={styles.iconBtn} onPress={() => setShowNotifications(true)}>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => setShowNotifications(true)}>
                 <Ionicons name="alarm-outline" size={22} color={COLORS.textMain} />
-              </WalkthroughableTouchableOpacity>
-            </CopilotStep>
+              </TouchableOpacity>
+            </Tooltip>
           </View>
         </View>
 
-        {/* Balance Card */}
-        <CopilotStep
-          text="This card shows your total spending this month, budget usage percentage, and how much balance you have left to spend."
-          order={3}
-          name="Monthly Overview"
+        {/* Balance Card Section */}
+        <Tooltip
+          isVisible={tourStep === 2}
+          content={
+            <View style={styles.tooltipContent}>
+              <Text style={styles.tooltipText}>This card shows your total spending, budget usage, and remaining balance.</Text>
+              <View style={styles.tooltipButtons}>
+                <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.nextBtn} onPress={() => setTourStep(3)}><Text style={styles.nextBtnText}>Next</Text></TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="bottom"
+          onClose={() => setTourStep(-1)}
+          contentStyle={styles.tooltipContainer}
         >
-          <WalkthroughableView style={{ borderRadius: 32, overflow: 'hidden', marginBottom: 30 }}>
+          <View style={{ borderRadius: 32, overflow: 'hidden', marginBottom: 30 }}>
             <ImageBackground
               source={require('../../assets/card-bg.jpg')}
               style={[
@@ -385,8 +418,8 @@ const Home = ({ navigation }) => {
                 </View>
               </View>
             </ImageBackground>
-          </WalkthroughableView>
-        </CopilotStep>
+          </View>
+        </Tooltip>
 
         {/* Budget Warning Banner */}
         <BudgetWarningBanner />
@@ -411,16 +444,30 @@ const Home = ({ navigation }) => {
           </View>
         )}
 
-        <CopilotStep
-          text="Every income and expense appears here with category, amount and date. Tap any transaction to view or edit it."
-          order={4}
-          name="Your Transactions"
+        <Tooltip
+          isVisible={tourStep === 3}
+          content={
+            <View style={styles.tooltipContent}>
+              <Text style={styles.tooltipText}>Every transaction appears here. Tap any item to view or edit it.</Text>
+              <View style={styles.tooltipButtons}>
+                <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
+                <TouchableOpacity style={styles.nextBtn} onPress={async () => {
+                  setTourStep(-1);
+                  await AsyncStorage.setItem('hasCompletedTour', 'true');
+                  Alert.alert("Tour Completed!", "You're all set to manage your finances.");
+                }}><Text style={styles.nextBtnText}>Finish</Text></TouchableOpacity>
+              </View>
+            </View>
+          }
+          placement="top"
+          onClose={() => setTourStep(-1)}
+          contentStyle={styles.tooltipContainer}
         >
-          <WalkthroughableText style={styles.sectionTitle}>Recent Transactions</WalkthroughableText>
-        </CopilotStep>
+          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+        </Tooltip>
       </View>
     )
-  }, [selectedPeriod, selectedMonth, displayTotals, monthlySummary, prevMonthSummary, currencySymbol, totalSpent, balance, overBudgetCategories, isBudgetWarningDismissed, hasSeenPreClosingThisMonth, hasDismissedSummaryBanner]);
+  }, [selectedPeriod, selectedMonth, displayTotals, monthlySummary, prevMonthSummary, currencySymbol, totalSpent, balance, overBudgetCategories, isBudgetWarningDismissed, hasSeenPreClosingThisMonth, hasDismissedSummaryBanner, tourStep]);
 
   return (
     <SafeAreaView style={styles.root}>
@@ -1014,7 +1061,45 @@ const styles = StyleSheet.create({
     color: COLORS.gray400,
     marginTop: 6,
     fontWeight: '600',
-  }
+  },
+  // Tooltip Styles
+  tooltipContainer: {
+    backgroundColor: '#1F2937', // Dark gray
+    borderRadius: 16,
+    padding: 16,
+    width: 250,
+  },
+  tooltipContent: {
+    width: '100%',
+  },
+  tooltipText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+    fontWeight: '500',
+  },
+  tooltipButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  skipBtn: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  nextBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  nextBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 })
 
 export default Home

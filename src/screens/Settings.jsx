@@ -13,8 +13,6 @@ import { exportTransactionsToPDF } from '../services/ExportService'
 import { currencies } from '../constants/currencies'
 import AdService from '../services/AdService'
 import { requestWidgetUpdate } from 'react-native-android-widget'
-import { CopilotStep } from 'react-native-copilot'
-import { WalkthroughableView } from '../components/WalletyTour'
 
 const Settings = ({ navigation }) => {
     const {
@@ -231,36 +229,20 @@ const Settings = ({ navigation }) => {
                 {/* Preferences Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Preferences</Text>
-                    <CopilotStep
-                        text="Change your preferred currency here. All amounts across the app will update automatically."
-                        order={12}
-                        name="Currency"
-                    >
-                        <WalkthroughableView>
-                            <MenuItem
-                                icon="cash-outline"
-                                label="Currency"
-                                subtitle={`Currently using ${currency} (${currencySymbol})`}
-                                onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
-                                customIcon={currencySymbol}
-                            />
-                        </WalkthroughableView>
-                    </CopilotStep>
+                    <MenuItem
+                        icon="cash-outline"
+                        label="Currency"
+                        subtitle={`Currently using ${currency} (${currencySymbol})`}
+                        onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
+                        customIcon={currencySymbol}
+                    />
 
-                    <CopilotStep
-                        text="Add the Wallety widget to your home screen to see your spending summary without opening the app."
-                        order={14}
-                        name="Home Screen Widget"
-                    >
-                        <WalkthroughableView>
-                            <MenuItem
-                                icon="apps-outline"
-                                label="Add Home Screen Widget"
-                                subtitle="Log expenses without opening the app"
-                                onPress={promptAddWidget}
-                            />
-                        </WalkthroughableView>
-                    </CopilotStep>
+                    <MenuItem
+                        icon="apps-outline"
+                        label="Add Home Screen Widget"
+                        subtitle="Log expenses without opening the app"
+                        onPress={promptAddWidget}
+                    />
                     <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
@@ -279,20 +261,12 @@ const Settings = ({ navigation }) => {
                 {/* Recurring Items Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Recurring & Planning</Text>
-                    <CopilotStep
-                        text="Set your fixed monthly income and expenses here. Wallety will automatically add them every month for you."
-                        order={13}
-                        name="Recurring Items"
-                    >
-                        <WalkthroughableView>
-                            <MenuItem
-                                icon="calendar-outline"
-                                label="Recurring Items"
-                                subtitle={`${recurringTransactions.length} items auto-logged monthly`}
-                                onPress={() => navigation.navigate('RecurringManager')}
-                            />
-                        </WalkthroughableView>
-                    </CopilotStep>
+                    <MenuItem
+                        icon="calendar-outline"
+                        label="Recurring Items"
+                        subtitle={`${recurringTransactions.length} items auto-logged monthly`}
+                        onPress={() => navigation.navigate('RecurringManager')}
+                    />
                     <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
@@ -311,20 +285,12 @@ const Settings = ({ navigation }) => {
                         subtitle="Share raw transaction data"
                         onPress={handleExportCSV}
                     />
-                    <CopilotStep
-                        text="Export all your transactions and reports as a PDF or CSV file anytime you need them."
-                        order={15}
-                        name="Export Your Data"
-                    >
-                        <WalkthroughableView>
-                            <MenuItem
-                                icon="document-text-outline"
-                                label="Export Report (PDF)"
-                                subtitle="Professional transaction summary"
-                                onPress={handleExportPDF}
-                            />
-                        </WalkthroughableView>
-                    </CopilotStep>
+                    <MenuItem
+                        icon="document-text-outline"
+                        label="Export Report (PDF)"
+                        subtitle="Professional transaction summary"
+                        onPress={handleExportPDF}
+                    />
                     <MenuItem
                         icon="trash-outline"
                         label="Delete Profile Data"

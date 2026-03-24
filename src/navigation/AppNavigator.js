@@ -20,11 +20,8 @@ import RecurringManager from "../screens/RecurringManager"
 import LoginScreen from "../screens/LoginScreen"
 import ScannerScreen from "../screens/ScannerScreen"
 import { onAuthStateChanged } from "../services/firestoreService"
-import { CopilotProvider, CopilotStep, walkthroughable } from "react-native-copilot"
-import { TourTooltip } from "../components/WalletyTour"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 
-const WalkthroughableTouchableOpacity = walkthroughable(TouchableOpacity)
 
 const { width } = Dimensions.get("window")
 const TAB_BAR_WIDTH = width - 40
@@ -118,21 +115,13 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
             if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name)
           }
 
-          if (isCreate) {
             return (
               <View key={index} style={styles.centerWrapper}>
-                <CopilotStep
-                  text="Tap this button anytime to quickly add a new expense or income transaction."
-                  order={5}
-                  name="Add Transaction"
-                >
-                  <WalkthroughableTouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.centerButton}>
-                    <Ionicons name="add" size={32} color="#FFF" />
-                  </WalkthroughableTouchableOpacity>
-                </CopilotStep>
+                <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.centerButton}>
+                  <Ionicons name="add" size={32} color="#FFF" />
+                </TouchableOpacity>
               </View>
             )
-          }
 
           return (
             <TouchableOpacity key={index} style={styles.tab} onPress={onPress} activeOpacity={0.7}>
@@ -177,6 +166,7 @@ import FixedExpensesSetup from "../screens/onboarding/FixedExpensesSetup"
 import InitialBudgetSetup from "../screens/onboarding/InitialBudgetSetup"
 import { AppContext } from "../Contex/ContextApi"
 import { useContext } from "react"
+
 
 const AppNavigator = () => {
   const { isFirstLaunch, hasFetchedFromCloud, isSetupComplete } = useContext(AppContext)
@@ -228,45 +218,37 @@ const AppNavigator = () => {
   }
 
   return (
-    <CopilotProvider
-      tooltip={TourTooltip}
-      stepNumberComponent={() => null}
-      animated={true}
-      overlay="view"
-      backdropColor="rgba(0,0,0,0.85)"
+    <Stack.Navigator
+      ref={navigationRef}
+      screenOptions={{ headerShown: false }}
     >
-      <Stack.Navigator
-        ref={navigationRef}
-        screenOptions={{ headerShown: false }}
-      >
-        {!isAuthenticated ? (
-          <Stack.Screen name="Login">
-            {(props) => (
-              <LoginScreen {...props} onSkip={() => {
-                setIsAuthenticated(true);
-              }} />
-            )}
-          </Stack.Screen>
-        ) : !isSetupComplete ? (
-          <>
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="CurrencySetup" component={CurrencySetup} />
-            <Stack.Screen name="FixedIncomeSetup" component={FixedIncomeSetup} />
-            <Stack.Screen name="FixedExpensesSetup" component={FixedExpensesSetup} />
-            <Stack.Screen name="InitialBudgetSetup" component={InitialBudgetSetup} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="BottomTabs" component={MyTabs} />
-            <Stack.Screen name="Category" component={Category} />
-            <Stack.Screen name="AddIncome" component={AddIncome} />
-            <Stack.Screen name="RecurringManager" component={RecurringManager} />
-            <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'modal' }} />
-          </>
-        )}
-        <Stack.Screen name="SettingsCurrency" component={CurrencySetup} />
-      </Stack.Navigator>
-    </CopilotProvider>
+      {!isAuthenticated ? (
+        <Stack.Screen name="Login">
+          {(props) => (
+            <LoginScreen {...props} onSkip={() => {
+              setIsAuthenticated(true);
+            }} />
+          )}
+        </Stack.Screen>
+      ) : !isSetupComplete ? (
+        <>
+          <Stack.Screen name="Welcome" component={WelcomeScreen} />
+          <Stack.Screen name="CurrencySetup" component={CurrencySetup} />
+          <Stack.Screen name="FixedIncomeSetup" component={FixedIncomeSetup} />
+          <Stack.Screen name="FixedExpensesSetup" component={FixedExpensesSetup} />
+          <Stack.Screen name="InitialBudgetSetup" component={InitialBudgetSetup} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="BottomTabs" component={MyTabs} />
+          <Stack.Screen name="Category" component={Category} />
+          <Stack.Screen name="AddIncome" component={AddIncome} />
+          <Stack.Screen name="RecurringManager" component={RecurringManager} />
+          <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'modal' }} />
+        </>
+      )}
+      <Stack.Screen name="SettingsCurrency" component={CurrencySetup} />
+    </Stack.Navigator>
   )
 }
 
