@@ -6,6 +6,8 @@ import { AppContext } from '../Contex/ContextApi'
 import { categories } from '../Data/categoriesData'
 import { COLORS, SHADOW } from '../theme'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoBudgetList, AdService } from '../services/AdService'
+import { CopilotStep } from 'react-native-copilot'
+import { WalkthroughableView, WalkthroughableTouchableOpacity } from '../components/WalletyTour'
 
 const Budget = () => {
     const { expenses, budgets, setBudget, categoriesList, currencySymbol } = useContext(AppContext)
@@ -86,7 +88,7 @@ const Budget = () => {
     // Insert ads into budget list (every 3rd item)
     const budgetListWithAds = insertAdsIntoBudgetList(allCategories)
 
-    const renderItem = ({ item }) => {
+    const renderItem = ({ item, index }) => {
         // Render native ad if item type is AD
         if (item.type === 'AD') {
             return <BannerAdComponent />
@@ -116,12 +118,28 @@ const Budget = () => {
                             )}
                         </View>
                     </View>
-                    <TouchableOpacity
-                        onPress={() => { setEditingCat(item.name); setInputValue(budget > 0 ? budget.toString() : '') }}
-                        style={styles.editBtn}
-                    >
-                        <Ionicons name={budget > 0 ? "pencil" : "add"} size={20} color={COLORS.textMain} />
-                    </TouchableOpacity>
+                    
+                    {index === 0 ? (
+                        <CopilotStep
+                            text="Tap here to add a new budget or edit your existing budget limits anytime."
+                            order={11}
+                            name="Manage Budgets"
+                        >
+                            <WalkthroughableTouchableOpacity
+                                onPress={() => { setEditingCat(item.name); setInputValue(budget > 0 ? budget.toString() : '') }}
+                                style={styles.editBtn}
+                            >
+                                <Ionicons name={budget > 0 ? "pencil" : "add"} size={20} color={COLORS.textMain} />
+                            </WalkthroughableTouchableOpacity>
+                        </CopilotStep>
+                    ) : (
+                        <TouchableOpacity
+                            onPress={() => { setEditingCat(item.name); setInputValue(budget > 0 ? budget.toString() : '') }}
+                            style={styles.editBtn}
+                        >
+                            <Ionicons name={budget > 0 ? "pencil" : "add"} size={20} color={COLORS.textMain} />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {isEditing && (
@@ -149,12 +167,28 @@ const Budget = () => {
                         <Text style={styles.progressVal}>{currencySymbol}{spent.toFixed(0)} spent</Text>
                         <Text style={styles.limitVal}>of {currencySymbol}{budget.toFixed(0)} limit</Text>
                     </View>
-                    <View style={styles.progressBarBg}>
-                        <View style={[
-                            styles.progressBarFill,
-                            { width: `${pct}%`, backgroundColor: isOver ? COLORS.expense : COLORS.black }
-                        ]} />
-                    </View>
+                    
+                    {index === 0 ? (
+                        <CopilotStep
+                            text="This bar fills up as you spend. It turns red when you are close to or over your limit."
+                            order={10}
+                            name="Budget Progress"
+                        >
+                            <WalkthroughableView style={styles.progressBarBg}>
+                                <View style={[
+                                    styles.progressBarFill,
+                                    { width: `${pct}%`, backgroundColor: isOver ? COLORS.expense : COLORS.black }
+                                ]} />
+                            </WalkthroughableView>
+                        </CopilotStep>
+                    ) : (
+                        <View style={styles.progressBarBg}>
+                            <View style={[
+                                styles.progressBarFill,
+                                { width: `${pct}%`, backgroundColor: isOver ? COLORS.expense : COLORS.black }
+                            ]} />
+                        </View>
+                    )}
                 </View>
             </View>
         )
@@ -169,13 +203,21 @@ const Budget = () => {
             </View>
 
             <View style={{ flex: 1 }}>
-                <FlatList
-                    data={budgetListWithAds}
-                    keyExtractor={(item, index) => item.name + index || item.id}
-                    renderItem={renderItem}
-                    contentContainerStyle={[styles.listContent, { paddingBottom: 120 + 70 + 8 }]}
-                    showsVerticalScrollIndicator={false}
-                />
+                <CopilotStep
+                    text="Each card shows a budget category with your spending limit and how much you have used."
+                    order={9}
+                    name="Your Budgets"
+                >
+                    <WalkthroughableView style={{ flex: 1 }}>
+                        <FlatList
+                            data={budgetListWithAds}
+                            keyExtractor={(item, index) => (item.name || 'ad') + index}
+                            renderItem={renderItem}
+                            contentContainerStyle={[styles.listContent, { paddingBottom: 120 + 70 + 8 }]}
+                            showsVerticalScrollIndicator={false}
+                        />
+                    </WalkthroughableView>
+                </CopilotStep>
 
                 {/* Fixed Banner Ad — above floating tab bar */}
                 <View style={{

@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native'
 import React, { useState, useContext } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import tailwind from 'twrnc'
@@ -39,13 +40,14 @@ const InitialBudgetSetup = ({ navigation }) => {
     const [transportBudget, setTransportBudget] = useState(200);
     const [funBudget, setFunBudget] = useState(300);
 
-    const handleFinish = () => {
+    const handleFinish = async () => {
         setBudget('Food', foodBudget);
         setBudget('Transport', transportBudget);
         setBudget('Entertainment', funBudget);
 
+        // Signal to Home screen to start the tour once it mounts
+        await AsyncStorage.setItem('shouldStartTour', 'true');
         completeOnboarding();
-        // Navigation will be handled by the root navigator listening to isFirstLaunch
     }
 
 

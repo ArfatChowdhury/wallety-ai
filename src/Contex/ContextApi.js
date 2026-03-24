@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from "../Data/categoriesData";
@@ -446,12 +446,11 @@ export const AppContextProvider = ({ children }) => {
         });
     };
 
-    const completeOnboarding = async () => {
+    const completeOnboarding = useCallback(async () => {
         try {
             const currentMonth = getYearMonth();
 
             // 1. Process recurring items immediately so they appear on dashboard
-            // We read from the current state. They should be there since they were added in previous screens.
             if (recurringTransactions.length > 0) {
                 processRecurring(recurringTransactions, currentMonth);
             }
@@ -468,7 +467,7 @@ export const AppContextProvider = ({ children }) => {
         } catch (e) {
             console.error('Error completing onboarding', e);
         }
-    };
+    }, [recurringTransactions, processRecurring]);
 
     const setUserName = async (name) => {
         setUserNameState(name);
@@ -476,9 +475,9 @@ export const AppContextProvider = ({ children }) => {
     };
 
     // ── Category CRUD ─────────────────────────────────────────
-    const handleAddCategory = (newCat) => {
+    const handleAddCategory = useCallback((newCat) => {
         setCategoriesList(prev => [newCat, ...prev]);
-    };
+    }, []);
 
     // ── Expense CRUD ──────────────────────────────────────────
     const handleAddExpense = ({ title: t, amount: amt, category: cat, date: d, navigation }) => {
@@ -838,7 +837,7 @@ export const AppContextProvider = ({ children }) => {
         budgets, setBudget, setBudgets,
         currency, setCurrency,
         isDarkMode, toggleDarkMode,
-        isFirstLaunch, completingOnboarding: completeOnboarding,
+        isFirstLaunch, completeOnboarding,
         userName, setUserName,
         recurringTransactions, addRecurringTransaction, deleteRecurringTransaction, updateRecurringTransaction,
         currencySymbol,

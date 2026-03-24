@@ -1,5 +1,5 @@
 import { FlatList, StyleSheet, Text, View, StatusBar } from 'react-native'
-import React, { useContext } from 'react'
+import React, { useContext, useMemo } from 'react'
 import { PieChart } from 'react-native-gifted-charts'
 import { AppContext } from '../Contex/ContextApi'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -7,6 +7,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { COLORS, SHADOW } from '../theme'
 import RenderInsightitem from '../components/RenderInsightitem'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoBudgetList } from '../services/AdService'
+import { CopilotStep } from 'react-native-copilot'
+import { WalkthroughableView } from '../components/WalletyTour'
 
 const Insight = () => {
   const { filteredExpenses, expenses, totalSpent, totalIncome, balance, categoriesList, currencySymbol } = useContext(AppContext)
@@ -61,54 +63,76 @@ const Insight = () => {
 
   const insightListWithAds = insertAdsIntoBudgetList(flatListData)
 
-  const ListHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.title}>History & Insights</Text>
+  const ListHeader = useMemo(() => {
+    return (
+      <View style={styles.header}>
+        <Text style={styles.title}>History & Insights</Text>
 
-      <View style={styles.summaryRow}>
-        <View style={[styles.summaryCard, { backgroundColor: COLORS.income }]}>
-          <Ionicons name="trending-up" size={16} color="white" />
-          <Text style={styles.summaryValue}>{currencySymbol}{totalIncome.toFixed(0)}</Text>
-          <Text style={styles.summaryLabel}>Income</Text>
-        </View>
-        <View style={[styles.summaryCard, { backgroundColor: COLORS.expense }]}>
-          <Ionicons name="trending-down" size={16} color="white" />
-          <Text style={styles.summaryValue}>{currencySymbol}{totalSpent.toFixed(0)}</Text>
-          <Text style={styles.summaryLabel}>Spent</Text>
-        </View>
-        <View style={[styles.summaryCard, { backgroundColor: COLORS.card }]}>
-          <Ionicons name="wallet" size={16} color="white" />
-          <Text style={styles.summaryValue}>{currencySymbol}{Math.abs(balance).toFixed(0)}</Text>
-          <Text style={styles.summaryLabel}>Balance</Text>
-        </View>
-      </View>
-
-      <View style={styles.chartWrapper}>
-        <PieChart
-          donut
-          isAnimated={false}
-          animationDuration={1000}
-          data={chartData}
-          radius={110}
-          innerRadius={80}
-          focusOnPress
-          onPress={(item) => setSelectedCategory(item.label === selectedCategory ? null : item.label)}
-          centerLabelComponent={() => (
-            <View style={{ alignItems: 'center' }}>
-              <Text style={styles.chartTotal}>
-                {currencySymbol}{selectedCategory
-                  ? spendingByCategory[selectedCategory]?.toFixed(0)
-                  : periodTotal.toFixed(0)}
-              </Text>
-              <Text style={styles.chartLabel}>{selectedCategory || 'Total'}</Text>
+        <CopilotStep
+          text="See your total income, total spent, and remaining balance for the month at a glance."
+          order={6}
+          name="Monthly Summary"
+        >
+          <WalkthroughableView style={styles.summaryRow}>
+            <View style={[styles.summaryCard, { backgroundColor: COLORS.income }]}>
+              <Ionicons name="trending-up" size={16} color="white" />
+              <Text style={styles.summaryValue}>{currencySymbol}{totalIncome.toFixed(0)}</Text>
+              <Text style={styles.summaryLabel}>Income</Text>
             </View>
-          )}
-        />
-      </View>
+            <View style={[styles.summaryCard, { backgroundColor: COLORS.expense }]}>
+              <Ionicons name="trending-down" size={16} color="white" />
+              <Text style={styles.summaryValue}>{currencySymbol}{totalSpent.toFixed(0)}</Text>
+              <Text style={styles.summaryLabel}>Spent</Text>
+            </View>
+            <View style={[styles.summaryCard, { backgroundColor: COLORS.card }]}>
+              <Ionicons name="wallet" size={16} color="white" />
+              <Text style={styles.summaryValue}>{currencySymbol}{Math.abs(balance).toFixed(0)}</Text>
+              <Text style={styles.summaryLabel}>Balance</Text>
+            </View>
+          </WalkthroughableView>
+        </CopilotStep>
 
-      <Text style={styles.sectionTitle}>Category Breakdown</Text>
-    </View>
-  )
+        <CopilotStep
+          text="This chart shows how your spending is divided across different categories visually."
+          order={7}
+          name="Spending Breakdown"
+        >
+          <WalkthroughableView style={styles.chartWrapper}>
+            <PieChart
+              donut
+              isAnimated={false}
+              animationDuration={1000}
+              data={chartData}
+              radius={110}
+              innerRadius={80}
+              focusOnPress
+              onPress={(item) => setSelectedCategory(item.label === selectedCategory ? null : item.label)}
+              centerLabelComponent={() => (
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.chartTotal}>
+                    {currencySymbol}{selectedCategory
+                      ? spendingByCategory[selectedCategory]?.toFixed(0)
+                      : periodTotal.toFixed(0)}
+                  </Text>
+                  <Text style={styles.chartLabel}>{selectedCategory || 'Total'}</Text>
+                </View>
+              )}
+            />
+          </WalkthroughableView>
+        </CopilotStep>
+
+        <CopilotStep
+          text="See exactly how much you spent in each category this month with amounts and percentages."
+          order={8}
+          name="Category Details"
+        >
+          <WalkthroughableView>
+            <Text style={styles.sectionTitle}>Category Breakdown</Text>
+          </WalkthroughableView>
+        </CopilotStep>
+      </View>
+    )
+  }, [currencySymbol, totalIncome, totalSpent, balance, chartData, selectedCategory, spendingByCategory, periodTotal]);
 
   const filteredFlatData = selectedCategory
     ? flatListData.filter(item => item.id === selectedCategory)
@@ -121,7 +145,7 @@ const Insight = () => {
         <FlatList
           data={selectedCategory ? filteredFlatData : insightListWithAds}
           keyExtractor={(item, index) => item.id || `ad_${index}`}
-          ListHeaderComponent={<ListHeader />}
+          ListHeaderComponent={ListHeader}
           renderItem={({ item }) => {
             if (item.type === 'AD') {
               return (
