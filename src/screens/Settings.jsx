@@ -13,6 +13,7 @@ import { exportTransactionsToPDF } from '../services/ExportService'
 import { currencies } from '../constants/currencies'
 import AdService from '../services/AdService'
 import { requestWidgetUpdate } from 'react-native-android-widget'
+import LimnersLogo from '../../assets/compay-logo/limners'
 
 const Settings = ({ navigation }) => {
     const {
@@ -280,12 +281,6 @@ const Settings = ({ navigation }) => {
                         onPress={handleExportCSV}
                     />
                     <MenuItem
-                        icon="cloud-download-outline"
-                        label="Export Data (CSV)"
-                        subtitle="Share raw transaction data"
-                        onPress={handleExportCSV}
-                    />
-                    <MenuItem
                         icon="document-text-outline"
                         label="Export Report (PDF)"
                         subtitle="Professional transaction summary"
@@ -310,6 +305,9 @@ const Settings = ({ navigation }) => {
 
                 {/* Footer */}
                 <View style={[styles.footer, { paddingBottom: 20 }]}>
+                    <View style={{ width: '50%', height: 40, marginBottom: 15, opacity: 0.6 }}>
+                        <LimnersLogo />
+                    </View>
                     <Text style={styles.footerApp}>WALLET APP v1.0.0</Text>
                     <Text style={styles.footerMoto}>Premium Financial Tracking</Text>
                 </View>
@@ -363,16 +361,19 @@ const Settings = ({ navigation }) => {
                 onRequestClose={() => setFeedbackModalVisible(false)}
             >
                 <View style={styles.modalBackdrop}>
-                    <View style={styles.modalContent}>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={styles.modalContent}
+                    >
                         <View style={tailwind`flex-row justify-between items-center mb-4`}>
                             <Text style={styles.modalTitle}>Share Feedback</Text>
                             <TouchableOpacity onPress={() => setFeedbackModalVisible(false)}>
                                 <Ionicons name="close" size={24} color={COLORS.textSub} />
                             </TouchableOpacity>
                         </View>
-                        
+
                         <Text style={tailwind`text-xs text-gray-500 mb-4 font-bold uppercase tracking-wider`}>Your message to the developers</Text>
-                        
+
                         <TextInput
                             style={[styles.input, { height: 120, textAlignVertical: 'top', paddingTop: 15 }]}
                             value={feedbackMessage}
@@ -382,7 +383,7 @@ const Settings = ({ navigation }) => {
                             multiline
                             autoFocus
                         />
-                        
+
                         <TouchableOpacity
                             style={[styles.modalBtn, styles.saveBtn, { flexDirection: 'row', gap: 8, marginTop: 10 }]}
                             onPress={handleSendFeedback}
@@ -390,7 +391,7 @@ const Settings = ({ navigation }) => {
                             <Ionicons name="send" size={18} color="white" />
                             <Text style={styles.saveBtnText}>Send via Email</Text>
                         </TouchableOpacity>
-                    </View>
+                    </KeyboardAvoidingView>
                 </View>
             </Modal>
             

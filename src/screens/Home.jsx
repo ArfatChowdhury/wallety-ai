@@ -1,5 +1,5 @@
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View, StatusBar, ImageBackground, Modal, ScrollView as RNScrollView, Image, TextInput, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native'
-import React, { useContext, useMemo, useCallback } from 'react'
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View, StatusBar, ImageBackground, Modal, ScrollView as RNScrollView, Image, TextInput, KeyboardAvoidingView, Platform, RefreshControl, Animated, Dimensions } from 'react-native'
+import React, { useContext, useMemo, useCallback, useState, useRef } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -14,17 +14,276 @@ import { auth } from '../services/firebase'
 import { scheduleCustomReminder, getActiveReminders, cancelReminder } from '../services/NotificationService'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoTransactionList, AdService } from '../services/AdService'
-import Tooltip from 'react-native-walkthrough-tooltip';
+import SpotlightTour from '../components/SpotlightTour'
+
+const HomeListHeader = React.memo(({
+  navigation, auth, COLORS, SHADOW, tailwind, Ionicons, AntDesign,
+  overBudgetCategories, isBudgetWarningDismissed, setIsBudgetWarningDismissed,
+  monthlySummary, hasSeenPreClosingThisMonth, setHasSeenPreClosingThisMonth, getYearMonth,
+  hasDismissedSummaryBanner, setHasDismissedSummaryBanner, setShowSummaryModal,
+  logAppNotification, scanBtnRef, alarmBtnRef, balanceCardRef, transactionsTitleRef,
+  setShowNotifications, selectedPeriod, selectedMonth, prevMonthSummary,
+  displayTotals, currencySymbol, totalSpent, balance, setShowMonthPicker,
+  handlePeriodSelect
+}) => {
+  const BudgetWarningBanner = () => {
+    if (overBudgetCategories.length === 0 || isBudgetWarningDismissed) return null
+    return (
+      <View style={styles.warningBanner}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Budget')}
+          style={tailwind`flex-row items-center flex-1`}
+          activeOpacity={0.9}
+        >
+          <View style={styles.warningIconBox}>
+            <Ionicons name="warning" size={24} color="#FFF" />
+          </View>
+          <View style={styles.warningTextContent}>
+            <Text style={styles.warningTitle}>Budget Alert</Text>
+            <Text style={styles.warningDesc}>
+              You have exceeded your limit in {overBudgetCategories.length} {overBudgetCategories.length === 1 ? 'category' : 'categories'}.
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setIsBudgetWarningDismissed(true)}
+          style={tailwind`p-2`}
+        >
+          <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
+  const MonthlySummaryBanner = () => {
+    if (!monthlySummary.isClosingTime) return null
+
+    // Pre-Closing Info Banner (Last 3 days but not the last day)
+    if (monthlySummary.isPreClosing) {
+      if (hasSeenPreClosingThisMonth) return null
+      return (
+        <View style={styles.preClosingBanner}>
+          <View style={styles.warningIconBox}>
+            <Ionicons name="time" size={24} color="#FFF" />
+          </View>
+          <View style={styles.warningTextContent}>
+            <Text style={styles.warningTitle}>Month Closing Soon</Text>
+            <Text style={styles.warningDesc}>
+              A new month starts soon! Recurring items will be added automatically.
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={async () => {
+              const currentMonth = getYearMonth();
+              await AsyncStorage.setItem('preClosingSeenMonth', currentMonth);
+              setHasSeenPreClosingThisMonth(true);
+            }}
+            style={tailwind`p-2`}
+          >
+            <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.7)" />
+          </TouchableOpacity>
+        </View>
+      )
+    }
+
+    // actual Closing Day Banner - ONLY SHOW ON LAST DAY
+    if (!monthlySummary.isLastDay || hasDismissedSummaryBanner) return null
+    const isSavings = monthlySummary.savings > 0;
+    const bannerStyle = isSavings ? styles.closingBannerSuccess : styles.closingBannerWarning;
+    const iconName = isSavings ? 'trophy' : 'stats-chart';
+
+    return (
+      <View style={bannerStyle}>
+        <TouchableOpacity
+          style={tailwind`flex-row items-center flex-1`}
+          activeOpacity={0.8}
+          onPress={() => setShowSummaryModal(true)}
+        >
+          <View style={styles.warningIconBox}>
+            <Ionicons name={iconName} size={24} color="#FFF" />
+          </View>
+          <View style={styles.warningTextContent}>
+            <Text style={styles.warningTitle}>
+              {isSavings ? 'Monthly Savings!' : 'Monthly Close'}
+            </Text>
+            <Text style={styles.warningDesc}>
+              {isSavings
+                ? `Great job! Click to see how much you saved.`
+                : `Monthly summary is ready. You've spent slightly more.`}
+            </Text>
+            <Text style={styles.insightText}>
+              Click to see your full summary
+            </Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={async () => {
+            const currentMonth = getYearMonth();
+            await AsyncStorage.setItem('summaryBannerDismissedMonth', currentMonth);
+            setHasDismissedSummaryBanner(true);
+            logAppNotification("📊 Monthly Summary Ready!", "Your final results for this month are in! Tap to see how you did.", "info");
+          }}
+          style={tailwind`p-2`}
+        >
+          <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.7)" />
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
+  return (
+    <View style={styles.headerContainer}>
+      {/* Header Top */}
+      <View style={styles.topBar}>
+        <View style={tailwind`flex-row items-center gap-3`}>
+          {auth.currentUser?.photoURL ? (
+            <Image source={{ uri: auth.currentUser.photoURL }} style={styles.profilePic} />
+          ) : (
+            <View style={[styles.profilePic, { backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' }]}>
+              <Ionicons name="person" size={20} color={COLORS.black} />
+            </View>
+          )}
+          <View>
+            <Text style={styles.greeting}>Hi, {auth.currentUser?.displayName?.split(" ").pop() || "User"} 👋</Text>
+            <Text style={styles.subGreeting}>Welcome back!</Text>
+          </View>
+        </View>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            ref={scanBtnRef}
+            style={styles.iconBtn}
+            onPress={() => navigation.navigate('Scanner')}
+            onLayout={() => { }}
+          >
+            <AntDesign name="scan" size={22} color={COLORS.textMain} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            ref={alarmBtnRef}
+            style={styles.iconBtn}
+            onPress={() => setShowNotifications(true)}
+            onLayout={() => { }}
+          >
+            <Ionicons name="alarm-outline" size={22} color={COLORS.textMain} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Balance Card Section */}
+      <View
+        ref={balanceCardRef}
+        style={{ borderRadius: 32, overflow: 'hidden', marginBottom: 30 }}
+      >
+        <ImageBackground
+          source={require('../../assets/card-bg.jpg')}
+          style={[
+            styles.balanceCard,
+            { marginBottom: 0 },
+            monthlySummary.isDebt && { borderColor: COLORS.expense, borderExtraWidth: 2 }
+          ]}
+          imageStyle={{ borderRadius: 32 }}
+        >
+          <View style={styles.cardOverlay} />
+          <View style={tailwind`w-full flex-row justify-between items-center`}>
+            <Text style={styles.balanceLabel}>
+              {selectedPeriod === 'all' ? 'Spent so far' : `${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Spending`}
+            </Text>
+            {prevMonthSummary && selectedPeriod === 'month' && (
+              <View style={styles.comparisonBadge}>
+                <Ionicons
+                  name={displayTotals.spent > prevMonthSummary.totalSpent ? "trending-up" : "trending-down"}
+                  size={12}
+                  color={displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income}
+                />
+                <Text style={[styles.comparisonText, { color: displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income }]}>
+                  {Math.abs(((displayTotals.spent - prevMonthSummary.totalSpent) / (prevMonthSummary.totalSpent || 1)) * 100).toFixed(0)}% vs last
+                </Text>
+              </View>
+            )}
+          </View>
+          <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.balance).toFixed(2)}</Text>
+
+          {/* Budget Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBarBg}>
+              <View style={[
+                styles.progressBarFill,
+                {
+                  width: `${Math.min((totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) * 100, 100)}%`,
+                  backgroundColor:
+                    (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.85 ? COLORS.expense :
+                      (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.5 ? '#EAB308' : COLORS.income
+                }
+              ]} />
+            </View>
+            <View style={tailwind`flex-row justify-between mt-1`}>
+              <Text style={styles.progressLabel}>Income Used</Text>
+              <Text style={styles.progressValue}>
+                {totalSpent + balance > 0
+                  ? `${Math.round((totalSpent / (totalSpent + balance)) * 100)}%`
+                  : '0%'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.balanceFooter}>
+            <View style={styles.footerItem}>
+              <Text style={styles.footerLabel}>Balance left to spend</Text>
+              <Text style={[
+                styles.footerValue,
+                monthlySummary.isDebt && { color: COLORS.expense }
+              ]}>
+                {currencySymbol}{Number(displayTotals.balance).toFixed(2)}
+              </Text>
+            </View>
+          </View>
+        </ImageBackground>
+      </View>
+
+      {/* Budget Warning Banner */}
+      <BudgetWarningBanner />
+
+      {/* Monthly Closing Summary */}
+      <MonthlySummaryBanner />
+
+      <DateFilterBar
+        selectedPeriod={selectedPeriod}
+        onSelect={handlePeriodSelect}
+      />
+
+      {selectedPeriod === 'calendar' && (
+        <View style={styles.calendarFilterInfo}>
+          <Ionicons name="calendar" size={16} color={COLORS.textSub} />
+          <Text style={styles.calendarFilterText}>
+            Showing: {new Date(selectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
+          </Text>
+          <TouchableOpacity onPress={() => setShowMonthPicker(true)}>
+            <Text style={styles.changeMonthBtn}>Change</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <Text
+        ref={transactionsTitleRef}
+        style={styles.sectionTitle}
+      >
+        Recent Transactions
+      </Text>
+    </View>
+  )
+});
+
+const { width: W, height: H } = Dimensions.get('window');
+
 const Home = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const BOTTOM_AD_MARGIN = 20 + 70 + 8;
 
-
-
   const {
     totalSpent, balance, expenses, allTransactions, handleEdit, handleDelete,
     handleDeleteIncome, categoriesWithBudget, currencySymbol, monthlySummary, appNotifications, logAppNotification,
-    prevMonthSummary, checkAndResetMonth, getLocalDate, getYearMonth, refreshData, isSetupComplete
+    prevMonthSummary, checkAndResetMonth, getLocalDate, getYearMonth, refreshData, isSetupComplete,
+    tabLayouts
   } = useContext(AppContext)
 
   const [selectedPeriod, setSelectedPeriod] = React.useState('month')
@@ -52,7 +311,22 @@ const Home = ({ navigation }) => {
   }, [refreshData]);
 
   const [tourStep, setTourStep] = React.useState(-1); // -1 = inactive, 0-3 = steps
+  const [tourSteps, setTourSteps] = React.useState([])
 
+  const scanBtnRef = React.useRef()
+  const alarmBtnRef = React.useRef()
+  const balanceCardRef = React.useRef()
+  const transactionsTitleRef = React.useRef()
+
+  const measureRef = (ref) => {
+    return new Promise((resolve) => {
+      if (!ref.current) return resolve({ x: 0, y: 0, width: 0, height: 0 });
+      ref.current.measure((fx, fy, width, height, px, py) => {
+        if (px === undefined) resolve({ x: 0, y: 0, width: 0, height: 0 });
+        else resolve({ x: px + width / 2, y: py + height / 2, width, height })
+      })
+    })
+  }
 
   const fetchReminders = async () => {
     const reminders = await getActiveReminders()
@@ -64,8 +338,6 @@ const Home = ({ navigation }) => {
       fetchReminders()
     }
   }, [showNotifications])
-
-
 
   // Banner & Popup seen status logic
   React.useEffect(() => {
@@ -90,8 +362,63 @@ const Home = ({ navigation }) => {
         const shouldStart = await AsyncStorage.getItem('shouldStartTour');
         const hasCompleted = await AsyncStorage.getItem('hasCompletedTour');
         if (shouldStart === 'true' && hasCompleted !== 'true') {
-          setTourStep(0);
           await AsyncStorage.removeItem('shouldStartTour');
+
+          setTimeout(async () => {
+            const scan = await measureRef(scanBtnRef)
+            const alarm = await measureRef(alarmBtnRef)
+            const card = await measureRef(balanceCardRef)
+            const list = await measureRef(transactionsTitleRef)
+
+            if (!scan.x || !alarm.x || !card.x || !list.x) return; // Guard against empty measures
+
+            setTourSteps([
+              {
+                x: scan.x, y: scan.y, r: 36,
+                title: 'Smart Receipt Scanner',
+                body: 'Snap a photo of any receipt! Our AI instantly extracts the amount, date, and category for you.',
+              },
+              {
+                x: alarm.x, y: alarm.y, r: 36,
+                title: 'Never Miss a Log',
+                body: 'Set personalized reminders to stay on top of your daily expenses and monthly goals.',
+              },
+              {
+                x: card.x, y: card.y, r: 120,
+                title: 'Financial Snapshot',
+                body: "Track your total spending vs. income at a glance. We'll even alert you if you're nearing your budget limit.",
+              },
+              {
+                x: list.x, y: list.y, width: list.width, height: list.height,
+                shape: 'rect',
+                title: 'Full Transaction History',
+                body: 'All your income and expenses organized in one place. Tap any entry to see details or make quick edits.',
+              },
+              {
+                x: tabLayouts.Insight?.x || 100,
+                y: tabLayouts.Insight?.y || H - 60,
+                r: 36,
+                title: 'Smart Analytics',
+                body: 'Deep dive into your spending habits with interactive charts and weekly comparisons.',
+              },
+              {
+                x: tabLayouts.Budget?.x || 200,
+                y: tabLayouts.Budget?.y || H - 60,
+                r: 36,
+                title: 'Master Your Budget',
+                body: 'Set limits for different categories and track your progress to reach your savings goals faster.',
+              },
+              {
+                x: tabLayouts.SettingsTab?.x || W - 60,
+                y: tabLayouts.SettingsTab?.y || H - 60,
+                r: 36,
+                title: 'Your Account & Settings',
+                body: 'Change currency, export data, set reminders and more.',
+                onFinish: () => navigation.navigate('BottomTabs', { screen: 'SettingsTab' })
+              },
+            ])
+            setTourStep(0)
+          }, 600)
         }
       };
       checkTour();
@@ -157,11 +484,8 @@ const Home = ({ navigation }) => {
     const income = filteredTransactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + Number(t.amount), 0);
-
-    return {
-      spent,
-      balance: income - spent
-    };
+    const balance = income - spent;
+    return { spent, balance, income };
   }, [filteredTransactions]);
 
   const handlePeriodSelect = (period) => {
@@ -173,304 +497,6 @@ const Home = ({ navigation }) => {
 
   const overBudgetCategories = categoriesWithBudget.filter(cat => cat.budgetLimit > 0 && cat.amountSpent > cat.budgetLimit)
 
-  const ListHeader = useMemo(() => {
-    const BudgetWarningBanner = () => {
-      if (overBudgetCategories.length === 0 || isBudgetWarningDismissed) return null
-      return (
-        <View style={styles.warningBanner}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Budget')}
-            style={tailwind`flex-row items-center flex-1`}
-            activeOpacity={0.9}
-          >
-            <View style={styles.warningIconBox}>
-              <Ionicons name="warning" size={24} color="#FFF" />
-            </View>
-            <View style={styles.warningTextContent}>
-              <Text style={styles.warningTitle}>Budget Alert</Text>
-              <Text style={styles.warningDesc}>
-                You have exceeded your limit in {overBudgetCategories.length} {overBudgetCategories.length === 1 ? 'category' : 'categories'}.
-              </Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setIsBudgetWarningDismissed(true)}
-            style={tailwind`p-2`}
-          >
-            <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
-        </View>
-      )
-    }
-
-    const MonthlySummaryBanner = () => {
-      if (!monthlySummary.isClosingTime) return null
-
-      // Pre-Closing Info Banner (Last 3 days but not the last day)
-      if (monthlySummary.isPreClosing) {
-        if (hasSeenPreClosingThisMonth) return null
-        return (
-          <View style={styles.preClosingBanner}>
-            <View style={styles.warningIconBox}>
-              <Ionicons name="time" size={24} color="#FFF" />
-            </View>
-            <View style={styles.warningTextContent}>
-              <Text style={styles.warningTitle}>Month Closing Soon</Text>
-              <Text style={styles.warningDesc}>
-                A new month starts soon! Recurring items will be added automatically.
-              </Text>
-            </View>
-            <TouchableOpacity
-              onPress={async () => {
-                const currentMonth = getYearMonth();
-                await AsyncStorage.setItem('preClosingSeenMonth', currentMonth);
-                setHasSeenPreClosingThisMonth(true);
-              }}
-              style={tailwind`p-2`}
-            >
-              <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.7)" />
-            </TouchableOpacity>
-          </View>
-        )
-      }
-
-      // actual Closing Day Banner - ONLY SHOW ON LAST DAY
-      if (!monthlySummary.isLastDay || hasDismissedSummaryBanner) return null
-      const isSavings = monthlySummary.savings > 0;
-      const bannerStyle = isSavings ? styles.closingBannerSuccess : styles.closingBannerWarning;
-      const iconName = isSavings ? 'trophy' : 'stats-chart';
-
-      return (
-        <View style={bannerStyle}>
-          <TouchableOpacity
-            style={tailwind`flex-row items-center flex-1`}
-            activeOpacity={0.8}
-            onPress={() => setShowSummaryModal(true)}
-          >
-            <View style={styles.warningIconBox}>
-              <Ionicons name={iconName} size={24} color="#FFF" />
-            </View>
-            <View style={styles.warningTextContent}>
-              <Text style={styles.warningTitle}>
-                {isSavings ? 'Monthly Savings!' : 'Monthly Close'}
-              </Text>
-              <Text style={styles.warningDesc}>
-                {isSavings
-                  ? `Great job! Click to see how much you saved.`
-                  : `Monthly summary is ready. You've spent slightly more.`}
-              </Text>
-              <Text style={styles.insightText}>
-                Click to see your full summary
-              </Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={async () => {
-              const currentMonth = getYearMonth();
-              await AsyncStorage.setItem('summaryBannerDismissedMonth', currentMonth);
-              setHasDismissedSummaryBanner(true);
-              logAppNotification("📊 Monthly Summary Ready!", "Your final results for this month are in! Tap to see how you did.", "info");
-            }}
-            style={tailwind`p-2`}
-          >
-            <Ionicons name="close-circle" size={20} color="rgba(255,255,255,0.7)" />
-          </TouchableOpacity>
-        </View>
-      )
-    }
-
-    return (
-      <View style={styles.headerContainer}>
-        {/* Header Top */}
-        <View style={styles.topBar}>
-          <View style={tailwind`flex-row items-center gap-3`}>
-            {auth.currentUser?.photoURL ? (
-              <Image source={{ uri: auth.currentUser.photoURL }} style={styles.profilePic} />
-            ) : (
-              <View style={[styles.profilePic, { backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' }]}>
-                <Ionicons name="person" size={20} color={COLORS.black} />
-              </View>
-            )}
-            <View>
-              <Text style={styles.greeting}>Hi, {auth.currentUser?.displayName?.split(" ").pop() || "User"} 👋</Text>
-              <Text style={styles.subGreeting}>Welcome back!</Text>
-            </View>
-          </View>
-          <View style={styles.headerActions}>
-            <Tooltip
-              isVisible={tourStep === 0}
-              content={
-                <View style={styles.tooltipContent}>
-                  <Text style={styles.tooltipText}>Tap here to scan any receipt. Our AI will automatically log the expense for you.</Text>
-                  <View style={styles.tooltipButtons}>
-                    <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.nextBtn} onPress={() => setTourStep(1)}><Text style={styles.nextBtnText}>Next</Text></TouchableOpacity>
-                  </View>
-                </View>
-              }
-              placement="bottom"
-              onClose={() => setTourStep(-1)}
-              contentStyle={styles.tooltipContainer}
-            >
-              <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Scanner')}>
-                <AntDesign name="scan" size={22} color={COLORS.textMain} />
-              </TouchableOpacity>
-            </Tooltip>
-
-            <Tooltip
-              isVisible={tourStep === 1}
-              content={
-                <View style={styles.tooltipContent}>
-                  <Text style={styles.tooltipText}>Set custom reminders so you never forget to log an expense or check your budget.</Text>
-                  <View style={styles.tooltipButtons}>
-                    <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
-                    <TouchableOpacity style={styles.nextBtn} onPress={() => setTourStep(2)}><Text style={styles.nextBtnText}>Next</Text></TouchableOpacity>
-                  </View>
-                </View>
-              }
-              placement="bottom"
-              onClose={() => setTourStep(-1)}
-              contentStyle={styles.tooltipContainer}
-            >
-              <TouchableOpacity style={styles.iconBtn} onPress={() => setShowNotifications(true)}>
-                <Ionicons name="alarm-outline" size={22} color={COLORS.textMain} />
-              </TouchableOpacity>
-            </Tooltip>
-          </View>
-        </View>
-
-        {/* Balance Card Section */}
-        <Tooltip
-          isVisible={tourStep === 2}
-          content={
-            <View style={styles.tooltipContent}>
-              <Text style={styles.tooltipText}>This card shows your total spending, budget usage, and remaining balance.</Text>
-              <View style={styles.tooltipButtons}>
-                <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
-                <TouchableOpacity style={styles.nextBtn} onPress={() => setTourStep(3)}><Text style={styles.nextBtnText}>Next</Text></TouchableOpacity>
-              </View>
-            </View>
-          }
-          placement="bottom"
-          onClose={() => setTourStep(-1)}
-          contentStyle={styles.tooltipContainer}
-        >
-          <View style={{ borderRadius: 32, overflow: 'hidden', marginBottom: 30 }}>
-            <ImageBackground
-              source={require('../../assets/card-bg.jpg')}
-              style={[
-                styles.balanceCard,
-                { marginBottom: 0 },
-                monthlySummary.isDebt && { borderColor: COLORS.expense, borderExtraWidth: 2 }
-              ]}
-              imageStyle={{ borderRadius: 32 }}
-            >
-              <View style={styles.cardOverlay} />
-              <View style={tailwind`w-full flex-row justify-between items-center`}>
-                <Text style={styles.balanceLabel}>
-                  {selectedPeriod === 'all' ? 'Spent so far' : `${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Spending`}
-                </Text>
-                {prevMonthSummary && selectedPeriod === 'month' && (
-                  <View style={styles.comparisonBadge}>
-                    <Ionicons
-                      name={displayTotals.spent > prevMonthSummary.totalSpent ? "trending-up" : "trending-down"}
-                      size={12}
-                      color={displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income}
-                    />
-                    <Text style={[styles.comparisonText, { color: displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income }]}>
-                      {Math.abs(((displayTotals.spent - prevMonthSummary.totalSpent) / (prevMonthSummary.totalSpent || 1)) * 100).toFixed(0)}% vs last
-                    </Text>
-                  </View>
-                )}
-              </View>
-              <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.balance).toFixed(2)}</Text>
-
-              {/* Budget Progress Bar */}
-              <View style={styles.progressContainer}>
-                <View style={styles.progressBarBg}>
-                  <View style={[
-                    styles.progressBarFill,
-                    {
-                      width: `${Math.min((totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) * 100, 100)}%`,
-                      backgroundColor: 
-                        (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.85 ? COLORS.expense :
-                        (totalSpent / (totalSpent + balance > 0 ? (totalSpent + balance) : 1)) > 0.5 ? '#EAB308' : COLORS.income
-                    }
-                  ]} />
-                </View>
-                <View style={tailwind`flex-row justify-between mt-1`}>
-                  <Text style={styles.progressLabel}>Income Used</Text>
-                  <Text style={styles.progressValue}>
-                    {totalSpent + balance > 0
-                      ? `${Math.round((totalSpent / (totalSpent + balance)) * 100)}%`
-                      : '0%'}
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.balanceFooter}>
-                <View style={styles.footerItem}>
-                  <Text style={styles.footerLabel}>Balance left to spend</Text>
-                  <Text style={[
-                    styles.footerValue,
-                    monthlySummary.isDebt && { color: COLORS.expense }
-                  ]}>
-                    {currencySymbol}{Number(displayTotals.balance).toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-            </ImageBackground>
-          </View>
-        </Tooltip>
-
-        {/* Budget Warning Banner */}
-        <BudgetWarningBanner />
-
-        {/* Monthly Closing Summary */}
-        <MonthlySummaryBanner />
-
-        <DateFilterBar
-          selectedPeriod={selectedPeriod}
-          onSelect={handlePeriodSelect}
-        />
-
-        {selectedPeriod === 'calendar' && (
-          <View style={styles.calendarFilterInfo}>
-            <Ionicons name="calendar" size={16} color={COLORS.textSub} />
-            <Text style={styles.calendarFilterText}>
-              Showing: {new Date(selectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
-            </Text>
-            <TouchableOpacity onPress={() => setShowMonthPicker(true)}>
-              <Text style={styles.changeMonthBtn}>Change</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        <Tooltip
-          isVisible={tourStep === 3}
-          content={
-            <View style={styles.tooltipContent}>
-              <Text style={styles.tooltipText}>Every transaction appears here. Tap any item to view or edit it.</Text>
-              <View style={styles.tooltipButtons}>
-                <TouchableOpacity onPress={() => setTourStep(-1)}><Text style={styles.skipBtn}>Skip</Text></TouchableOpacity>
-                <TouchableOpacity style={styles.nextBtn} onPress={async () => {
-                  setTourStep(-1);
-                  await AsyncStorage.setItem('hasCompletedTour', 'true');
-                  Alert.alert("Tour Completed!", "You're all set to manage your finances.");
-                }}><Text style={styles.nextBtnText}>Finish</Text></TouchableOpacity>
-              </View>
-            </View>
-          }
-          placement="top"
-          onClose={() => setTourStep(-1)}
-          contentStyle={styles.tooltipContainer}
-        >
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
-        </Tooltip>
-      </View>
-    )
-  }, [selectedPeriod, selectedMonth, displayTotals, monthlySummary, prevMonthSummary, currencySymbol, overBudgetCategories, isBudgetWarningDismissed, hasSeenPreClosingThisMonth, hasDismissedSummaryBanner, tourStep]);
-
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar barStyle="dark-content" />
@@ -478,7 +504,42 @@ const Home = ({ navigation }) => {
         <FlatList
           data={transactionsWithAds}
           keyExtractor={(item, index) => item.id || `ad_${index}`}
-          ListHeaderComponent={ListHeader}
+          ListHeaderComponent={
+            <HomeListHeader
+              navigation={navigation}
+              auth={auth}
+              COLORS={COLORS}
+              SHADOW={SHADOW}
+              tailwind={tailwind}
+              Ionicons={Ionicons}
+              AntDesign={AntDesign}
+              overBudgetCategories={overBudgetCategories}
+              isBudgetWarningDismissed={isBudgetWarningDismissed}
+              setIsBudgetWarningDismissed={setIsBudgetWarningDismissed}
+              monthlySummary={monthlySummary}
+              hasSeenPreClosingThisMonth={hasSeenPreClosingThisMonth}
+              setHasSeenPreClosingThisMonth={setHasSeenPreClosingThisMonth}
+              getYearMonth={getYearMonth}
+              hasDismissedSummaryBanner={hasDismissedSummaryBanner}
+              setHasDismissedSummaryBanner={setHasDismissedSummaryBanner}
+              setShowSummaryModal={setShowSummaryModal}
+              logAppNotification={logAppNotification}
+              scanBtnRef={scanBtnRef}
+              alarmBtnRef={alarmBtnRef}
+              balanceCardRef={balanceCardRef}
+              transactionsTitleRef={transactionsTitleRef}
+              setShowNotifications={setShowNotifications}
+              selectedPeriod={selectedPeriod}
+              selectedMonth={selectedMonth}
+              prevMonthSummary={prevMonthSummary}
+              displayTotals={displayTotals}
+              currencySymbol={currencySymbol}
+              totalSpent={totalSpent}
+              balance={balance}
+              setShowMonthPicker={setShowMonthPicker}
+              handlePeriodSelect={handlePeriodSelect}
+            />
+          }
           renderItem={({ item }) => {
             if (item.type === 'AD') {
               return (
@@ -613,6 +674,7 @@ const Home = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
       {/* Reminders Modal */}
       <Modal
         visible={showNotifications}
@@ -625,6 +687,30 @@ const Home = ({ navigation }) => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={[styles.notificationModalContainer, { paddingBottom: 20, maxHeight: '90%' }]}
           >
+            <View style={styles.balanceCard}>
+                <View style={tailwind`flex-row justify-between items-start`}>
+                    <View>
+                        <Text style={styles.balanceLabel}>Spent so far</Text>
+                        <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.spent).toFixed(2)}</Text>
+                    </View>
+                    <View style={styles.percentageBadge}>
+                        <Ionicons name="trending-down" size={14} color="#EF4444" />
+                        <Text style={styles.percentageText}>Monthly</Text>
+                    </View>
+                </View>
+
+                <View style={styles.balanceFooter}>
+                    <View style={tailwind`flex-1`}>
+                        <Text style={styles.footerLabel}>Total Income</Text>
+                        <Text style={styles.footerAmount}>{currencySymbol}{Number(displayTotals.income).toFixed(2)}</Text>
+                    </View>
+                    <View style={[styles.footerDivider, { marginHorizontal: 15 }]} />
+                    <View style={tailwind`flex-1 items-end`}>
+                        <Text style={styles.footerLabel}>Balance Left</Text>
+                        <Text style={styles.footerAmount}>{currencySymbol}{Number(displayTotals.balance).toFixed(2)}</Text>
+                    </View>
+                </View>
+            </View>
             <View style={tailwind`flex-row justify-between items-center w-full mb-4`}>
               <Text style={styles.notificationModalTitle}>Custom Reminders</Text>
               <Ionicons name="alarm" size={24} color={COLORS.primary} />
@@ -745,6 +831,23 @@ const Home = ({ navigation }) => {
         </View>
       </Modal>
 
+      <SpotlightTour
+        steps={tourSteps}
+        currentStep={tourStep}
+        onNext={() => {
+          if (tourStep >= tourSteps.length - 1) {
+            setTourStep(-1)
+            AsyncStorage.setItem('hasCompletedTour', 'true')
+            Alert.alert('Tour complete!', "You're all set to manage your finances.")
+          } else {
+            setTourStep(tourStep + 1)
+          }
+        }}
+        onSkip={async () => {
+          setTourStep(-1)
+          await AsyncStorage.setItem('hasCompletedTour', 'true')
+        }}
+      />
     </SafeAreaView>
   )
 }
@@ -818,16 +921,25 @@ const styles = StyleSheet.create({
   progressValue: { color: COLORS.white, fontSize: 10, fontWeight: '800' },
 
   balanceFooter: {
-    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: 24,
     paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
   },
-  footerItem: { alignItems: 'center' },
-  footerLabel: { color: COLORS.gray500, fontSize: 12, fontWeight: '600' },
-  footerValue: { color: COLORS.white, fontSize: 16, fontWeight: '700', marginTop: 4 },
+  footerDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  footerLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  footerAmount: { color: COLORS.white, fontSize: 16, fontWeight: '700' },
 
   sectionTitle: {
     fontSize: 20,

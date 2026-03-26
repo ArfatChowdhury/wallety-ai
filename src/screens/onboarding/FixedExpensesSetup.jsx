@@ -14,6 +14,10 @@ const FixedExpensesSetup = ({ navigation }) => {
     const [debt, setDebt] = useState('');
     const [debtMonths, setDebtMonths] = useState('');
 
+    const rentRef = React.useRef();
+    const debtRef = React.useRef();
+    const debtMonthsRef = React.useRef();
+
     const skipSetup = () => {
         navigation.navigate('InitialBudgetSetup');
     };
@@ -54,7 +58,7 @@ const FixedExpensesSetup = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.root}>
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
@@ -94,6 +98,9 @@ const FixedExpensesSetup = ({ navigation }) => {
                                         keyboardType="numeric"
                                         value={insurance}
                                         onChangeText={setInsurance}
+                                        returnKeyType="next"
+                                        onSubmitEditing={() => rentRef.current.focus()}
+                                        blurOnSubmit={false}
                                     />
                                 </View>
                             </View>
@@ -106,11 +113,15 @@ const FixedExpensesSetup = ({ navigation }) => {
                                 <View style={tailwind`flex-1 ml-4`}>
                                     <Text style={styles.label}>Monthly Rent / Mortgage</Text>
                                     <TextInput
+                                        ref={rentRef}
                                         style={styles.input}
                                         placeholder="0.00"
                                         keyboardType="numeric"
                                         value={rent}
                                         onChangeText={setRent}
+                                        returnKeyType="next"
+                                        onSubmitEditing={() => debtRef.current.focus()}
+                                        blurOnSubmit={false}
                                     />
                                 </View>
                             </View>
@@ -123,21 +134,29 @@ const FixedExpensesSetup = ({ navigation }) => {
                                 <View style={tailwind`flex-1 ml-4`}>
                                     <Text style={styles.label}>Bank Debt / Loan</Text>
                                     <TextInput
+                                        ref={debtRef}
                                         style={styles.input}
                                         placeholder="0.00"
                                         keyboardType="numeric"
                                         value={debt}
                                         onChangeText={setDebt}
+                                        returnKeyType={debt !== '' ? 'next' : 'done'}
+                                        onSubmitEditing={() => {
+                                            if (debt !== '') debtMonthsRef.current?.focus()
+                                        }}
+                                        blurOnSubmit={debt === ''}
                                     />
                                     {debt !== '' && (
                                         <View style={tailwind`mt-2`}>
                                             <Text style={styles.subLabel}>How many months left?</Text>
                                             <TextInput
+                                                ref={debtMonthsRef}
                                                 style={[styles.input, tailwind`py-2 text-sm`]}
                                                 placeholder="e.g. 12"
                                                 keyboardType="numeric"
                                                 value={debtMonths}
                                                 onChangeText={setDebtMonths}
+                                                returnKeyType="done"
                                             />
                                         </View>
                                     )}

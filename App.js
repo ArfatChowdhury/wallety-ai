@@ -10,6 +10,7 @@ import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { Platform, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from './src/Data/categoriesData';
+import LimnersLogo from './assets/compay-logo/limners';
 
 function AppContent() {
   const { isLoading, handleAddExpense } = useContext(AppContext);
@@ -56,6 +57,9 @@ function AppContent() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' }}>
         <ActivityIndicator size="large" color="#16a34a" />
+        <View style={{ marginTop: 20, width: '60%', height: 60 }}>
+          <LimnersLogo />
+        </View>
       </View>
     );
   }

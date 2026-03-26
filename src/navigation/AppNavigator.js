@@ -83,14 +83,27 @@ function MyTabs() {
 /* ---------------- FLOATING TAB ---------------- */
 
 const FloatingTabBar = ({ state, descriptors, navigation }) => {
+  const { updateTabLayout } = useContext(AppContext)
   const insets = useSafeAreaInsets()
   const [keyboardVisible, setKeyboardVisible] = useState(false)
+  const tabRefs = useRef({}).current
 
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true))
     const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false))
     return () => { showSub.remove(); hideSub.remove() }
   }, [])
+
+  const handleLayout = (name) => {
+    // Add small delay to ensure native layout has fully settled (e.g. after ads shift the view)
+    setTimeout(() => {
+      tabRefs[name]?.measureInWindow((x, y, width, height) => {
+        if (x !== undefined) {
+          updateTabLayout(name, { x: x + width / 2, y: y + height / 2 + 8, width, height })
+        }
+      })
+    }, 100)
+  }
 
   if (keyboardVisible) return null
 
@@ -126,7 +139,14 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
           }
            
           return (
-            <TouchableOpacity key={index} style={styles.tab} onPress={onPress} activeOpacity={0.7}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.tab} 
+              onPress={onPress} 
+              activeOpacity={0.7}
+              ref={el => tabRefs[route.name] = el}
+              onLayout={() => handleLayout(route.name)}
+            >
               <Ionicons name={icon} size={22} color={isFocused ? "#000" : "#9CA3AF"} />
               <Text style={[styles.label, isFocused && styles.activeLabel]}>{label}</Text>
             </TouchableOpacity>

@@ -31,6 +31,14 @@ export const AppContextProvider = ({ children }) => {
     const [hasFetchedFromCloud, setHasFetchedFromCloud] = useState(false);
     const [isSetupComplete, setIsSetupComplete] = useState(false);
     const [lastProcessedMonth, setLastProcessedMonth] = useState(null);
+    const [tabLayouts, setTabLayouts] = useState({});
+
+    const updateTabLayout = useCallback((name, layout) => {
+        setTabLayouts(prev => ({
+            ...prev,
+            [name]: layout
+        }));
+    }, []);
 
     const logAppNotification = (title, body, type = 'info') => {
         setAppNotifications(prev => {
@@ -647,7 +655,7 @@ export const AppContextProvider = ({ children }) => {
             await AsyncStorage.multiRemove([
                 'expenses', 'incomes', 'budgets', 'appNotifications', 'userName',
                 'lastProcessedMonth', 'prevMonthSummary', 'recurringTransactions',
-                'isSetupComplete'
+                'isSetupComplete', 'hasCompletedTour', 'shouldStartTour'
             ]);
 
             setIsSetupComplete(false);
@@ -767,7 +775,7 @@ export const AppContextProvider = ({ children }) => {
             return {
                 ...cat,
                 budgetLimit,
-                amountSpent
+            amountSpent
             };
         });
     }, [expenses, budgets, categoriesList]);
@@ -858,14 +866,15 @@ export const AppContextProvider = ({ children }) => {
         isSetupComplete, setIsSetupComplete,
         handleWipeData, checkAndResetMonth,
         getLocalDate, getYearMonth,
-        refreshData
+        refreshData,
+        tabLayouts, updateTabLayout
     }), [
         expenses, incomes, amount, title, category, editingId, isLoading, categoriesList,
         selectedPeriod, filteredExpenses, budgets, currency, isDarkMode, isFirstLaunch,
         userName, recurringTransactions, currencySymbol, allTransactions, totalSpent,
         totalIncome, balance, monthlySummary, categoriesWithBudget, appNotifications,
         prevMonthSummary, hasFetchedFromCloud, isSetupComplete, lastProcessedMonth,
-        refreshData
+        refreshData, tabLayouts, updateTabLayout
     ]);
 
     return (

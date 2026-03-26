@@ -13,6 +13,9 @@ const FixedIncomeSetup = ({ navigation }) => {
     const [business, setBusiness] = useState('');
     const [sideHustle, setSideHustle] = useState('');
 
+    const businessRef = React.useRef();
+    const sideHustleRef = React.useRef();
+
     const skipSetup = () => {
         navigation.navigate('FixedExpensesSetup');
     };
@@ -52,7 +55,7 @@ const FixedIncomeSetup = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.root}>
             <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
@@ -91,6 +94,9 @@ const FixedIncomeSetup = ({ navigation }) => {
                                         keyboardType="numeric"
                                         value={salary}
                                         onChangeText={setSalary}
+                                        returnKeyType="next"
+                                        onSubmitEditing={() => businessRef.current.focus()}
+                                        blurOnSubmit={false}
                                     />
                                 </View>
                             </View>
@@ -103,11 +109,15 @@ const FixedIncomeSetup = ({ navigation }) => {
                                 <View style={tailwind`flex-1 ml-4`}>
                                     <Text style={styles.label}>Business Profit</Text>
                                     <TextInput
+                                        ref={businessRef}
                                         style={styles.input}
                                         placeholder="0.00"
                                         keyboardType="numeric"
                                         value={business}
                                         onChangeText={setBusiness}
+                                        returnKeyType="next"
+                                        onSubmitEditing={() => sideHustleRef.current.focus()}
+                                        blurOnSubmit={false}
                                     />
                                 </View>
                             </View>
@@ -120,11 +130,13 @@ const FixedIncomeSetup = ({ navigation }) => {
                                 <View style={tailwind`flex-1 ml-4`}>
                                     <Text style={styles.label}>Side Hustle / Freelance</Text>
                                     <TextInput
+                                        ref={sideHustleRef}
                                         style={styles.input}
                                         placeholder="0.00"
                                         keyboardType="numeric"
                                         value={sideHustle}
                                         onChangeText={setSideHustle}
+                                        returnKeyType="done"
                                     />
                                 </View>
                             </View>

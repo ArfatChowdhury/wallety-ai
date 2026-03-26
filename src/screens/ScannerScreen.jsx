@@ -67,58 +67,65 @@ const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
     return (
         <View style={sheetStyles.backdrop}>
             <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onDismiss} activeOpacity={1} />
-            <Animated.View style={[sheetStyles.sheet, { transform: [{ translateY: slideAnim }] }]}>
-                <View style={sheetStyles.handle} />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={sheetStyles.sheetWrapper}
+            >
+                <Animated.View style={[sheetStyles.sheet, { transform: [{ translateY: slideAnim }] }]}>
+                    <View style={sheetStyles.handle} />
 
-                <View style={sheetStyles.scanBadge}>
-                    <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
-                    <Text style={sheetStyles.scanBadgeText}>OCR Scan Complete!</Text>
-                </View>
+                    <View style={sheetStyles.scanBadge}>
+                        <Ionicons name="checkmark-circle" size={20} color="#22C55E" />
+                        <Text style={sheetStyles.scanBadgeText}>OCR Scan Complete!</Text>
+                    </View>
 
-                <Text style={sheetStyles.sheetTitle}>Add as Expense?</Text>
-                <Text style={sheetStyles.sheetSub}>Extracted from your receipt image</Text>
+                    <Text style={sheetStyles.sheetTitle}>Add as Expense?</Text>
+                    <Text style={sheetStyles.sheetSub}>Extracted from your receipt image</Text>
 
-                <View style={sheetStyles.fieldGroup}>
-                    <Text style={sheetStyles.fieldLabel}>MERCHANT / TITLE</Text>
-                    <TextInput
-                        style={sheetStyles.fieldInput}
-                        value={manualTitle}
-                        onChangeText={setManualTitle}
-                        placeholder="Merchant name..."
-                        placeholderTextColor="#9CA3AF"
-                    />
-                </View>
-
-                <View style={sheetStyles.fieldGroup}>
-                    <Text style={sheetStyles.fieldLabel}>TOTAL AMOUNT ({currencySymbol})</Text>
-                    <View style={sheetStyles.amountRow}>
-                        <Text style={sheetStyles.currencyTag}>{currencySymbol}</Text>
+                    <View style={sheetStyles.fieldGroup}>
+                        <Text style={sheetStyles.fieldLabel}>MERCHANT / TITLE</Text>
                         <TextInput
-                            style={[sheetStyles.fieldInput, { flex: 1 }]}
-                            value={manualAmount}
-                            onChangeText={setManualAmount}
-                            placeholder="0.00"
+                            style={sheetStyles.fieldInput}
+                            value={manualTitle}
+                            onChangeText={setManualTitle}
+                            placeholder="Merchant name..."
                             placeholderTextColor="#9CA3AF"
-                            keyboardType="decimal-pad"
+                            returnKeyType="next"
                         />
                     </View>
-                </View>
 
-                <TouchableOpacity
-                    style={sheetStyles.addBtn}
-                    onPress={() => onAddExpense({ title: manualTitle, amount: manualAmount })}
-                    activeOpacity={0.85}
-                >
-                    <LinearGradient colors={['#16a34a', '#22C55E']} style={sheetStyles.addBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                        <Ionicons name="add-circle-outline" size={22} color="white" />
-                        <Text style={sheetStyles.addBtnText}>Add to Expenses</Text>
-                    </LinearGradient>
-                </TouchableOpacity>
+                    <View style={sheetStyles.fieldGroup}>
+                        <Text style={sheetStyles.fieldLabel}>TOTAL AMOUNT ({currencySymbol})</Text>
+                        <View style={sheetStyles.amountRow}>
+                            <Text style={sheetStyles.currencyTag}>{currencySymbol}</Text>
+                            <TextInput
+                                style={[sheetStyles.fieldInput, { flex: 1 }]}
+                                value={manualAmount}
+                                onChangeText={setManualAmount}
+                                placeholder="0.00"
+                                placeholderTextColor="#9CA3AF"
+                                keyboardType="decimal-pad"
+                                returnKeyType="done"
+                            />
+                        </View>
+                    </View>
 
-                <TouchableOpacity style={sheetStyles.dismissBtn} onPress={onDismiss}>
-                    <Text style={sheetStyles.dismissText}>Cancel — Try Another Image</Text>
-                </TouchableOpacity>
-            </Animated.View>
+                    <TouchableOpacity
+                        style={sheetStyles.addBtn}
+                        onPress={() => onAddExpense({ title: manualTitle, amount: manualAmount })}
+                        activeOpacity={0.85}
+                    >
+                        <LinearGradient colors={['#16a34a', '#22C55E']} style={sheetStyles.addBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
+                            <Ionicons name="add-circle-outline" size={22} color="white" />
+                            <Text style={sheetStyles.addBtnText}>Add to Expenses</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={sheetStyles.dismissBtn} onPress={onDismiss}>
+                        <Text style={sheetStyles.dismissText}>Cancel — Try Another Image</Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            </KeyboardAvoidingView>
         </View>
     );
 };
