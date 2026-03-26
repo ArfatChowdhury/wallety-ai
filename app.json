@@ -19,6 +19,7 @@
     "android": {
       "package": "com.wallety.budgettracker",
       "versionCode": 1,
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
