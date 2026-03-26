@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1053891785607",
+    "project_id": "vocaboai-95eb1",
+    "storage_bucket": "vocaboai-95eb1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1053891785607:android:a7cd968752b7bea9d89922",
+        "android_client_info": {
+          "package_name": "com.vocaboai"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1053891785607-qni3iq7bb9u33p2um31hddpkmp9b8ajr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDdx3CPJGOkUDI3HApguK8td4O5fYSZ--0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1053891785607-qni3iq7bb9u33p2um31hddpkmp9b8ajr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
