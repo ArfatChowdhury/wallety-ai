@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { googleAuthService } from '../services/googleAuthService';
-import { firebaseAuth, auth } from '../../../config/firebase';
+import { auth as jsAuth } from '../../../services/firebase';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
 export const useGoogleSignIn = () => {
   const [loading, setLoading] = useState(false);
@@ -11,16 +12,33 @@ export const useGoogleSignIn = () => {
     setError(null);
     try {
       googleAuthService.configure();
+      // Force account picker by signing out first
+      try {
+        await googleAuthService.signOut();
+      } catch (e) {
+        // Ignore errors if already signed out
+      }
       const response = await googleAuthService.signIn();
-      if (response.type === 'success' && response.data.idToken) {
-        const googleCredential = auth.GoogleAuthProvider.credential(response.data.idToken);
-        await firebaseAuth.signInWithCredential(googleCredential);
+
+      // Fix: Handle SignInResponse structure (v11+)
+      let idToken = null;
+      if (response.type === 'success') {
+        idToken = response.data.idToken;
+      }
+
+      if (idToken) {
+        const credential = GoogleAuthProvider.credential(idToken);
+        await signInWithCredential(jsAuth, credential);
       } else if (response.type === 'cancelled') {
         console.log('Google Sign-In cancelled');
       } else {
-        throw new Error('Google Sign-In failed or idToken is missing');
+        throw new Error('Google Sign-In failed: No ID Token received');
       }
     } catch (err: any) {
+      if (err.code === 'ASYNC_OP_IN_PROGRESS') {
+        console.log('Google Sign-In already in progress');
+        return;
+      }
       console.error('Google Sign-In Error:', err);
       setError(err.message || 'An error occurred during Google Sign-In');
     } finally {
@@ -32,7 +50,7 @@ export const useGoogleSignIn = () => {
     setLoading(true);
     try {
       await googleAuthService.signOut();
-      await firebaseAuth.signOut();
+      await jsAuth.signOut();
     } catch (err: any) {
       console.error('Sign-Out Error:', err);
       setError(err.message || 'An error occurred during Sign-Out');
