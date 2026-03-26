@@ -43,3 +43,8 @@ yarn-error.*
 .env
 
 .txt
+
+
+google-services.json
+
+GoogleService-Info.plist
