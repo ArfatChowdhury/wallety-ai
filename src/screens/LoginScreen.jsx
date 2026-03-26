@@ -2,13 +2,10 @@ import { ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView, Text, Te
 import React, { useState } from 'react'
 import tailwind from 'twrnc'
 import { Ionicons } from '@expo/vector-icons'
-import * as WebBrowser from 'expo-web-browser'
-import * as Google from 'expo-auth-session/providers/google'
-import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth } from '../services/firebase'
+import { useGoogleSignIn } from '../features/auth/hooks/useGoogleSignIn'
 import { COLORS, SHADOW } from '../theme' // <-- Fixed named import
-
-WebBrowser.maybeCompleteAuthSession()
 
 const LoginScreen = ({ onSkip }) => {
     const [isLogin, setIsLogin] = useState(true)
@@ -18,37 +15,13 @@ const LoginScreen = ({ onSkip }) => {
     const [name, setName] = useState('')
     const [error, setError] = useState('')
 
-    const webClientId = process.env.EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID || 'missing-client-id';
-    const androidClientId = process.env.EXPO_PUBLIC_FIREBASE_ANDROID_CLIENT_ID || webClientId;
-
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        webClientId: webClientId,
-        androidClientId: androidClientId,
-        iosClientId: process.env.EXPO_PUBLIC_FIREBASE_IOS_CLIENT_ID || webClientId,
-        expoClientId: webClientId,
-    });
+    const { signIn: handleGoogleSignIn, loading: googleLoading, error: googleError } = useGoogleSignIn();
 
     React.useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token } = response.params;
-            const credential = GoogleAuthProvider.credential(id_token);
-            setLoading(true);
-            signInWithCredential(auth, credential)
-                .catch((e) => {
-                    console.log('Firebase credential auth error:', e)
-                    alert('Sign in failed. Check console for details.')
-                    setLoading(false)
-                })
+        if (googleError) {
+            alert(googleError);
         }
-    }, [response]);
-
-    const handleGoogleSignIn = () => {
-        if (!process.env.EXPO_PUBLIC_FIREBASE_WEB_CLIENT_ID) {
-            alert('Missing Google Client ID. Check environment variables.')
-            return;
-        }
-        promptAsync();
-    }
+    }, [googleError]);
 
     const handleEmailAuth = async () => {
         // Basic Validation
@@ -213,12 +186,19 @@ const LoginScreen = ({ onSkip }) => {
                     </View>
 
                     <TouchableOpacity
-                        onPress={() => alert('Google sync is currently under verification. This feature will be live shortly!')}
-                        activeOpacity={0.6}
-                        style={[tailwind`flex-row items-center w-full justify-center py-4.5 rounded-2xl border-2 opacity-50`, { borderColor: COLORS.gray100, backgroundColor: COLORS.white }]}
+                        onPress={handleGoogleSignIn}
+                        disabled={googleLoading}
+                        activeOpacity={0.7}
+                        style={[tailwind`flex-row items-center w-full justify-center py-4.5 rounded-2xl border-2`, { borderColor: COLORS.gray100, backgroundColor: COLORS.white }]}
                     >
-                        <Ionicons name="logo-google" size={22} color={COLORS.gray400} style={tailwind`mr-3`} />
-                        <Text style={[tailwind`font-black text-base tracking-tight`, { color: COLORS.gray400 }]}>Verification in progress...</Text>
+                        {googleLoading ? (
+                            <ActivityIndicator color={COLORS.primary} />
+                        ) : (
+                            <>
+                                <Ionicons name="logo-google" size={22} color={COLORS.black} style={tailwind`mr-3`} />
+                                <Text style={[tailwind`font-black text-base tracking-tight`, { color: COLORS.black }]}>Continue with Google</Text>
+                            </>
+                        )}
                     </TouchableOpacity>
                 </View>
 

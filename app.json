@@ -60,6 +60,14 @@
           "androidAppId": "ca-app-pub-3315420037530922~4770136289",
           "iosAppId": "ca-app-pub-3315420037530922~4770136289"
         }
+      ],
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.669641289282-gs5doefjibvuqiskt1avoc5g9cd1ch5k"
+        }
       ]
     ]
   }
