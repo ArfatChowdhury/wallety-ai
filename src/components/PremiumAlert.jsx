@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tailwind from 'twrnc';
@@ -15,8 +15,11 @@ const PremiumAlert = ({
     primaryButtonText = "Got it",
     onPrimaryPress,
     secondaryButtonText,
-    onSecondaryPress
+    onSecondaryPress,
+    showRatingStars = false
 }) => {
+    const [rating, setRating] = useState(0);
+
     if (!visible) return null;
 
     return (
@@ -36,6 +39,21 @@ const PremiumAlert = ({
                         <Text style={styles.message}>{message}</Text>
                     </View>
 
+                    {/* Interactive Stars */}
+                    {showRatingStars && (
+                        <View style={styles.starsContainer}>
+                            {[1, 2, 3, 4, 5].map((star) => (
+                                <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7} style={{ padding: 4 }}>
+                                    <Ionicons 
+                                        name={star <= rating ? "star" : "star-outline"} 
+                                        size={40} 
+                                        color="#F59E0B" 
+                                    />
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
+
                     {/* Actions */}
                     <View style={styles.actions}>
                         {secondaryButtonText && onSecondaryPress && (
@@ -51,7 +69,7 @@ const PremiumAlert = ({
                         )}
                         <TouchableOpacity 
                             style={[styles.button, styles.primaryButton, { flex: secondaryButtonText ? 1 : undefined, width: secondaryButtonText ? undefined : '100%' }]} 
-                            onPress={onPrimaryPress}
+                            onPress={() => onPrimaryPress && onPrimaryPress(rating)}
                             activeOpacity={0.8}
                         >
                             <Text style={styles.buttonText}>{primaryButtonText}</Text>
@@ -114,6 +132,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 22,
         fontWeight: '500',
+    },
+    starsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+        marginBottom: 24,
     },
     actions: {
         flexDirection: 'row',

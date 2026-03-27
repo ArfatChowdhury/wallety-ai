@@ -308,13 +308,23 @@ export const AppContextProvider = ({ children }) => {
 
             if (storedNotifs) setAppNotifications(JSON.parse(storedNotifs));
 
-            const [storedPrevSummary, storedHasRated] = await Promise.all([
+            const [storedPrevSummary, storedHasRated, storedLastRatePrompt] = await Promise.all([
                 AsyncStorage.getItem('prevMonthSummary'),
-                AsyncStorage.getItem('hasRatedApp')
+                AsyncStorage.getItem('hasRatedApp'),
+                AsyncStorage.getItem('lastRatePrompt')
             ]);
             if (storedPrevSummary) setPrevMonthSummary(JSON.parse(storedPrevSummary));
             if (storedIsSetupComplete) setIsSetupComplete(JSON.parse(storedIsSetupComplete));
-            if (storedHasRated) setHasRatedApp(JSON.parse(storedHasRated));
+            
+            if (storedHasRated) {
+                setHasRatedApp(JSON.parse(storedHasRated));
+            } else if (storedLastRatePrompt) {
+                const lastPromptTime = parseInt(storedLastRatePrompt);
+                const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+                if (Date.now() - lastPromptTime > TWELVE_HOURS) {
+                    setTimeout(() => setShowRatingPrompt(true), 10000);
+                }
+            }
 
             // Recurring logic
             const recurring = storedRecurring ? JSON.parse(storedRecurring) : [];

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     View, Text, StyleSheet, TouchableOpacity, Animated,
     Dimensions, StatusBar, TextInput, KeyboardAvoidingView,
-    Platform, Vibration, Modal, ScrollView, Image, ActivityIndicator, Alert
+    Platform, Vibration, Modal, ScrollView, Image, ActivityIndicator, Alert, FlatList
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useContext } from 'react';
 import { AppContext } from '../Contex/ContextApi';
 import { scanReceipt } from '../services/OCRService';
+import { suggestCategory } from '../Data/categoryKeywords';
 import { COLORS } from '../theme';
 import AdService, { BannerAdComponent } from '../services/AdService';
 
@@ -53,16 +54,57 @@ const cornerStyles = StyleSheet.create({
 });
 
 // ─── Result bottom sheet (Updated for OCR results) ──────────────────────────
-const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
+// ─── Result bottom sheet (Updated for OCR results) ──────────────────────────
+const ResultSheet = ({ result, onDismiss, currencySymbol, categoriesList, handleAddTransaction, getLocalDate, navigation }) => {
     const slideAnim = useRef(new Animated.Value(300)).current;
     const [manualAmount, setManualAmount] = useState(String(result?.total || ''));
     const [manualTitle, setManualTitle] = useState(result?.merchant || '');
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     useEffect(() => {
         Animated.spring(slideAnim, {
             toValue: 0, damping: 18, stiffness: 200, useNativeDriver: true,
         }).start();
-    }, []);
+
+        // Initial suggestion
+        const match = suggestCategory(result?.merchant || '', categoriesList);
+        setSelectedCategory(match);
+    }, [result]);
+
+    const handleSaveDirectly = () => {
+        if (!manualAmount || isNaN(parseFloat(manualAmount))) {
+            Alert.alert("Error", "Please enter a valid amount");
+            return;
+        }
+        if (!selectedCategory) {
+            Alert.alert("Error", "Please select a category");
+            return;
+        }
+
+        const amt = parseFloat(manualAmount);
+        
+        // Directly add to transactions via Context
+        handleAddTransaction(null, {
+            type: 'expense',
+            title: manualTitle,
+            amount: amt,
+            category: selectedCategory,
+            date: getLocalDate()
+        });
+
+        Alert.alert(
+            "Expense Added!",
+            `${manualTitle} ${currencySymbol}${amt.toFixed(2)} saved to ${selectedCategory.name}`,
+            [{ 
+                text: "OK", 
+                onPress: () => {
+                    onDismiss();
+                    navigation.navigate('BottomTabs', { screen: 'Home' });
+                } 
+            }]
+        );
+    };
 
     return (
         <View style={sheetStyles.backdrop}>
@@ -79,8 +121,8 @@ const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
                         <Text style={sheetStyles.scanBadgeText}>OCR Scan Complete!</Text>
                     </View>
 
-                    <Text style={sheetStyles.sheetTitle}>Add as Expense?</Text>
-                    <Text style={sheetStyles.sheetSub}>Extracted from your receipt image</Text>
+                    <Text style={sheetStyles.sheetTitle}>Review & Save</Text>
+                    <Text style={sheetStyles.sheetSub}>Verify the details before adding to your record</Text>
 
                     <View style={sheetStyles.fieldGroup}>
                         <Text style={sheetStyles.fieldLabel}>MERCHANT / TITLE</Text>
@@ -90,7 +132,6 @@ const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
                             onChangeText={setManualTitle}
                             placeholder="Merchant name..."
                             placeholderTextColor="#9CA3AF"
-                            returnKeyType="next"
                         />
                     </View>
 
@@ -105,19 +146,33 @@ const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
                                 placeholder="0.00"
                                 placeholderTextColor="#9CA3AF"
                                 keyboardType="decimal-pad"
-                                returnKeyType="done"
                             />
+                        </View>
+                    </View>
+
+                    <View style={sheetStyles.fieldGroup}>
+                        <Text style={sheetStyles.fieldLabel}>CATEGORY</Text>
+                        <View style={sheetStyles.categoryRow}>
+                            <View style={sheetStyles.categoryLeft}>
+                                <View style={[sheetStyles.catIconCircle, { backgroundColor: (selectedCategory?.color || COLORS.gray200) + '20' }]}>
+                                    <Text style={{ fontSize: 18 }}>{selectedCategory?.icon || '📁'}</Text>
+                                </View>
+                                <Text style={sheetStyles.catNameText}>{selectedCategory?.name || 'Uncategorized'}</Text>
+                            </View>
+                            <TouchableOpacity onPress={() => setShowCategoryModal(true)}>
+                                <Text style={sheetStyles.changeBtnText}>Change</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
 
                     <TouchableOpacity
                         style={sheetStyles.addBtn}
-                        onPress={() => onAddExpense({ title: manualTitle, amount: manualAmount })}
+                        onPress={handleSaveDirectly}
                         activeOpacity={0.85}
                     >
                         <LinearGradient colors={['#16a34a', '#22C55E']} style={sheetStyles.addBtnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>
-                            <Ionicons name="add-circle-outline" size={22} color="white" />
-                            <Text style={sheetStyles.addBtnText}>Add to Expenses</Text>
+                            <Ionicons name="checkmark-done-circle-outline" size={22} color="white" />
+                            <Text style={sheetStyles.addBtnText}>Save Expense Directly</Text>
                         </LinearGradient>
                     </TouchableOpacity>
 
@@ -125,6 +180,40 @@ const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
                         <Text style={sheetStyles.dismissText}>Cancel — Try Another Image</Text>
                     </TouchableOpacity>
                 </Animated.View>
+
+                {/* Category Selection Modal */}
+                <Modal visible={showCategoryModal} animationType="slide" transparent={true}>
+                    <View style={sheetStyles.modalOverlay}>
+                        <View style={sheetStyles.modalContent}>
+                            <View style={sheetStyles.modalHeader}>
+                                <Text style={sheetStyles.modalTitle}>Select Category</Text>
+                                <TouchableOpacity onPress={() => setShowCategoryModal(false)}>
+                                    <Ionicons name="close" size={24} color={COLORS.textMain} />
+                                </TouchableOpacity>
+                            </View>
+                            <FlatList
+                                data={categoriesList}
+                                keyExtractor={(item, index) => item.name + index}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={{ paddingBottom: 40 }}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity 
+                                        style={sheetStyles.catItem}
+                                        onPress={() => {
+                                            setSelectedCategory(item);
+                                            setShowCategoryModal(false);
+                                        }}
+                                    >
+                                        <View style={[sheetStyles.catIconCircle, { backgroundColor: (item.color || COLORS.gray200) + '20' }]}>
+                                            <Text style={{ fontSize: 18 }}>{item.icon}</Text>
+                                        </View>
+                                        <Text style={sheetStyles.modalCatName}>{item.name}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        </View>
+                    </View>
+                </Modal>
             </KeyboardAvoidingView>
         </View>
     );
@@ -132,6 +221,7 @@ const ResultSheet = ({ result, onAddExpense, onDismiss, currencySymbol }) => {
 
 const sheetStyles = StyleSheet.create({
     backdrop: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.4)' },
+    sheetWrapper: { flex: 1, justifyContent: 'flex-end' },
     sheet: {
         backgroundColor: '#FFFFFF', borderTopLeftRadius: 32, borderTopRightRadius: 32,
         padding: 28, paddingBottom: 40,
@@ -147,16 +237,38 @@ const sheetStyles = StyleSheet.create({
     fieldInput: { backgroundColor: '#F9FAFB', borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 16, padding: 16, fontSize: 16, fontWeight: '600', color: '#111827' },
     amountRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     currencyTag: { fontSize: 22, fontWeight: '900', color: '#111827' },
+    categoryRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#F9FAFB',
+        borderWidth: 1.5,
+        borderColor: '#E5E7EB',
+        borderRadius: 16,
+        padding: 12,
+        paddingHorizontal: 16,
+    },
+    categoryLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    catIconCircle: { width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+    catNameText: { fontSize: 16, fontWeight: '700', color: '#111827' },
+    changeBtnText: { color: '#22C55E', fontWeight: '700', fontSize: 14 },
     addBtn: { borderRadius: 20, overflow: 'hidden', marginTop: 8, marginBottom: 12 },
     addBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18 },
     addBtnText: { color: 'white', fontSize: 17, fontWeight: '900' },
     dismissBtn: { alignItems: 'center', paddingVertical: 8 },
     dismissText: { color: '#9CA3AF', fontSize: 15, fontWeight: '600' },
+
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+    modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, maxHeight: '80%', paddingBottom: 40 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+    modalTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
+    catItem: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+    modalCatName: { fontSize: 16, fontWeight: '600', color: '#111827' },
 });
 
 // ─── Main ScannerScreen ────────────────────────────────────────────────────
 const ScannerScreen = ({ navigation }) => {
-    const { currencySymbol, categoriesList, setTitle, setAmount, setCategory } = useContext(AppContext);
+    const { currencySymbol, categoriesList, handleAddTransaction, getLocalDate } = useContext(AppContext);
 
     const [image, setImage] = useState(null);
     const [scanning, setScanning] = useState(false);
@@ -198,7 +310,7 @@ const ScannerScreen = ({ navigation }) => {
         
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
+            allowsEditing: false,
             quality: 1,
             base64: true, 
         });
@@ -218,7 +330,7 @@ const ScannerScreen = ({ navigation }) => {
         await AdService.showReceiptScanAd();
         
         const result = await ImagePicker.launchCameraAsync({
-            allowsEditing: true,
+            allowsEditing: false,
             quality: 1,
             base64: true, 
         });
@@ -263,21 +375,6 @@ const ScannerScreen = ({ navigation }) => {
         } finally {
             setScanning(false);
         }
-    };
-
-    const handleAddExpense = ({ title, amount }) => {
-        setTitle(title || '');
-        setAmount(amount || '');
-
-        const lower = (title || '').toLowerCase();
-        const match = categoriesList?.find(c => lower.includes(c.name.toLowerCase()));
-        if (match) setCategory(match);
-
-        setIsSheetVisible(false);
-        navigation.navigate('BottomTabs', {
-            screen: 'Create',
-            params: { fromScanner: Date.now() },
-        });
     };
 
     const handleDismiss = () => {
@@ -367,9 +464,12 @@ const ScannerScreen = ({ navigation }) => {
             {isSheetVisible && scannedResult && (
                 <ResultSheet
                     result={scannedResult}
-                    onAddExpense={handleAddExpense}
                     onDismiss={handleDismiss}
                     currencySymbol={currencySymbol}
+                    categoriesList={categoriesList}
+                    handleAddTransaction={handleAddTransaction}
+                    getLocalDate={getLocalDate}
+                    navigation={navigation}
                 />
             )}
         </View>

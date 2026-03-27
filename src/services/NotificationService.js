@@ -15,6 +15,7 @@ Notifications.setNotificationHandler({
 const CHANNEL_REMINDER = 'wallety-reminder';
 const CHANNEL_TRANSACTION = 'wallety-transactions';
 const CHANNEL_BUDGET = 'wallety-budget';
+const CHANNEL_ALARM = 'wallety-alarm';
 
 // ─── Create all Android channels (idempotent — safe to call on every launch)
 const createAndroidChannels = async () => {
@@ -47,6 +48,22 @@ const createAndroidChannels = async () => {
         vibrationPattern: [0, 400, 200, 400, 200, 400],
         lightColor: '#EF4444',
         sound: 'default',
+        lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+        enableVibrate: true,
+        bypassDnd: true,
+    });
+
+    await Notifications.setNotificationChannelAsync(CHANNEL_ALARM, {
+        name: '⏰ Loud Alarms',
+        description: 'High priority noisy alarms for reminders',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 500, 200, 500, 200, 500, 200, 500],
+        lightColor: '#EF4444',
+        sound: 'default',
+        audioAttributes: {
+            usage: Notifications.AndroidAudioUsage.ALARM,
+            contentType: Notifications.AndroidAudioContentType.SONIFICATION,
+        },
         lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
         enableVibrate: true,
         bypassDnd: true,
@@ -222,23 +239,24 @@ export const scheduleMonthlySummaryAlert = async () => {
     }
 };
 // ─── Custom User Reminders ──────────────────────────────────────────────────
-export const scheduleCustomReminder = async (triggerDate, message) => {
+export const scheduleCustomReminder = async (triggerDate, message, isAlarm = false) => {
     try {
         const identifier = `wallety-custom-${Date.now()}`;
+        const targetChannel = isAlarm ? CHANNEL_ALARM : CHANNEL_REMINDER;
 
         await Notifications.scheduleNotificationAsync({
             identifier,
             content: {
-                title: '⏰ Custom Reminder',
+                title: isAlarm ? '⏰ Urgent Reminder' : '🔔 Custom Reminder',
                 body: message || "It's time! Don't forget to track your expenses.",
                 sound: 'default',
-                color: '#22C55E',
-                priority: Notifications.AndroidNotificationPriority.HIGH,
+                color: isAlarm ? '#EF4444' : '#22C55E',
+                priority: Notifications.AndroidNotificationPriority.MAX,
                 data: { screen: 'Create' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_REMINDER }),
+                ...(Platform.OS === 'android' && { channelId: targetChannel }),
             },
             trigger: Platform.OS === 'android'
-                ? { type: 'date', date: triggerDate.getTime(), channelId: CHANNEL_REMINDER }
+                ? { type: 'date', date: triggerDate.getTime(), channelId: targetChannel }
                 : { type: 'date', date: triggerDate.getTime() },
         });
 

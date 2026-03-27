@@ -288,24 +288,38 @@ const AppNavigator = () => {
       <PremiumAlert
         visible={showRatingPrompt}
         title="Enjoying Wallety?"
-        message="If you find this app helpful, please take a moment to rate us on the Play Store! Your support means a lot."
+        message="Tap a star to rate us. We appreciate your feedback!"
         icon="star"
         iconColor="#F59E0B"
+        showRatingStars={true}
         primaryButtonText="Rate Now"
         secondaryButtonText="Later"
-        onPrimaryPress={() => {
+        onPrimaryPress={(rating) => {
           setShowRatingPrompt(false);
           setHasRatedApp(true);
           AsyncStorage.setItem('hasRatedApp', 'true');
-          Linking.openURL('market://details?id=com.wallety.budgettracker').catch(() => {
-              Linking.openURL('https://play.google.com/store/apps/details?id=com.wallety.budgettracker');
-          });
+          
+          if (rating === 0 || rating >= 4) {
+             Linking.openURL('market://details?id=com.wallety.budgettracker').catch(() => {
+                 Linking.openURL('https://play.google.com/store/apps/details?id=com.wallety.budgettracker');
+             });
+          } else {
+             // For 1-3 stars, thank them internally to avoid bad Play Store reviews
+             setTimeout(() => {
+                 showGlobalAlert({
+                     title: "Thank You!",
+                     message: "We appreciate your feedback and will use it to improve Wallety.",
+                     icon: "heart",
+                     iconColor: "#F59E0B",
+                     primaryButtonText: "Got it"
+                 });
+             }, 500);
+          }
         }}
         onSecondaryPress={() => {
           setShowRatingPrompt(false);
-          // Set to true so we don't nag them again.
-          setHasRatedApp(true);
-          AsyncStorage.setItem('hasRatedApp', 'true');
+          // Set lastRatePrompt time so it only bugs them again after 24 hours
+          AsyncStorage.setItem('lastRatePrompt', Date.now().toString());
         }}
       />
 

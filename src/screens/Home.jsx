@@ -289,7 +289,7 @@ const Home = ({ navigation }) => {
     totalSpent, balance, expenses, allTransactions, handleEdit, handleDelete,
     handleDeleteIncome, categoriesWithBudget, currencySymbol, monthlySummary, appNotifications, logAppNotification,
     prevMonthSummary, checkAndResetMonth, getLocalDate, getYearMonth, refreshData, isSetupComplete,
-    tabLayouts
+    tabLayouts, showGlobalAlert
   } = useContext(AppContext)
 
   const [selectedPeriod, setSelectedPeriod] = React.useState('month')
@@ -307,6 +307,7 @@ const Home = ({ navigation }) => {
   const [reminderDate, setReminderDate] = React.useState(new Date())
   const [showPicker, setShowPicker] = React.useState(false)
   const [pickerMode, setPickerMode] = React.useState('date')
+  const [isAlarm, setIsAlarm] = React.useState(false)
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -693,33 +694,9 @@ const Home = ({ navigation }) => {
       >
         <View style={styles.modalBackdrop}>
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={[styles.notificationModalContainer, { paddingBottom: 20, maxHeight: '90%' }]}
           >
-            <View style={styles.balanceCard}>
-                <View style={tailwind`flex-row justify-between items-start`}>
-                    <View>
-                        <Text style={styles.balanceLabel}>Spent so far</Text>
-                        <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.spent).toFixed(2)}</Text>
-                    </View>
-                    <View style={styles.percentageBadge}>
-                        <Ionicons name="trending-down" size={14} color="#EF4444" />
-                        <Text style={styles.percentageText}>Monthly</Text>
-                    </View>
-                </View>
-
-                <View style={styles.balanceFooter}>
-                    <View style={tailwind`flex-1`}>
-                        <Text style={styles.footerLabel}>Total Income</Text>
-                        <Text style={styles.footerAmount}>{currencySymbol}{Number(displayTotals.income).toFixed(2)}</Text>
-                    </View>
-                    <View style={[styles.footerDivider, { marginHorizontal: 15 }]} />
-                    <View style={tailwind`flex-1 items-end`}>
-                        <Text style={styles.footerLabel}>Balance Left</Text>
-                        <Text style={styles.footerAmount}>{currencySymbol}{Number(displayTotals.balance).toFixed(2)}</Text>
-                    </View>
-                </View>
-            </View>
             <View style={tailwind`flex-row justify-between items-center w-full mb-4`}>
               <Text style={styles.notificationModalTitle}>Custom Reminders</Text>
               <Ionicons name="alarm" size={24} color={COLORS.primary} />
@@ -759,6 +736,27 @@ const Home = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
 
+                <View style={tailwind`flex-row justify-between items-center mb-4 bg-gray-50 rounded-lg p-1 border border-gray-200`}>
+                  <TouchableOpacity
+                    style={[tailwind`flex-1 py-2 px-3 items-center rounded-md`, !isAlarm ? tailwind`bg-white shadow-sm border border-gray-100` : null]}
+                    onPress={() => setIsAlarm(false)}
+                  >
+                    <View style={tailwind`flex-row items-center`}>
+                      <Ionicons name="notifications" size={16} color={!isAlarm ? COLORS.primary : COLORS.gray400} style={tailwind`mr-1`} />
+                      <Text style={[tailwind`font-bold text-sm`, { color: !isAlarm ? COLORS.textMain : COLORS.gray400 }]}>Notification</Text>
+                    </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[tailwind`flex-1 py-2 px-3 items-center rounded-md`, isAlarm ? tailwind`bg-white shadow-sm border border-gray-100` : null]}
+                    onPress={() => setIsAlarm(true)}
+                  >
+                    <View style={tailwind`flex-row items-center`}>
+                      <Ionicons name="alarm" size={16} color={isAlarm ? COLORS.expense : COLORS.gray400} style={tailwind`mr-1`} />
+                      <Text style={[tailwind`font-bold text-sm`, { color: isAlarm ? COLORS.textMain : COLORS.gray400 }]}>Loud Alarm</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
                 {showPicker && (
                   <DateTimePicker
                     value={reminderDate}
@@ -777,12 +775,24 @@ const Home = ({ navigation }) => {
                   style={tailwind`w-full bg-green-500 rounded-xl p-3 flex-row items-center justify-center`}
                   onPress={async () => {
                     if (reminderDate <= new Date()) {
-                      Alert.alert("Invalid Time", "Please choose a future date and time.");
+                      showGlobalAlert({
+                         title: "Invalid Time",
+                         message: "Please choose a future date and time.",
+                         icon: "time",
+                         iconColor: "#EF4444",
+                         primaryButtonText: "Okay"
+                      });
                       return;
                     }
-                    const success = await scheduleCustomReminder(reminderDate, reminderMsg);
+                    const success = await scheduleCustomReminder(reminderDate, reminderMsg, isAlarm);
                     if (success) {
-                      Alert.alert('Success', 'Reminder carefully scheduled!');
+                      showGlobalAlert({
+                         title: "Success",
+                         message: "Reminder carefully scheduled!",
+                         icon: "checkmark-circle",
+                         iconColor: "#22C55E",
+                         primaryButtonText: "Awesome!"
+                      });
                       setReminderMsg('');
                       fetchReminders();
                     }
@@ -811,11 +821,6 @@ const Home = ({ navigation }) => {
                       <Text style={tailwind`text-gray-500 text-xs mt-1`}>
                         {new Date(rem.trigger?.value).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </Text>
-                    </View>
-
-                    {/* Banner Ad inside Reminders Modal */}
-                    <View style={tailwind`my-4 items-center`}>
-                      <BannerAdComponent />
                     </View>
 
                     <TouchableOpacity
