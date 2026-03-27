@@ -414,7 +414,10 @@ const Home = ({ navigation }) => {
                 r: 36,
                 title: 'Your Account & Settings',
                 body: 'Change currency, export data, set reminders and more.',
-                onFinish: () => navigation.navigate('BottomTabs', { screen: 'SettingsTab' })
+                onFinish: async () => {
+                  await AsyncStorage.setItem('shouldStartSettingsTour', 'true');
+                  navigation.navigate('BottomTabs', { screen: 'SettingsTab' });
+                }
               },
             ])
             setTourStep(0)

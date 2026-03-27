@@ -15,6 +15,10 @@ const LoginScreen = ({ onSkip }) => {
     const [name, setName] = useState('')
     const [error, setError] = useState('')
 
+    const nameRef = React.useRef(null);
+    const emailRef = React.useRef(null);
+    const passwordRef = React.useRef(null);
+
     const { signIn: handleGoogleSignIn, loading: googleLoading, error: googleError } = useGoogleSignIn();
 
     React.useEffect(() => {
@@ -79,13 +83,13 @@ const LoginScreen = ({ onSkip }) => {
             <ScrollView contentContainerStyle={tailwind`flex-grow justify-center px-8 py-10`} showsVerticalScrollIndicator={false}>
 
                 {/* Logo & Branding */}
-                <View style={tailwind`items-center mt-10 mb-10`}>
-                    <View style={[tailwind`w-20 h-20 rounded-[28px] justify-center items-center mb-4 p-1 bg-white`, { ...SHADOW.lg }]}>
+                <View style={tailwind`items-center mt-4 mb-4`}>
+                    <View style={[tailwind`w-16 h-16 rounded-[22px] justify-center items-center mb-4 p-1 bg-white`, { ...SHADOW.lg }]}>
                         <View style={tailwind`w-full h-full rounded-[24px] overflow-hidden bg-gray-50`}>
                             <Image source={require('../../assets/icon.png')} style={tailwind`w-full h-full`} resizeMode="contain" />
                         </View>
                     </View>
-                    <Text style={[tailwind`text-4xl font-[900] tracking-tighter`, { color: COLORS.textMain }]}>Wallety</Text>
+                    <Text style={[tailwind`text-3xl font-[900] tracking-tighter`, { color: COLORS.textMain }]}>Wallety</Text>
                     <View style={[tailwind`h-1 w-12 rounded-full mt-2`, { backgroundColor: COLORS.primary }]} />
                     <Text style={[tailwind`text-sm mt-3 text-center font-bold px-4 tracking-tight`, { color: COLORS.textSub }]}>
                         Your personal financial companion.{"\n"}Secure, smart, and simple.
@@ -129,6 +133,10 @@ const LoginScreen = ({ onSkip }) => {
                                         placeholderTextColor={COLORS.gray400}
                                         value={name}
                                         onChangeText={setName}
+                                        ref={nameRef}
+                                        returnKeyType="next"
+                                        onSubmitEditing={() => emailRef.current?.focus()}
+                                        blurOnSubmit={false}
                                     />
                                 </View>
                             )}
@@ -143,6 +151,10 @@ const LoginScreen = ({ onSkip }) => {
                                     autoCapitalize="none"
                                     value={email}
                                     onChangeText={setEmail}
+                                    ref={emailRef}
+                                    returnKeyType="next"
+                                    onSubmitEditing={() => passwordRef.current?.focus()}
+                                    blurOnSubmit={false}
                                 />
                             </View>
 
@@ -155,6 +167,9 @@ const LoginScreen = ({ onSkip }) => {
                                     secureTextEntry
                                     value={password}
                                     onChangeText={setPassword}
+                                    ref={passwordRef}
+                                    returnKeyType="done"
+                                    onSubmitEditing={handleEmailAuth}
                                 />
                                 {error ? <Text style={tailwind`text-xs text-red-500 font-bold ml-2 mt-2`}>{error}</Text> : null}
                             </View>

@@ -1,5 +1,8 @@
-import { Alert, Share, Switch, Text, TouchableOpacity, View, StyleSheet, ScrollView, StatusBar, Image, TextInput, Modal, ActivityIndicator, Linking } from 'react-native'
-import React, { useContext } from 'react'
+import { Alert, Share, Switch, Text, TouchableOpacity, View, StyleSheet, ScrollView, StatusBar, Image, TextInput, Modal, ActivityIndicator, Linking, KeyboardAvoidingView, Platform } from 'react-native'
+import React, { useContext, useState, useRef, useCallback } from 'react'
+import { useFocusEffect } from '@react-navigation/native';
+import { Dimensions } from 'react-native';
+import SpotlightTour from '../components/SpotlightTour'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons'
@@ -22,12 +25,105 @@ const Settings = ({ navigation }) => {
         handleLogout, userName, setUserName, allTransactions, handleWipeData
     } = useContext(AppContext)
 
-    const [isEditModalVisible, setEditModalVisible] = React.useState(false)
-    const [newName, setNewName] = React.useState(auth.currentUser?.displayName || '')
-    const [isUpdating, setIsUpdating] = React.useState(false)
+    const [tourStep, setTourStep] = useState(-1);
+    const [tourSteps, setTourSteps] = useState([]);
+    const { width: W, height: H } = Dimensions.get('window');
 
-    const [isFeedbackModalVisible, setFeedbackModalVisible] = React.useState(false)
-    const [feedbackMessage, setFeedbackMessage] = React.useState('')
+    const currencyRef = useRef();
+    const widgetRef = useRef();
+    const recurringRef = useRef();
+    const exportRef = useRef();
+    const scrollViewRef = useRef();
+
+    const tourStepsConfig = [
+        {
+            ref: currencyRef, shape: 'rect', title: 'Change Currency',
+            body: 'Switch between 150+ currencies at any time. Your reports will automatically update.'
+        },
+        {
+            ref: widgetRef, shape: 'rect', title: 'Home Screen Widget',
+            body: 'Add our beautiful widget to your home screen to see your balance and log items without opening the app!'
+        },
+        {
+            ref: recurringRef, shape: 'rect', title: 'Recurring Manager',
+            body: 'View and manage all your automated subscriptions and income sources in one place.'
+        },
+        {
+            ref: exportRef, shape: 'rect', title: 'Export Your Data',
+            body: 'Download your financial history in PDF or CSV format for tax season or personal budgeting.'
+        }
+    ];
+
+    const measureRefAbsolute = (ref) => {
+        return new Promise((resolve) => {
+            if (!ref.current) return resolve({ x: -1000, y: -1000, width: 0, height: 0 });
+            ref.current.measure((fx, fy, width, height, px, py) => {
+                if (px === undefined) resolve({ x: -1000, y: -1000, width: 0, height: 0 });
+                else resolve({ x: px + width / 2, y: py + height / 2, width, height })
+            })
+        })
+    }
+
+    useFocusEffect(
+        useCallback(() => {
+            const checkTour = async () => {
+                const shouldStart = await AsyncStorage.getItem('shouldStartSettingsTour');
+                if (shouldStart === 'true') {
+                    await AsyncStorage.removeItem('shouldStartSettingsTour');
+                    
+                    // Initialize empty steps so SpotlightTour knows it has 4 steps
+                    setTourSteps(tourStepsConfig.map(c => ({
+                        ...c, x: -1000, y: -1000, width: 0, height: 0
+                    })));
+
+                    // Start step 0
+                    setTimeout(() => setTourStep(0), 500);
+                }
+            };
+            checkTour();
+        }, [])
+    );
+
+    // Watch tourStep and dynamically scroll + measure
+    React.useEffect(() => {
+        if (tourStep >= 0 && tourStep < tourStepsConfig.length) {
+            const stepConfig = tourStepsConfig[tourStep];
+            if (!stepConfig.ref.current || !scrollViewRef.current) return;
+
+            // 1. Measure relative to ScrollView to scroll to the item
+            stepConfig.ref.current.measureLayout(
+                scrollViewRef.current,
+                (x, y, w, h) => {
+                    // Scroll so item is roughly in the middle of the screen
+                    scrollViewRef.current.scrollTo({ y: Math.max(0, y - H / 3), animated: true });
+                    
+                    // 2. Wait for scroll to finish, then measure absolute screen position
+                    setTimeout(async () => {
+                        const abs = await measureRefAbsolute(stepConfig.ref);
+                        setTourSteps(prev => {
+                            const newSteps = [...prev];
+                            newSteps[tourStep] = {
+                                ...newSteps[tourStep],
+                                x: abs.x,
+                                y: abs.y,
+                                width: abs.width,
+                                height: abs.height
+                            };
+                            return newSteps;
+                        });
+                    }, 400); // 400ms is enough for scroll animation
+                },
+                () => { console.warn("Could not measure offset for scroll"); }
+            );
+        }
+    }, [tourStep]);
+
+    const [isEditModalVisible, setEditModalVisible] = useState(false)
+    const [newName, setNewName] = useState(auth.currentUser?.displayName || '')
+    const [isUpdating, setIsUpdating] = useState(false)
+
+    const [isFeedbackModalVisible, setFeedbackModalVisible] = useState(false)
+    const [feedbackMessage, setFeedbackMessage] = useState('')
 
     const onLogoutPress = () => {
         Alert.alert(
@@ -187,7 +283,7 @@ const Settings = ({ navigation }) => {
     return (
         <SafeAreaView style={styles.root}>
             <StatusBar barStyle="dark-content" />
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.header}>
                     <Text style={styles.title}>Account</Text>
                     <Text style={styles.subtitle}>Preferences and settings</Text>
@@ -230,20 +326,24 @@ const Settings = ({ navigation }) => {
                 {/* Preferences Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Preferences</Text>
-                    <MenuItem
-                        icon="cash-outline"
-                        label="Currency"
-                        subtitle={`Currently using ${currency} (${currencySymbol})`}
-                        onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
-                        customIcon={currencySymbol}
-                    />
+                    <View ref={currencyRef} onLayout={() => {}}>
+                         <MenuItem
+                            icon="cash-outline"
+                            label="Currency"
+                            subtitle={`Currently using ${currency} (${currencySymbol})`}
+                            onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
+                            customIcon={currencySymbol}
+                        />
+                    </View>
 
-                    <MenuItem
-                        icon="apps-outline"
-                        label="Add Home Screen Widget"
-                        subtitle="Log expenses without opening the app"
-                        onPress={promptAddWidget}
-                    />
+                    <View ref={widgetRef} onLayout={() => {}}>
+                        <MenuItem
+                            icon="apps-outline"
+                            label="Add Home Screen Widget"
+                            subtitle="Log expenses without opening the app"
+                            onPress={promptAddWidget}
+                        />
+                    </View>
                     <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
@@ -262,12 +362,14 @@ const Settings = ({ navigation }) => {
                 {/* Recurring Items Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Recurring & Planning</Text>
-                    <MenuItem
-                        icon="calendar-outline"
-                        label="Recurring Items"
-                        subtitle={`${recurringTransactions.length} items auto-logged monthly`}
-                        onPress={() => navigation.navigate('RecurringManager')}
-                    />
+                    <View ref={recurringRef} onLayout={() => {}}>
+                        <MenuItem
+                            icon="calendar-outline"
+                            label="Recurring Items"
+                            subtitle={`${recurringTransactions.length} items auto-logged monthly`}
+                            onPress={() => navigation.navigate('RecurringManager')}
+                        />
+                    </View>
                     <BannerAdComponent style={{ marginTop: 10 }} />
                 </View>
 
@@ -280,12 +382,14 @@ const Settings = ({ navigation }) => {
                         subtitle="Share raw transaction data"
                         onPress={handleExportCSV}
                     />
-                    <MenuItem
-                        icon="document-text-outline"
-                        label="Export Report (PDF)"
-                        subtitle="Professional transaction summary"
-                        onPress={handleExportPDF}
-                    />
+                    <View ref={exportRef} onLayout={() => {}}>
+                        <MenuItem
+                            icon="document-text-outline"
+                            label="Export Report (PDF)"
+                            subtitle="Professional transaction summary"
+                            onPress={handleExportPDF}
+                        />
+                    </View>
                     <MenuItem
                         icon="trash-outline"
                         label="Delete Profile Data"
@@ -312,6 +416,21 @@ const Settings = ({ navigation }) => {
                     <Text style={styles.footerMoto}>Premium Financial Tracking</Text>
                 </View>
             </ScrollView>
+
+            {tourStep >= 0 && (
+                <SpotlightTour
+                    steps={tourSteps}
+                    currentStep={tourStep}
+                    onNext={() => {
+                        if (tourStep >= tourSteps.length - 1) {
+                            setTourStep(-1);
+                        } else {
+                            setTourStep(tourStep + 1);
+                        }
+                    }}
+                    onSkip={() => setTourStep(-1)}
+                />
+            )}
 
             <Modal
                 visible={isEditModalVisible}

@@ -11,6 +11,10 @@ import { Platform, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from './src/Data/categoriesData';
 import LimnersLogo from './assets/compay-logo/limners';
+import * as SplashScreen from 'expo-splash-screen';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { isLoading, handleAddExpense } = useContext(AppContext);
@@ -52,6 +56,22 @@ function AppContent() {
       subscription.remove();
     };
   }, [handleAddExpense]);
+
+  useEffect(() => {
+    const hideSplash = async () => {
+      if (!isLoading) {
+        try {
+          // Small delay so JS has time to render the first frame
+          setTimeout(async () => {
+            await SplashScreen.hideAsync();
+          }, 300);
+        } catch (e) {
+          console.warn('Error hiding splash screen', e);
+        }
+      }
+    };
+    hideSplash();
+  }, [isLoading]);
 
   if (isLoading) {
     return (

@@ -91,18 +91,25 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () => setKeyboardVisible(true))
     const hideSub = Keyboard.addListener("keyboardDidHide", () => setKeyboardVisible(false))
+
+    // Initial measurement trigger
+    setTimeout(() => {
+      Object.keys(tabRefs).forEach(name => handleLayout(name))
+    }, 500)
+
     return () => { showSub.remove(); hideSub.remove() }
   }, [])
 
   const handleLayout = (name) => {
-    // Add small delay to ensure native layout has fully settled (e.g. after ads shift the view)
+    // Increased delay to 400ms to ensure ads and layout have fully settled
     setTimeout(() => {
       tabRefs[name]?.measureInWindow((x, y, width, height) => {
-        if (x !== undefined) {
-          updateTabLayout(name, { x: x + width / 2, y: y + height / 2 + 8, width, height })
+        if (x !== undefined && y !== undefined) {
+          // Removed manual +8 offset; y + height/2 marks the exact center
+          updateTabLayout(name, { x: x + width / 2, y: y + height / 2, width, height })
         }
       })
-    }, 100)
+    }, 400)
   }
 
   if (keyboardVisible) return null
