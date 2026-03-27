@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from "react"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { createStackNavigator } from "@react-navigation/stack"
-import { Platform, TouchableOpacity, View, Text, ActivityIndicator, StyleSheet, Dimensions, Keyboard } from "react-native"
+import { Platform, TouchableOpacity, View, Text, ActivityIndicator, StyleSheet, Dimensions, Keyboard, Linking } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import Svg, { Path } from "react-native-svg"
 import { BlurView } from "expo-blur"
 import * as Notifications from "expo-notifications"
 import { useNavigationContainerRef } from "@react-navigation/native"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import PremiumAlert from "../components/PremiumAlert"
 
 import Home from "../screens/Home"
 import Create from "../screens/Create"
@@ -198,7 +199,11 @@ import { useContext } from "react"
 
 
 const AppNavigator = () => {
-  const { isFirstLaunch, hasFetchedFromCloud, isSetupComplete } = useContext(AppContext)
+  const { 
+    isFirstLaunch, hasFetchedFromCloud, isSetupComplete, 
+    showRatingPrompt, setShowRatingPrompt, setHasRatedApp,
+    globalAlert, hideGlobalAlert
+  } = useContext(AppContext)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
 
@@ -247,6 +252,7 @@ const AppNavigator = () => {
   }
 
   return (
+    <>
     <Stack.Navigator
       ref={navigationRef}
       screenOptions={{ headerShown: false }}
@@ -278,6 +284,50 @@ const AppNavigator = () => {
       )}
       <Stack.Screen name="SettingsCurrency" component={CurrencySetup} />
     </Stack.Navigator>
+
+      <PremiumAlert
+        visible={showRatingPrompt}
+        title="Enjoying Wallety?"
+        message="If you find this app helpful, please take a moment to rate us on the Play Store! Your support means a lot."
+        icon="star"
+        iconColor="#F59E0B"
+        primaryButtonText="Rate Now"
+        secondaryButtonText="Later"
+        onPrimaryPress={() => {
+          setShowRatingPrompt(false);
+          setHasRatedApp(true);
+          AsyncStorage.setItem('hasRatedApp', 'true');
+          Linking.openURL('market://details?id=com.wallety.budgettracker').catch(() => {
+              Linking.openURL('https://play.google.com/store/apps/details?id=com.wallety.budgettracker');
+          });
+        }}
+        onSecondaryPress={() => {
+          setShowRatingPrompt(false);
+          // Set to true so we don't nag them again.
+          setHasRatedApp(true);
+          AsyncStorage.setItem('hasRatedApp', 'true');
+        }}
+      />
+
+      {/* Global generic Premium Alert */}
+      <PremiumAlert
+        visible={globalAlert.visible}
+        title={globalAlert.title}
+        message={globalAlert.message}
+        icon={globalAlert.icon}
+        iconColor={globalAlert.iconColor}
+        primaryButtonText={globalAlert.primaryButtonText}
+        onPrimaryPress={() => {
+          hideGlobalAlert();
+          if (globalAlert.onPrimaryPress) globalAlert.onPrimaryPress();
+        }}
+        secondaryButtonText={globalAlert.secondaryButtonText}
+        onSecondaryPress={globalAlert.secondaryButtonText ? () => {
+          hideGlobalAlert();
+          if (globalAlert.onSecondaryPress) globalAlert.onSecondaryPress();
+        } : undefined}
+      />
+    </>
   )
 }
 

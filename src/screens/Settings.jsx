@@ -3,6 +3,7 @@ import React, { useContext, useState, useRef, useCallback } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
 import { Dimensions } from 'react-native';
 import SpotlightTour from '../components/SpotlightTour'
+import PremiumAlert from '../components/PremiumAlert'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons'
@@ -22,7 +23,7 @@ const Settings = ({ navigation }) => {
     const {
         expenses, incomes, currency, currencySymbol, setExpenses, setIncomes,
         isDarkMode, toggleDarkMode, recurringTransactions, setRecurringTransactions,
-        handleLogout, userName, setUserName, allTransactions, handleWipeData
+        handleLogout, userName, setUserName, allTransactions, handleWipeData, startRatingTimer, showGlobalAlert
     } = useContext(AppContext)
 
     const [tourStep, setTourStep] = useState(-1);
@@ -121,28 +122,32 @@ const Settings = ({ navigation }) => {
     const [isEditModalVisible, setEditModalVisible] = useState(false)
     const [newName, setNewName] = useState(auth.currentUser?.displayName || '')
     const [isUpdating, setIsUpdating] = useState(false)
+    const [showTourCompleteAlert, setShowTourCompleteAlert] = useState(false);
 
     const [isFeedbackModalVisible, setFeedbackModalVisible] = useState(false)
     const [feedbackMessage, setFeedbackMessage] = useState('')
 
     const onLogoutPress = () => {
-        Alert.alert(
-            "Logout",
-            "Are you sure you want to log out?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Logout",
-                    style: "destructive",
-                    onPress: async () => {
-                        const success = await handleLogout();
-                        if (!success) {
-                            Alert.alert("Error", "Could not sign out. Please check your connection.");
-                        }
-                    }
+        showGlobalAlert({
+            title: "Logout",
+            message: "Are you sure you want to log out?",
+            icon: "log-out",
+            iconColor: COLORS.expense,
+            primaryButtonText: "Logout",
+            secondaryButtonText: "Cancel",
+            onPrimaryPress: async () => {
+                const success = await handleLogout();
+                if (!success) {
+                    showGlobalAlert({
+                        title: "Error",
+                        message: "Could not sign out. Please check your connection.",
+                        icon: "alert-circle",
+                        iconColor: COLORS.expense,
+                        primaryButtonText: "Got it"
+                    });
                 }
-            ]
-        )
+            }
+        });
     }
 
     const handleUpdateName = async () => {
@@ -160,25 +165,28 @@ const Settings = ({ navigation }) => {
     }
 
     const handleClearAll = () => {
-        Alert.alert(
-            'Clear Everything',
-            'This will permanently delete ALL data from your device AND the cloud (Firestore). Your account will be reset to a fresh state. Are you sure?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Delete Everything',
-                    style: 'destructive',
-                    onPress: async () => {
-                        setIsUpdating(true); // Using isUpdating as a generic loading state
-                        const success = await handleWipeData();
-                        setIsUpdating(false);
-                        if (!success) {
-                            Alert.alert('Error', 'Failed to wipe cloud data. Please check your connection.');
-                        }
-                    }
+        showGlobalAlert({
+            title: "Clear Everything",
+            message: "This will permanently delete ALL data from your device AND the cloud (Firestore). Your account will be reset to a fresh state. Are you sure?",
+            icon: "trash",
+            iconColor: COLORS.expense,
+            primaryButtonText: "Delete Everything",
+            secondaryButtonText: "Cancel",
+            onPrimaryPress: async () => {
+                setIsUpdating(true);
+                const success = await handleWipeData();
+                setIsUpdating(false);
+                if (!success) {
+                    showGlobalAlert({
+                        title: "Error",
+                        message: "Failed to wipe cloud data. Please check your connection.",
+                        icon: "alert-circle",
+                        iconColor: COLORS.expense,
+                        primaryButtonText: "Got it"
+                    });
                 }
-            ]
-        )
+            }
+        });
     }
 
     const handleFeedback = () => {
@@ -231,7 +239,13 @@ const Settings = ({ navigation }) => {
             await AdService.showPdfExportAd();
             await exportTransactionsToPDF(allTransactions, currencySymbol, auth.currentUser?.displayName || userName);
         } catch (error) {
-            Alert.alert("Error", "Failed to generate PDF report.");
+            showGlobalAlert({
+                title: 'Error',
+                message: 'Failed to generate PDF report.',
+                icon: 'alert-circle',
+                iconColor: '#F43F5E',
+                primaryButtonText: 'Got it'
+            });
         }
     }
 
@@ -243,7 +257,14 @@ const Settings = ({ navigation }) => {
             });
             // Note: direct requestPinAppWidget call is preferred if available in the package
             // But since the prompt specifically mentioned requestWidgetUpdate for this task:
-            Alert.alert("Widget", "To add the widget, long press your home screen and find 'Expense Tracker' in the widgets list.");
+            showGlobalAlert({
+                title: 'Widget',
+                message: "To add the widget, long press your home screen and find 'Expense Tracker' in the widgets list.",
+                icon: 'grid',
+                iconColor: COLORS.primary,
+                primaryButtonText: 'Got it'
+            });
+
         } catch (error) {
             console.error("Error prompting widget:", error);
         }
@@ -424,11 +445,15 @@ const Settings = ({ navigation }) => {
                     onNext={() => {
                         if (tourStep >= tourSteps.length - 1) {
                             setTourStep(-1);
+                            setShowTourCompleteAlert(true);
                         } else {
                             setTourStep(tourStep + 1);
                         }
                     }}
-                    onSkip={() => setTourStep(-1)}
+                    onSkip={() => {
+                        setTourStep(-1);
+                        setShowTourCompleteAlert(true);
+                    }}
                 />
             )}
 
@@ -518,6 +543,19 @@ const Settings = ({ navigation }) => {
             <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center', marginBottom: 110 }}>
                 <BannerAdComponent />
             </View>
+
+            <PremiumAlert 
+                visible={showTourCompleteAlert}
+                title="Tour Complete!"
+                message="You're all set to manage your finances like a pro."
+                icon="rocket"
+                iconColor={COLORS.primary}
+                primaryButtonText="Let's Go!"
+                onPrimaryPress={() => {
+                    setShowTourCompleteAlert(false);
+                    if (startRatingTimer) startRatingTimer();
+                }}
+            />
         </SafeAreaView>
     )
 }

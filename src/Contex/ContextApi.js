@@ -33,6 +33,38 @@ export const AppContextProvider = ({ children }) => {
     const [lastProcessedMonth, setLastProcessedMonth] = useState(null);
     const [tabLayouts, setTabLayouts] = useState({});
 
+    // ── Rating Prompt ─────────────────────────────────────────
+    const [hasRatedApp, setHasRatedApp] = useState(false);
+    const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+
+    // ── Global Premium Alert ──────────────────────────────────
+    const [globalAlert, setGlobalAlert] = useState({
+        visible: false,
+        title: '',
+        message: '',
+        icon: 'information-circle',
+        iconColor: '#000',
+        primaryButtonText: 'OK',
+        onPrimaryPress: null,
+        secondaryButtonText: null,
+        onSecondaryPress: null,
+    });
+
+    const showGlobalAlert = useCallback((config) => {
+        setGlobalAlert({ ...config, visible: true });
+    }, []);
+
+    const hideGlobalAlert = useCallback(() => {
+        setGlobalAlert(prev => ({ ...prev, visible: false }));
+    }, []);
+
+    const startRatingTimer = useCallback(() => {
+        if (hasRatedApp) return;
+        setTimeout(() => {
+            setShowRatingPrompt(true);
+        }, 40000);
+    }, [hasRatedApp]);
+
     const updateTabLayout = useCallback((name, layout) => {
         setTabLayouts(prev => ({
             ...prev,
@@ -276,11 +308,13 @@ export const AppContextProvider = ({ children }) => {
 
             if (storedNotifs) setAppNotifications(JSON.parse(storedNotifs));
 
-            const [storedPrevSummary] = await Promise.all([
-                AsyncStorage.getItem('prevMonthSummary')
+            const [storedPrevSummary, storedHasRated] = await Promise.all([
+                AsyncStorage.getItem('prevMonthSummary'),
+                AsyncStorage.getItem('hasRatedApp')
             ]);
             if (storedPrevSummary) setPrevMonthSummary(JSON.parse(storedPrevSummary));
             if (storedIsSetupComplete) setIsSetupComplete(JSON.parse(storedIsSetupComplete));
+            if (storedHasRated) setHasRatedApp(JSON.parse(storedHasRated));
 
             // Recurring logic
             const recurring = storedRecurring ? JSON.parse(storedRecurring) : [];
@@ -304,7 +338,13 @@ export const AppContextProvider = ({ children }) => {
             }
         } catch (error) {
             console.log('Error loading data:', error);
-            Alert.alert('Error', 'Failed to load your data');
+            showGlobalAlert({
+                title: 'Error',
+                message: 'Failed to load your data',
+                icon: 'warning',
+                iconColor: '#F43F5E',
+                primaryButtonText: 'Got it'
+            });
         } finally {
             setIsLoading(false);
         }
@@ -490,7 +530,13 @@ export const AppContextProvider = ({ children }) => {
     // ── Expense CRUD ──────────────────────────────────────────
     const handleAddExpense = ({ title: t, amount: amt, category: cat, date: d, navigation }) => {
         if (!t || !amt || !cat?.name) {
-            Alert.alert('Error', 'All fields are required');
+            showGlobalAlert({
+                title: 'Missing Fields',
+                message: 'All fields are required',
+                icon: 'alert-circle',
+                iconColor: '#F43F5E',
+                primaryButtonText: 'Okay'
+            });
             return;
         }
         const newExpense = {
@@ -538,7 +584,13 @@ export const AppContextProvider = ({ children }) => {
 
     const handleUpdateExpense = (navigation) => {
         if (!title || !amount || !category?.name) {
-            Alert.alert('Error', 'All fields are required');
+            showGlobalAlert({
+                title: 'Missing Fields',
+                message: 'All fields are required',
+                icon: 'alert-circle',
+                iconColor: '#F43F5E',
+                primaryButtonText: 'Okay'
+            });
             return;
         }
         setExpenses(prev => {
@@ -573,7 +625,13 @@ export const AppContextProvider = ({ children }) => {
     // ── Income CRUD ───────────────────────────────────────────
     const handleAddIncome = async ({ amount, source, date, navigation }) => {
         if (!amount || !source) {
-            Alert.alert('Error', 'Please fill all fields');
+            showGlobalAlert({
+                title: 'Missing Fields',
+                message: 'Please fill all fields',
+                icon: 'alert-circle',
+                iconColor: '#F43F5E',
+                primaryButtonText: 'Okay'
+            });
             return;
         }
 
@@ -588,7 +646,6 @@ export const AppContextProvider = ({ children }) => {
         setIncomes(prev => [newIncome, ...prev]);
         logAppNotification("💰 Income Added", `✅ ${currencySymbol}${parseFloat(amount).toFixed(2)}: ${source.trim()}`, 'success');
         resetForm();
-        Alert.alert("Success", "Income added successfully!");
         if (navigation) navigation.navigate('Home');
     };
 
@@ -666,7 +723,13 @@ export const AppContextProvider = ({ children }) => {
             return true;
         } catch (error) {
             console.error("Logout Error:", error);
-            Alert.alert("Error", "Failed to log out. Please try again.");
+            showGlobalAlert({
+                title: 'Logout Error',
+                message: 'Failed to log out. Please try again.',
+                icon: 'alert-circle',
+                iconColor: '#F43F5E',
+                primaryButtonText: 'Got it'
+            });
             return false;
         }
     };
@@ -867,14 +930,17 @@ export const AppContextProvider = ({ children }) => {
         handleWipeData, checkAndResetMonth,
         getLocalDate, getYearMonth,
         refreshData,
-        tabLayouts, updateTabLayout
+        tabLayouts, updateTabLayout,
+        hasRatedApp, setHasRatedApp,
+        showRatingPrompt, setShowRatingPrompt, startRatingTimer,
+        globalAlert, showGlobalAlert, hideGlobalAlert
     }), [
         expenses, incomes, amount, title, category, editingId, isLoading, categoriesList,
         selectedPeriod, filteredExpenses, budgets, currency, isDarkMode, isFirstLaunch,
         userName, recurringTransactions, currencySymbol, allTransactions, totalSpent,
         totalIncome, balance, monthlySummary, categoriesWithBudget, appNotifications,
         prevMonthSummary, hasFetchedFromCloud, isSetupComplete, lastProcessedMonth,
-        refreshData, tabLayouts, updateTabLayout
+        refreshData, tabLayouts, updateTabLayout, hasRatedApp, showRatingPrompt, startRatingTimer, globalAlert
     ]);
 
     return (

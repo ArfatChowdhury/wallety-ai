@@ -201,7 +201,7 @@ const HomeListHeader = React.memo(({
               </View>
             )}
           </View>
-          <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.balance).toFixed(2)}</Text>
+          <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.spent).toFixed(2)}</Text>
 
           {/* Budget Progress Bar */}
           <View style={styles.progressContainer}>
@@ -226,13 +226,19 @@ const HomeListHeader = React.memo(({
             </View>
           </View>
 
-          <View style={styles.balanceFooter}>
-            <View style={styles.footerItem}>
-              <Text style={styles.footerLabel}>Balance left to spend</Text>
+          <View style={[styles.balanceFooter, { justifyContent: 'space-between', flexDirection: 'row', width: '100%' }]}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <Text style={styles.footerLabel} numberOfLines={1}>Total Income</Text>
+              <Text style={styles.footerAmount} numberOfLines={1}>
+                {currencySymbol}{Number(displayTotals.income || 0).toFixed(2)}
+              </Text>
+            </View>
+            <View style={{ flex: 1, alignItems: 'flex-end', paddingLeft: 10 }}>
+              <Text style={styles.footerLabel} numberOfLines={1}>Balance Left</Text>
               <Text style={[
-                styles.footerValue,
+                styles.footerAmount,
                 monthlySummary.isDebt && { color: COLORS.expense }
-              ]}>
+              ]} numberOfLines={1}>
                 {currencySymbol}{Number(displayTotals.balance).toFixed(2)}
               </Text>
             </View>
@@ -841,7 +847,6 @@ const Home = ({ navigation }) => {
           if (tourStep >= tourSteps.length - 1) {
             setTourStep(-1)
             AsyncStorage.setItem('hasCompletedTour', 'true')
-            Alert.alert('Tour complete!', "You're all set to manage your finances.")
           } else {
             setTourStep(tourStep + 1)
           }
