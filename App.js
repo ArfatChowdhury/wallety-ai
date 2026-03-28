@@ -90,6 +90,7 @@ function AppContent() {
 
 const SplashScreenView = ({ onFinish }) => {
   const contentFade = useRef(new Animated.Value(0)).current;
+  const [showLogo, setShowLogo] = useState(false);
 
   useEffect(() => {
     // Fade in content
@@ -99,12 +100,18 @@ const SplashScreenView = ({ onFinish }) => {
       useNativeDriver: true,
     }).start();
 
-    // Hide after 3 seconds
+    // Small delay before showing the logo section
+    const logoTimer = setTimeout(() => setShowLogo(true), 400);
+
+    // Hide splash after 3 seconds
     const timer = setTimeout(() => {
       onFinish();
     }, 3000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(logoTimer);
+      clearTimeout(timer);
+    };
   }, [contentFade, onFinish]);
 
   return (
@@ -148,23 +155,25 @@ const SplashScreenView = ({ onFinish }) => {
       </Animated.View>
 
       {/* Animated Limners Logo at bottom */}
-      <View style={{
-        position: 'absolute',
-        bottom: 60,
-        alignItems: 'center',
-      }}>
-        <Text style={{
-          fontSize: 11,
-          color: '#9CA3AF',
-          fontWeight: '600',
-          letterSpacing: 2,
-          textTransform: 'uppercase',
-          marginBottom: 8,
+      {showLogo && (
+        <View style={{
+          position: 'absolute',
+          bottom: 60,
+          alignItems: 'center',
         }}>
-          from
-        </Text>
-        <LimnersLogo width={200} />
-      </View>
+          <Text style={{
+            fontSize: 11,
+            color: '#9CA3AF',
+            fontWeight: '600',
+            letterSpacing: 2,
+            textTransform: 'uppercase',
+            marginBottom: 8,
+          }}>
+            from
+          </Text>
+          <LimnersLogo width={200} />
+        </View>
+      )}
     </View>
   );
 };

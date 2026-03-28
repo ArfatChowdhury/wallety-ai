@@ -6,6 +6,7 @@ import { registerForPushNotificationsAsync, sendBudgetWarning, scheduleMonthlySu
 import { db, auth } from "../services/firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import AdService from "../services/AdService";
+import { runSmartAnalysis } from "../services/SmartNotificationService";
 
 export const AppContext = createContext()
 
@@ -359,6 +360,23 @@ export const AppContextProvider = ({ children }) => {
             setIsLoading(false);
         }
     };
+
+    // ── Smart Analysis Trigger ────────────────────────────────
+    useEffect(() => {
+        if (hasFetchedFromCloud && !isLoading) {
+            // Small skip to ensure all derived values are computed
+            const timer = setTimeout(() => {
+                runSmartAnalysis({
+                    totalIncome,
+                    totalSpent,
+                    monthlyExpenses,
+                    categoriesWithBudget,
+                    prevMonthSummary,
+                });
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [hasFetchedFromCloud, isLoading, totalIncome, totalSpent, monthlyExpenses, categoriesWithBudget, prevMonthSummary]);
 
     const cachePreviousMonthSummary = async (expensesStr, incomesStr, monthYear) => {
         try {

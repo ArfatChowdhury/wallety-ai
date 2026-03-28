@@ -1,6 +1,14 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const getYearMonth = (date = new Date()) => {
+    const d = new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+};
 
 // ─── Foreground handler ────────────────────────────────────────────────────
 Notifications.setNotificationHandler({
@@ -91,45 +99,74 @@ export const registerForPushNotificationsAsync = async () => {
 };
 
 // ─── Daily reminder (FIXED: proper channel + daily trigger type) ────────────
-const REMINDER_IDENTIFIER = 'wallety-daily-reminder';
+const MIDDAY_REMINDER_ID = 'wallety-midday-reminder';
+const EVENING_REMINDER_ID = 'wallety-evening-reminder';
 
 export const scheduleDailyReminder = async () => {
     try {
-        // Cancel previous to ensure clean state (no duplicates)
-        await Notifications.cancelScheduledNotificationAsync(REMINDER_IDENTIFIER).catch(() => { });
+        const reminderKey = 'dailyReminderScheduled';
+        const isScheduled = await AsyncStorage.getItem(reminderKey);
+        if (isScheduled === 'true') return;
 
-        const messages = [
-            { body: "Track today's spending and stay on budget 💪", sub: "Tap to log an expense" },
-            { body: "Every rupee counts! Log your expenses now 📊", sub: "Stay in control of your finances" },
-            { body: "Quick reminder — did you spend today? 🤔", sub: "Tap to add your daily expenses" },
-            { body: "Your wallet misses you. Time to log! 💼", sub: "Keep your records up to date" },
+        // Cancel previous to ensure clean state
+        await Notifications.cancelScheduledNotificationAsync(MIDDAY_REMINDER_ID).catch(() => { });
+        await Notifications.cancelScheduledNotificationAsync(EVENING_REMINDER_ID).catch(() => { });
+
+        const middayMessages = [
+            "Did you spend anything this morning? Log it before you forget!",
+            "Quick expense check — 2 minutes is all it takes 📊",
+            "Stay on top of your budget. Log today's expenses now!",
         ];
-        const pick = messages[new Date().getDay() % messages.length];
+        
+        const eveningMessages = [
+            "How was spending today? Log your expenses before bed!",
+            "End your day right — review your daily spending 💪",
+            "Don't sleep on your finances. Quick log before bed? 🛏️",
+        ];
 
+        const pickMidday = middayMessages[Math.floor(Math.random() * middayMessages.length)];
+        const pickEvening = eveningMessages[Math.floor(Math.random() * eveningMessages.length)];
+
+        // 2 PM Reminder
         await Notifications.scheduleNotificationAsync({
-            identifier: REMINDER_IDENTIFIER,
+            identifier: MIDDAY_REMINDER_ID,
             content: {
-                title: '⏰ Wallety Daily Check-In',
-                body: pick.body,
-                subtitle: pick.sub,
+                title: '💡 Midday Check-In',
+                body: pickMidday,
                 sound: 'default',
-                priority: Notifications.AndroidNotificationPriority.MAX,
+                priority: Notifications.AndroidNotificationPriority.HIGH,
                 color: '#22C55E',
-                // Deep-link data → tapping opens Create screen
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { channelId: CHANNEL_REMINDER }),
             },
-            trigger: Platform.OS === 'android'
-                ? { type: 'daily', hour: 20, minute: 0, channelId: CHANNEL_REMINDER }
-                : { type: 'daily', hour: 20, minute: 0 },
+            trigger: { type: 'daily', hour: 14, minute: 0 },
         });
+
+        // 8 PM Reminder
+        await Notifications.scheduleNotificationAsync({
+            identifier: EVENING_REMINDER_ID,
+            content: {
+                title: '🌙 Evening Summary',
+                body: pickEvening,
+                sound: 'default',
+                priority: Notifications.AndroidNotificationPriority.HIGH,
+                color: '#22C55E',
+                data: { screen: 'Create' },
+                ...(Platform.OS === 'android' && { channelId: CHANNEL_REMINDER }),
+            },
+            trigger: { type: 'daily', hour: 20, minute: 0 },
+        });
+
+        await AsyncStorage.setItem(reminderKey, 'true');
     } catch (err) {
         console.log('scheduleDailyReminder error:', err);
     }
 };
 
 export const cancelDailyReminder = async () => {
-    await Notifications.cancelScheduledNotificationAsync(REMINDER_IDENTIFIER).catch(() => { });
+    await Notifications.cancelScheduledNotificationAsync(MIDDAY_REMINDER_ID).catch(() => { });
+    await Notifications.cancelScheduledNotificationAsync(EVENING_REMINDER_ID).catch(() => { });
+    await AsyncStorage.removeItem('dailyReminderScheduled');
 };
 
 // ─── Transaction confirmation ──────────────────────────────────────────────
@@ -204,6 +241,11 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
 // ─── Monthly summary alert ─────────────────────────────────────────────────
 export const scheduleMonthlySummaryAlert = async () => {
     try {
+        const key = 'lastMonthlySummaryMonth';
+        const current = getYearMonth(); // YYYY-MM
+        const last = await AsyncStorage.getItem(key);
+        if (last === current) return; // already sent
+
         const now = new Date();
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         let triggerDate = new Date(lastDay);
@@ -234,6 +276,8 @@ export const scheduleMonthlySummaryAlert = async () => {
                 ? { date: triggerDate, channelId: CHANNEL_TRANSACTION }
                 : triggerDate,
         });
+
+        await AsyncStorage.setItem(key, current);
     } catch (err) {
         console.log('scheduleMonthlySummaryAlert error:', err);
     }
