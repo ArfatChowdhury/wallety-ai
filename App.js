@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from './src/Data/categoriesData';
 import LimnersLogo from './assets/compay-logo/limners';
 import * as SplashScreen from 'expo-splash-screen';
+import * as NavigationBar from 'expo-navigation-bar';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -102,6 +103,8 @@ export default function App() {
       Purchases.configure({ apiKey: iosApiKey });
     } else if (Platform.OS === 'android') {
       Purchases.configure({ apiKey: androidApiKey });
+      NavigationBar.setBackgroundColorAsync('#ffffff');
+      NavigationBar.setButtonStyleAsync('dark');
     }
   }, []);
 
