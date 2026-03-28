@@ -1,13 +1,12 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Animated, Image, Text, Platform, AppState } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AppContextProvider, AppContext } from './src/Contex/ContextApi';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
-import { Platform, AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from './src/Data/categoriesData';
 import LimnersLogo from './assets/compay-logo/limners';
@@ -89,8 +88,94 @@ function AppContent() {
   );
 }
 
-export default function App() {
+const SplashScreenView = ({ onFinish }) => {
+  const contentFade = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
+    // Fade in content
+    Animated.timing(contentFade, {
+      toValue: 1,
+      duration: 600,
+      useNativeDriver: true,
+    }).start();
+
+    // Hide after 3 seconds
+    const timer = setTimeout(() => {
+      onFinish();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [contentFade, onFinish]);
+
+  return (
+    <View style={{
+      flex: 1,
+      backgroundColor: '#ffffff',
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}>
+      {/* App icon + name */}
+      <Animated.View style={{ 
+        alignItems: 'center',
+        opacity: contentFade 
+      }}>
+        <Image
+          source={require('./assets/icon.png')}
+          style={{
+            width: 90,
+            height: 90,
+            borderRadius: 20,
+          }}
+          resizeMode="contain"
+        />
+        <Text style={{
+          fontSize: 26,
+          fontWeight: '900',
+          color: '#111827',
+          marginTop: 12,
+          letterSpacing: -0.5,
+        }}>
+          Wallety
+        </Text>
+        <Text style={{
+          fontSize: 13,
+          color: '#6B7280',
+          marginTop: 4,
+          fontWeight: '500',
+        }}>
+          AI Budget Tracker
+        </Text>
+      </Animated.View>
+
+      {/* Animated Limners Logo at bottom */}
+      <View style={{
+        position: 'absolute',
+        bottom: 60,
+        alignItems: 'center',
+      }}>
+        <Text style={{
+          fontSize: 11,
+          color: '#9CA3AF',
+          fontWeight: '600',
+          letterSpacing: 2,
+          textTransform: 'uppercase',
+          marginBottom: 8,
+        }}>
+          from
+        </Text>
+        <LimnersLogo width={200} />
+      </View>
+    </View>
+  );
+};
+
+export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    // Hide native splash screen immediately
+    SplashScreen.hideAsync().catch(() => {});
+
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
 
     // Platform-specific API keys
@@ -111,7 +196,11 @@ export default function App() {
       <SafeAreaProvider>
         <AppContextProvider>
           <StatusBar style="dark" />
-          <AppContent />
+          {showSplash ? (
+            <SplashScreenView onFinish={() => setShowSplash(false)} />
+          ) : (
+            <AppContent />
+          )}
         </AppContextProvider>
       </SafeAreaProvider>
     </ErrorBoundary>
