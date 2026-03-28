@@ -20,10 +20,10 @@ Notifications.setNotificationHandler({
 });
 
 // ─── Channel IDs ───────────────────────────────────────────────────────────
-const CHANNEL_REMINDER = 'wallety-reminder';
-const CHANNEL_TRANSACTION = 'wallety-transactions';
-const CHANNEL_BUDGET = 'wallety-budget';
-const CHANNEL_ALARM = 'wallety-alarm';
+export const CHANNEL_REMINDER = 'wallety-reminder';
+export const CHANNEL_TRANSACTION = 'wallety-transactions';
+export const CHANNEL_BUDGET = 'wallety-budget';
+export const CHANNEL_ALARM = 'wallety-alarm';
 
 // ─── Create all Android channels (idempotent — safe to call on every launch)
 const createAndroidChannels = async () => {
@@ -104,9 +104,12 @@ const EVENING_REMINDER_ID = 'wallety-evening-reminder';
 
 export const scheduleDailyReminder = async () => {
     try {
-        const reminderKey = 'dailyReminderScheduled';
-        const isScheduled = await AsyncStorage.getItem(reminderKey);
-        if (isScheduled === 'true') return;
+        const reminderKey = 'dailyReminderScheduledWeek';
+        const now = new Date();
+        const weekNumber = `${now.getFullYear()}-W${Math.ceil(now.getDate() / 7)}`;
+        const lastScheduledWeek = await AsyncStorage.getItem(reminderKey);
+        
+        if (lastScheduledWeek === weekNumber) return;
 
         // Cancel previous to ensure clean state
         await Notifications.cancelScheduledNotificationAsync(MIDDAY_REMINDER_ID).catch(() => { });
@@ -157,7 +160,7 @@ export const scheduleDailyReminder = async () => {
             trigger: { type: 'daily', hour: 20, minute: 0 },
         });
 
-        await AsyncStorage.setItem(reminderKey, 'true');
+        await AsyncStorage.setItem(reminderKey, weekNumber);
     } catch (err) {
         console.log('scheduleDailyReminder error:', err);
     }
@@ -166,7 +169,7 @@ export const scheduleDailyReminder = async () => {
 export const cancelDailyReminder = async () => {
     await Notifications.cancelScheduledNotificationAsync(MIDDAY_REMINDER_ID).catch(() => { });
     await Notifications.cancelScheduledNotificationAsync(EVENING_REMINDER_ID).catch(() => { });
-    await AsyncStorage.removeItem('dailyReminderScheduled');
+    await AsyncStorage.removeItem('dailyReminderScheduledWeek');
 };
 
 // ─── Transaction confirmation ──────────────────────────────────────────────
@@ -241,21 +244,27 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
 // ─── Monthly summary alert ─────────────────────────────────────────────────
 export const scheduleMonthlySummaryAlert = async () => {
     try {
-        const key = 'lastMonthlySummaryMonth';
         const current = getYearMonth(); // YYYY-MM
-        const last = await AsyncStorage.getItem(key);
-        if (last === current) return; // already sent
+        const scheduleKey = 'monthlySummaryScheduled'; // guard key: "already scheduled this month"
+        const lastScheduled = await AsyncStorage.getItem(scheduleKey);
+        
+        if (lastScheduled === current) return; // already scheduled this month — skip
 
         const now = new Date();
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        const dayOfMonth = now.getDate();
+        const lastDayOfMonth = lastDay.getDate();
+        const daysUntilEnd = lastDayOfMonth - dayOfMonth;
+
+        if (daysUntilEnd > 2) {
+            return; // Too early — don't touch the key so it can be checked next time
+        }
+
         let triggerDate = new Date(lastDay);
         triggerDate.setHours(20, 0, 0, 0);
 
-        if (now > triggerDate) {
-            const nextMonthLastDay = new Date(now.getFullYear(), now.getMonth() + 2, 0);
-            triggerDate = new Date(nextMonthLastDay);
-            triggerDate.setHours(20, 0, 0, 0);
-        }
+        // If we're already past 8PM on the last day, skip — month is essentially over
+        if (now > triggerDate) return;
 
         const identifier = 'wallety-monthly-summary';
         await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => { });
@@ -270,18 +279,24 @@ export const scheduleMonthlySummaryAlert = async () => {
                 color: '#8B5CF6',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: 'Insight' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_TRANSACTION }),
+                ...(Platform.OS === 'android' && { channelId: CHANNEL_BUDGET }),
             },
             trigger: Platform.OS === 'android'
-                ? { date: triggerDate, channelId: CHANNEL_TRANSACTION }
+                ? { date: triggerDate, channelId: CHANNEL_BUDGET }
                 : triggerDate,
         });
 
-        await AsyncStorage.setItem(key, current);
+        await AsyncStorage.setItem(scheduleKey, current);
     } catch (err) {
         console.log('scheduleMonthlySummaryAlert error:', err);
     }
 };
+
+// NEW: called when month rolls over, so that next month can schedule fresh
+export const resetMonthlySummaryScheduleKey = async () => {
+    await AsyncStorage.removeItem('monthlySummaryScheduled');
+};
+
 // ─── Custom User Reminders ──────────────────────────────────────────────────
 export const scheduleCustomReminder = async (triggerDate, message, isAlarm = false) => {
     try {

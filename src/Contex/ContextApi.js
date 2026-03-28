@@ -2,7 +2,7 @@ import { createContext, useCallback, useEffect, useMemo, useState } from "react"
 import { Alert } from "react-native";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from "../Data/categoriesData";
-import { registerForPushNotificationsAsync, sendBudgetWarning, scheduleMonthlySummaryAlert, scheduleDailyReminder } from "../services/NotificationService";
+import { registerForPushNotificationsAsync, sendBudgetWarning, scheduleMonthlySummaryAlert, scheduleDailyReminder, resetMonthlySummaryScheduleKey } from "../services/NotificationService";
 import { db, auth } from "../services/firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import AdService from "../services/AdService";
@@ -246,6 +246,16 @@ export const AppContextProvider = ({ children }) => {
                 }
             }
             setHasFetchedFromCloud(true);
+            // Run smart analysis once after cloud load
+            setTimeout(() => {
+                runSmartAnalysis({
+                    totalIncome,
+                    totalSpent,
+                    monthlyExpenses,
+                    categoriesWithBudget,
+                    prevMonthSummary,
+                });
+            }, 2000);
         } catch (e) {
             console.error("Firestore Fetch Error:", e);
             setHasFetchedFromCloud(true); // allow syncing after failed fetch attempt to avoid blocking user
@@ -361,22 +371,7 @@ export const AppContextProvider = ({ children }) => {
         }
     };
 
-    // ── Smart Analysis Trigger ────────────────────────────────
-    useEffect(() => {
-        if (hasFetchedFromCloud && !isLoading) {
-            // Small skip to ensure all derived values are computed
-            const timer = setTimeout(() => {
-                runSmartAnalysis({
-                    totalIncome,
-                    totalSpent,
-                    monthlyExpenses,
-                    categoriesWithBudget,
-                    prevMonthSummary,
-                });
-            }, 2000);
-            return () => clearTimeout(timer);
-        }
-    }, [hasFetchedFromCloud, isLoading, totalIncome, totalSpent, monthlyExpenses, categoriesWithBudget, prevMonthSummary]);
+    // No-op: moved smart analysis to run once after cloud fetch for performance
 
     const cachePreviousMonthSummary = async (expensesStr, incomesStr, monthYear) => {
         try {
@@ -442,7 +437,10 @@ export const AppContextProvider = ({ children }) => {
                 'success'
             );
 
-            // 4. Update last processed (Both local and sync will catch state update)
+            // 4. Reset monthly summary schedule key for the new month
+            await resetMonthlySummaryScheduleKey();
+
+            // 5. Update last processed (Both local and sync will catch state update)
             await AsyncStorage.setItem(storageKey, currentMonthYear);
             setLastProcessedMonth(currentMonthYear);
         } else if (!storedLastMonth) {
@@ -636,7 +634,8 @@ export const AppContextProvider = ({ children }) => {
                     .reduce((sum, e) => sum + Number(e.amount), 0);
 
                 if (totalInCat > budgetLimit) {
-                    scheduleBudgetAlert(category.name, totalInCat, budgetLimit);
+                    const percentage = Math.round((totalInCat / budgetLimit) * 100);
+                    sendBudgetWarning(category.name, percentage);
                 }
             }
             return updated;
@@ -740,8 +739,13 @@ export const AppContextProvider = ({ children }) => {
             await AsyncStorage.multiRemove([
                 'expenses', 'incomes', 'budgets', 'appNotifications', 'userName',
                 'lastProcessedMonth', 'prevMonthSummary', 'recurringTransactions',
-                'isSetupComplete', 'hasCompletedTour', 'shouldStartTour'
+                'isSetupComplete', 'hasCompletedTour', 'shouldStartTour',
+                'monthlySummaryScheduled', 'dailyReminderScheduledWeek'
             ]);
+
+            // Clear today's smart notification key
+            const today_str = new Date().toISOString().split('T')[0];
+            await AsyncStorage.removeItem(`smartNotif_${today_str}`);
 
             setIsSetupComplete(false);
 

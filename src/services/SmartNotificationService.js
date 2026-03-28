@@ -1,6 +1,4 @@
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CHANNEL_BUDGET } from './NotificationService';
 
 /**
  * Runs smart analysis on user spending and sends proactive notifications.
