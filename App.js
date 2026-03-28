@@ -4,7 +4,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AppContextProvider, AppContext } from './src/Contex/ContextApi';
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { Platform, AppState } from 'react-native';
@@ -19,6 +19,14 @@ SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { isLoading, handleAddExpense } = useContext(AppContext);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const checkWidgetExpense = async () => {
@@ -60,29 +68,19 @@ function AppContent() {
 
   useEffect(() => {
     const hideSplash = async () => {
-      if (!isLoading) {
+      if (!isLoading && minTimeElapsed) {
         try {
-          // Small delay so JS has time to render the first frame
-          setTimeout(async () => {
-            await SplashScreen.hideAsync();
-          }, 300);
+          await SplashScreen.hideAsync();
         } catch (e) {
           console.warn('Error hiding splash screen', e);
         }
       }
     };
     hideSplash();
-  }, [isLoading]);
+  }, [isLoading, minTimeElapsed]);
 
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f3f4f6' }}>
-        <ActivityIndicator size="large" color="#16a34a" />
-        <View style={{ marginTop: 20, width: '60%', height: 60 }}>
-          <LimnersLogo />
-        </View>
-      </View>
-    );
+  if (isLoading || !minTimeElapsed) {
+    return null;
   }
   return (
     <NavigationContainer>
