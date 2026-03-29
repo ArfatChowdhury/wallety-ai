@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Modal, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback } from 'react-native'
 import React, { useContext, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -61,7 +61,7 @@ const RecurringManager = ({ navigation }) => {
             </View>
             <View style={tailwind`items-end mr-3`}>
                 <Text style={[styles.amount, { color: item.type === 'income' ? '#059669' : '#DC2626' }]}>
-                    {item.type === 'income' ? '+' : '-'}{currencySymbol}{item.amount}
+                    {item.type === 'income' ? '+' : '-'}{currencySymbol}{parseFloat(item.amount || 0).toFixed(2)}
                 </Text>
             </View>
             <View style={styles.btnRow}>
@@ -115,11 +115,14 @@ const RecurringManager = ({ navigation }) => {
                     visible={modalVisible}
                     onRequestClose={() => setModalVisible(false)}
                 >
-                    <View style={styles.modalOverlay}>
-                        <KeyboardAvoidingView
-                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                            style={styles.modalContent}
-                        >
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={{ flex: 1, justifyContent: 'flex-end' }}
+                    >
+                        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+                            <View style={styles.modalOverlay} />
+                        </TouchableWithoutFeedback>
+                        <View style={styles.modalContent}>
                             <Text style={styles.modalTitle}>Edit Item</Text>
 
                             <View style={styles.modalInputGroup}>
@@ -137,7 +140,12 @@ const RecurringManager = ({ navigation }) => {
                                 <TextInput
                                     style={styles.modalInput}
                                     value={amount}
-                                    onChangeText={setAmount}
+                                    onChangeText={(val) => {
+                                        // Bug fix: Allow only valid decimal input and cap at 999,999,999
+                                        if (val === '' || val === '.') { setAmount(val); return; }
+                                        const num = parseFloat(val);
+                                        if (!isNaN(num) && num <= 999999999) setAmount(val);
+                                    }}
                                     keyboardType="numeric"
                                     placeholder="0.00"
                                 />
@@ -157,8 +165,8 @@ const RecurringManager = ({ navigation }) => {
                                     <Text style={styles.saveBtnText}>Save Changes</Text>
                                 </TouchableOpacity>
                             </View>
-                        </KeyboardAvoidingView>
-                    </View>
+                        </View>
+                    </KeyboardAvoidingView>
                 </Modal>
             </View>
 
@@ -261,9 +269,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#FEF2F2',
     },
     modalOverlay: {
-        flex: 1,
+        ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.5)',
-        justifyContent: 'flex-end',
     },
     modalContent: {
         backgroundColor: COLORS.white,

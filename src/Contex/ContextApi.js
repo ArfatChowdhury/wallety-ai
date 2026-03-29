@@ -120,12 +120,14 @@ export const AppContextProvider = ({ children }) => {
     const [title, setTitle] = useState('')
     const [category, setCategory] = useState({})
     const [editingId, setEditingId] = useState(null)
+    const [editingType, setEditingType] = useState('expense') // Bug 3: tracks type of transaction being edited
 
     const resetForm = () => {
         setAmount('');
         setTitle('');
         setCategory({});
         setEditingId(null);
+        setEditingType('expense');
     };
 
     // ── Date filter ───────────────────────────────────────────
@@ -602,14 +604,21 @@ export const AppContextProvider = ({ children }) => {
     };
 
     const handleEdit = (item) => {
-        setTitle(item.title);
+        setTitle(item.title || item.source || '');
         setAmount(item.amount.toString());
-        setCategory(item.category);
+        setCategory(item.category || {});
         setEditingId(item.id);
+        setEditingType(item.type || 'expense'); // Bug 3: set the correct type for editing
     };
 
-    const handleUpdateExpense = (navigation) => {
-        if (!title || !amount || !category?.name) {
+    // Bug 3 fix: Accept explicit overrides so caller data is always used,
+    // not stale context state. Falls back to context state if no override.
+    const handleUpdateExpense = (navigation, overrides = {}) => {
+        const t = overrides.title ?? title;
+        const amt = overrides.amount ?? amount;
+        const cat = overrides.category ?? category;
+
+        if (!t || !amt || !cat?.name) {
             showGlobalAlert({
                 title: 'Missing Fields',
                 message: 'All fields are required',
@@ -622,25 +631,25 @@ export const AppContextProvider = ({ children }) => {
         setExpenses(prev => {
             const updated = prev.map(e =>
                 e.id === editingId
-                    ? { ...e, title: title.trim(), amount: parseFloat(parseFloat(amount).toFixed(2)), category, icon: category.icon }
+                    ? { ...e, title: t.toString().trim(), amount: parseFloat(parseFloat(amt).toFixed(2)), category: cat, icon: cat.icon }
                     : e
             );
 
             // Check budget alert for the category
-            const budgetLimit = budgets[category.name] || 0;
+            const budgetLimit = budgets[cat.name] || 0;
             if (budgetLimit > 0) {
                 const totalInCat = updated
-                    .filter(e => e.category?.name === category.name)
+                    .filter(e => e.category?.name === cat.name)
                     .reduce((sum, e) => sum + Number(e.amount), 0);
 
                 if (totalInCat > budgetLimit) {
                     const percentage = Math.round((totalInCat / budgetLimit) * 100);
-                    sendBudgetWarning(category.name, percentage);
+                    sendBudgetWarning(cat.name, percentage);
                 }
             }
             return updated;
         });
-        logAppNotification("💸 Expense Updated", `✅ ${currencySymbol}${parseFloat(amount).toFixed(2)}: ${title.trim()}`, 'success');
+        logAppNotification("💸 Expense Updated", `✅ ${currencySymbol}${parseFloat(amt).toFixed(2)}: ${t.toString().trim()}`, 'success');
         resetForm();
         navigation.navigate('Home');
     };
@@ -688,12 +697,13 @@ export const AppContextProvider = ({ children }) => {
         }
     };
 
+    // Bug 3 fix: pass explicit params to handleUpdateExpense instead of relying on stale context state
     const handleUpdateTransaction = (navigation, { type, title: t, amount: amt, category: cat }) => {
         if (type === 'income') {
-            setIncomes(prev => prev.map(inv => inv.id === editingId ? { ...inv, source: t, amount: parseFloat(amt) } : inv));
+            setIncomes(prev => prev.map(inv => inv.id === editingId ? { ...inv, source: t, amount: parseFloat(parseFloat(amt).toFixed(2)) } : inv));
             logAppNotification("💰 Income Updated", `✅ ${currencySymbol}${parseFloat(amt).toFixed(2)}: ${t.trim()}`, 'success');
         } else {
-            handleUpdateExpense(navigation);
+            handleUpdateExpense(navigation, { title: t, amount: amt, category: cat });
             return;
         }
         resetForm();
@@ -739,8 +749,9 @@ export const AppContextProvider = ({ children }) => {
             await AsyncStorage.multiRemove([
                 'expenses', 'incomes', 'budgets', 'appNotifications', 'userName',
                 'lastProcessedMonth', 'prevMonthSummary', 'recurringTransactions',
-                'isSetupComplete', 'hasCompletedTour', 'shouldStartTour',
+                'hasCompletedTour', 'shouldStartTour',
                 'monthlySummaryScheduled', 'dailyReminderScheduledWeek'
+                // NOTE: 'isSetupComplete' intentionally NOT removed so user skips onboarding on re-login
             ]);
 
             // Clear today's smart notification key
@@ -927,6 +938,7 @@ export const AppContextProvider = ({ children }) => {
         title, setTitle,
         category, setCategory,
         editingId, setEditingId,
+        editingType, setEditingType,
         isLoading,
         categoriesList,
         // Category actions
@@ -967,7 +979,7 @@ export const AppContextProvider = ({ children }) => {
         showRatingPrompt, setShowRatingPrompt, startRatingTimer,
         globalAlert, showGlobalAlert, hideGlobalAlert
     }), [
-        expenses, incomes, amount, title, category, editingId, isLoading, categoriesList,
+        expenses, incomes, amount, title, category, editingId, editingType, isLoading, categoriesList,
         selectedPeriod, filteredExpenses, budgets, currency, isDarkMode, isFirstLaunch,
         userName, recurringTransactions, currencySymbol, allTransactions, totalSpent,
         totalIncome, balance, monthlySummary, categoriesWithBudget, appNotifications,

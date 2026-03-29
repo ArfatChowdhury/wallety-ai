@@ -202,7 +202,7 @@ const AppNavigator = () => {
   const { 
     isFirstLaunch, hasFetchedFromCloud, isSetupComplete, 
     showRatingPrompt, setShowRatingPrompt, setHasRatedApp,
-    globalAlert, hideGlobalAlert
+    globalAlert, hideGlobalAlert, expenses, incomes
   } = useContext(AppContext)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
@@ -265,7 +265,7 @@ const AppNavigator = () => {
             }} />
           )}
         </Stack.Screen>
-      ) : !isSetupComplete ? (
+      ) : (!isSetupComplete && expenses.length === 0 && incomes.length === 0) ? (
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="CurrencySetup" component={CurrencySetup} />

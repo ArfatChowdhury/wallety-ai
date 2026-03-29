@@ -27,7 +27,7 @@ const Create = ({ navigation, route }) => {
   const {
     handleAddTransaction, category, setCategory,
     title, setTitle, amount, setAmount,
-    editingId, setEditingId, handleUpdateTransaction, getCategorySuggestion,
+    editingId, setEditingId, editingType, handleUpdateTransaction, getCategorySuggestion,
     currencySymbol, getLocalDate
   } = useContext(AppContext)
 
@@ -85,6 +85,12 @@ const Create = ({ navigation, route }) => {
       setIsSuggested(false);
     }
   }, [route.params?.itemCat])
+
+  useEffect(() => {
+    if (editingId && editingType) {
+      setType(editingType);
+    }
+  }, [editingId, editingType]);
 
   useEffect(() => {
     if (type === 'expense' && !isEditing) {
@@ -170,7 +176,13 @@ const Create = ({ navigation, route }) => {
               onBlur={() => setActiveField(null)}
               keyboardType="decimal-pad"
               value={amount}
-              onChangeText={setAmount}
+              onChangeText={(val) => {
+                // Bug fix: Allow only valid decimal input, prevent scientific notation, cap at 999,999,999
+                if (val === '' || val === '.') { setAmount(val); return; }
+                const num = parseFloat(val);
+                if (!isNaN(num) && num <= 999999999) setAmount(val);
+              }}
+              maxLength={12}
               placeholderTextColor={COLORS.gray400}
             />
           </View>
