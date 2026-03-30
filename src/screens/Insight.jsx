@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, Text, View, StatusBar } from 'react-native'
+import { FlatList, StyleSheet, Text, View, StatusBar, TouchableOpacity } from 'react-native'
 import React, { useContext, useMemo } from 'react'
 import { PieChart } from 'react-native-gifted-charts'
 import { AppContext } from '../Contex/ContextApi'
@@ -93,19 +93,19 @@ const Insight = () => {
         <Text style={styles.title}>History & Insights</Text>
 
         <View style={styles.toggleContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.toggleBtn, viewMode === 'trends' && styles.toggleBtnActive]}
             onPress={() => handleToggleForecast('trends')}
           >
             <Text style={[styles.toggleText, viewMode === 'trends' && styles.toggleTextActive]}>Trends</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.toggleBtn, viewMode === 'forecast' && styles.toggleBtnActive]}
             onPress={() => handleToggleForecast('forecast')}
           >
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={[styles.toggleText, viewMode === 'forecast' && styles.toggleTextActive]}>AI Forecast</Text>
-              <Ionicons name="sparkles" size={12} color={viewMode === 'forecast' ? 'white' : COLORS.primary} style={{marginLeft: 4}} />
+              <Ionicons name="sparkles" size={12} color={viewMode === 'forecast' ? 'white' : COLORS.primary} style={{ marginLeft: 4 }} />
             </View>
           </TouchableOpacity>
         </View>
@@ -157,26 +157,26 @@ const Insight = () => {
         ) : (
           <View style={styles.forecastContainer}>
             <View style={[styles.forecastCard, { backgroundColor: forecastData.daysUntilDepletion < 7 && forecastData.isOverspending ? '#FEF2F2' : '#F0FDF4' }]}>
-               <View style={styles.forecastHeader}>
-                  <Text style={styles.forecastTitle}>Cash Runway</Text>
-                  <Ionicons 
-                    name={forecastData.daysUntilDepletion < 7 && forecastData.isOverspending ? "alert-circle" : "checkmark-circle"} 
-                    size={24} 
-                    color={forecastData.daysUntilDepletion < 7 && forecastData.isOverspending ? '#EF4444' : '#22C55E'} 
-                  />
-               </View>
-               <Text style={styles.runwayValue}>
-                  {forecastData.isOverspending 
-                    ? forecastData.daysUntilDepletion > 0 
-                      ? `${forecastData.daysUntilDepletion} Days Left` 
-                      : 'Funds Depleted' 
-                    : 'Budget is Safe'}
-               </Text>
-               <Text style={styles.runwaySub}>
-                 {forecastData.isOverspending 
+              <View style={styles.forecastHeader}>
+                <Text style={styles.forecastTitle}>Cash Runway</Text>
+                <Ionicons
+                  name={forecastData.daysUntilDepletion < 7 && forecastData.isOverspending ? "alert-circle" : "checkmark-circle"}
+                  size={24}
+                  color={forecastData.daysUntilDepletion < 7 && forecastData.isOverspending ? '#EF4444' : '#22C55E'}
+                />
+              </View>
+              <Text style={styles.runwayValue}>
+                {forecastData.isOverspending
+                  ? forecastData.daysUntilDepletion > 0
+                    ? `${forecastData.daysUntilDepletion} Days Left`
+                    : 'Funds Depleted'
+                  : 'Budget is Safe'}
+              </Text>
+              <Text style={styles.runwaySub}>
+                {forecastData.isOverspending
                   ? `Based on your burn rate of ${currencySymbol}${forecastData.dailyBurnRate.toFixed(0)}/day`
                   : `You are currently spending well within your income!`}
-               </Text>
+              </Text>
             </View>
 
             <View style={{ marginVertical: 10 }}>
@@ -184,16 +184,16 @@ const Insight = () => {
             </View>
 
             <View style={styles.statsGrid}>
-               <View style={styles.statBox}>
-                  <Text style={styles.statLabel}>Safe Daily Spend</Text>
-                  <Text style={styles.statValue}>{currencySymbol}{forecastData.safeDailySpend.toFixed(0)}</Text>
-                  <Text style={styles.statInsight}>to last the month</Text>
-               </View>
-               <View style={styles.statBox}>
-                  <Text style={styles.statLabel}>Projected Total</Text>
-                  <Text style={styles.statValue}>{currencySymbol}{forecastData.projectedTotal.toFixed(0)}</Text>
-                  <Text style={styles.statInsight}>Estimated end of month</Text>
-               </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statLabel}>Safe Daily Spend</Text>
+                <Text style={styles.statValue}>{currencySymbol}{forecastData.safeDailySpend.toFixed(0)}</Text>
+                <Text style={styles.statInsight}>to last the month</Text>
+              </View>
+              <View style={styles.statBox}>
+                <Text style={styles.statLabel}>Projected Total</Text>
+                <Text style={styles.statValue}>{currencySymbol}{forecastData.projectedTotal.toFixed(0)}</Text>
+                <Text style={styles.statInsight}>Estimated end of month</Text>
+              </View>
             </View>
 
             {forecastData.spendingFasterThanLastMonth && (
@@ -206,12 +206,12 @@ const Insight = () => {
             )}
 
             <View style={styles.aiInsightCard}>
-              <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
                 <Ionicons name="bulb" size={20} color={COLORS.primary} />
                 <Text style={styles.aiInsightTitle}>AI Recommendation</Text>
               </View>
               <Text style={styles.aiInsightText}>
-                {forecastData.isOverspending 
+                {forecastData.isOverspending
                   ? `If you reduce your daily spending by ${currencySymbol}${(forecastData.dailyBurnRate * 0.2).toFixed(0)}, your funds will last an additional ${Math.round(forecastData.daysUntilDepletion * 0.25)} days.`
                   : "You're doing great! This is a perfect time to take 10% of your current balance and put it into a high-yield savings account."}
               </Text>
@@ -247,7 +247,7 @@ const Insight = () => {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
         />
-        
+
         {/* Banner Ad at bottom - shifted up to avoid floating tabbar */}
         {viewMode === 'trends' && (
           <View style={{ backgroundColor: COLORS.background, marginBottom: 110 }}>
