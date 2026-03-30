@@ -138,11 +138,9 @@ export const scheduleDailyReminder = async () => {
                 body: pickMidday,
                 sound: 'default',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
-                color: '#22C55E',
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: { type: 'daily', hour: 14, minute: 0 },
@@ -156,11 +154,9 @@ export const scheduleDailyReminder = async () => {
                 body: pickEvening,
                 sound: 'default',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
-                color: '#22C55E',
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: { type: 'daily', hour: 20, minute: 0 },
@@ -189,12 +185,10 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
                 body: `${isIncome ? '✅' : '🔴'} ${symbol}${parseFloat(amount).toFixed(2)} — ${title}`,
                 subtitle: isIncome ? 'Great! Keep saving.' : 'Recorded successfully.',
                 sound: 'default',
-                color: isIncome ? '#22C55E' : '#EF4444',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: isIncome ? 'Home' : 'Home' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: null, // immediate
@@ -216,12 +210,10 @@ export const sendBudgetWarning = async (category, percentage) => {
                     : `${percentage}% of your ${category} budget is used. Slow down! 🐢`,
                 subtitle: exceeded ? 'Take action now' : `${100 - percentage}% remaining`,
                 sound: 'default',
-                color: '#EF4444',
                 priority: Notifications.AndroidNotificationPriority.MAX,
                 data: { screen: 'Budget' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: null,
@@ -241,12 +233,10 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
                 body: `You saved ${symbol}${savings.toLocaleString()} this month — absolutely crushing it! 🏆`,
                 subtitle: 'Financial goals on track 🚀',
                 sound: 'default',
-                color: '#F59E0B',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: null,
@@ -291,12 +281,10 @@ export const scheduleMonthlySummaryAlert = async () => {
                 body: 'Your final results for this month are in. Tap to see how you performed! 🎯',
                 subtitle: 'Tap to view your insights',
                 sound: 'default',
-                color: '#8B5CF6',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: Platform.OS === 'android'
@@ -327,12 +315,10 @@ export const scheduleCustomReminder = async (triggerDate, message, isAlarm = fal
                 title: isAlarm ? '⏰ Urgent Reminder' : '🔔 Custom Reminder',
                 body: message || "It's time! Don't forget to track your expenses.",
                 sound: 'default',
-                color: isAlarm ? '#EF4444' : '#22C55E',
                 priority: Notifications.AndroidNotificationPriority.MAX,
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: targetChannel,
-                    largeIcon: '@mipmap/ic_launcher',
                 }),
             },
             trigger: Platform.OS === 'android'

@@ -157,12 +157,10 @@ export const runSmartAnalysis = async ({
           title: notification.title,
           body: notification.body,
           sound: 'default',
-          color: '#22C55E',
           priority: Notifications.AndroidNotificationPriority.HIGH,
           data: notification.data,
           ...(Platform.OS === 'android' && {
             channelId: 'wallety-budget',
-            largeIcon: '@mipmap/ic_launcher',
           }),
         },
         trigger: null, // immediate
