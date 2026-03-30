@@ -97,15 +97,18 @@ const Insight = () => {
             style={[styles.toggleBtn, viewMode === 'trends' && styles.toggleBtnActive]}
             onPress={() => handleToggleForecast('trends')}
           >
-            <Text style={[styles.toggleText, viewMode === 'trends' && styles.toggleTextActive]}>Trends</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="stats-chart" size={14} color={viewMode === 'trends' ? 'white' : COLORS.textSub} style={{ marginRight: 6 }} />
+              <Text style={[styles.toggleText, viewMode === 'trends' && styles.toggleTextActive]}>Trends</Text>
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.toggleBtn, viewMode === 'forecast' && styles.toggleBtnActive]}
             onPress={() => handleToggleForecast('forecast')}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="sparkles" size={14} color={viewMode === 'forecast' ? 'white' : COLORS.primary} style={{ marginRight: 6 }} />
               <Text style={[styles.toggleText, viewMode === 'forecast' && styles.toggleTextActive]}>AI Forecast</Text>
-              <Ionicons name="sparkles" size={12} color={viewMode === 'forecast' ? 'white' : COLORS.primary} style={{ marginLeft: 4 }} />
             </View>
           </TouchableOpacity>
         </View>
@@ -274,13 +277,14 @@ const styles = StyleSheet.create({
   },
   toggleBtn: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 12,
     alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 12,
   },
   toggleBtnActive: {
     backgroundColor: COLORS.primary,
-    ...SHADOW.sm,
+    ...SHADOW.md,
   },
   toggleText: {
     fontSize: 14,
