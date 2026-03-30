@@ -41,6 +41,7 @@ export class AdService {
   static receiptScanInterstitial = null;
   static pdfExportInterstitial = null;
   static budgetInterstitial = null;
+  static aiInsightsInterstitial = null;
   static appOpenAd = null;
 
   // Load interstitial ads
@@ -79,6 +80,7 @@ export class AdService {
     this.receiptScanInterstitial = this.loadInterstitial('receipt-scan');
     this.pdfExportInterstitial = this.loadInterstitial('pdf-export');
     this.budgetInterstitial = this.loadInterstitial('budget');
+    this.aiInsightsInterstitial = this.loadInterstitial('ai-insights');
 
     // Initialize App Open Ad
     this.appOpenAd = AppOpenAd.createForAdRequest(AD_IDS.INTERSTITIAL, {
@@ -162,6 +164,11 @@ export class AdService {
     return this.showInterstitialAndWait(this.budgetInterstitial, 'budget');
   }
 
+  // Show AI Insights interstitial
+  static async showAiInsightsAd() {
+    return this.showInterstitialAndWait(this.aiInsightsInterstitial, 'ai-insights');
+  }
+
   // Check if any ad is ready
   static isAdReady(type) {
     switch (type) {
@@ -171,6 +178,8 @@ export class AdService {
         return this.receiptScanInterstitial?.loaded || false;
       case 'pdf-export':
         return this.pdfExportInterstitial?.loaded || false;
+      case 'ai-insights':
+        return this.aiInsightsInterstitial?.loaded || false;
       default:
         return false;
     }
