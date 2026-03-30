@@ -160,7 +160,8 @@ export const runSmartAnalysis = async ({
           priority: Notifications.AndroidNotificationPriority.HIGH,
           data: notification.data,
           ...(Platform.OS === 'android' && {
-            channelId: 'wallety-budget'
+            channelId: 'wallety-budget',
+            largeIcon: '@mipmap/ic_launcher',
           }),
         },
         trigger: null, // immediate

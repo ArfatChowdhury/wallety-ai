@@ -140,7 +140,10 @@ export const scheduleDailyReminder = async () => {
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 color: '#22C55E',
                 data: { screen: 'Create' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_REMINDER }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: CHANNEL_REMINDER,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: { type: 'daily', hour: 14, minute: 0 },
         });
@@ -155,7 +158,10 @@ export const scheduleDailyReminder = async () => {
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 color: '#22C55E',
                 data: { screen: 'Create' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_REMINDER }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: CHANNEL_REMINDER,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: { type: 'daily', hour: 20, minute: 0 },
         });
@@ -186,7 +192,10 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
                 color: isIncome ? '#22C55E' : '#EF4444',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: isIncome ? 'Home' : 'Home' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_TRANSACTION }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: CHANNEL_TRANSACTION,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: null, // immediate
         });
@@ -210,7 +219,10 @@ export const sendBudgetWarning = async (category, percentage) => {
                 color: '#EF4444',
                 priority: Notifications.AndroidNotificationPriority.MAX,
                 data: { screen: 'Budget' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_BUDGET }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: CHANNEL_BUDGET,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: null,
         });
@@ -232,7 +244,10 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
                 color: '#F59E0B',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: 'Insight' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_TRANSACTION }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: CHANNEL_TRANSACTION,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: null,
         });
@@ -279,7 +294,10 @@ export const scheduleMonthlySummaryAlert = async () => {
                 color: '#8B5CF6',
                 priority: Notifications.AndroidNotificationPriority.HIGH,
                 data: { screen: 'Insight' },
-                ...(Platform.OS === 'android' && { channelId: CHANNEL_BUDGET }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: CHANNEL_BUDGET,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: Platform.OS === 'android'
                 ? { date: triggerDate, channelId: CHANNEL_BUDGET }
@@ -312,7 +330,10 @@ export const scheduleCustomReminder = async (triggerDate, message, isAlarm = fal
                 color: isAlarm ? '#EF4444' : '#22C55E',
                 priority: Notifications.AndroidNotificationPriority.MAX,
                 data: { screen: 'Create' },
-                ...(Platform.OS === 'android' && { channelId: targetChannel }),
+                ...(Platform.OS === 'android' && { 
+                    channelId: targetChannel,
+                    largeIcon: '@mipmap/ic_launcher',
+                }),
             },
             trigger: Platform.OS === 'android'
                 ? { type: 'date', date: triggerDate.getTime(), channelId: targetChannel }
