@@ -2,6 +2,7 @@ export const COLORS = {
     // Backgrounds
     background: '#FFFFFF',
     card: '#000000',
+    primary: '#000000', // Matches Black/White Theme
     white: '#FFFFFF',
     black: '#000000',
 
