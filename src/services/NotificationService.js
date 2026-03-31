@@ -141,6 +141,7 @@ export const scheduleDailyReminder = async () => {
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: { type: 'daily', hour: 14, minute: 0 },
@@ -157,6 +158,7 @@ export const scheduleDailyReminder = async () => {
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: { type: 'daily', hour: 20, minute: 0 },
@@ -189,6 +191,7 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
                 data: { screen: isIncome ? 'Home' : 'Home' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: null, // immediate
@@ -214,6 +217,7 @@ export const sendBudgetWarning = async (category, percentage) => {
                 data: { screen: 'Budget' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: null,
@@ -237,6 +241,7 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: null,
@@ -285,6 +290,7 @@ export const scheduleMonthlySummaryAlert = async () => {
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: Platform.OS === 'android'
@@ -319,6 +325,7 @@ export const scheduleCustomReminder = async (triggerDate, message, isAlarm = fal
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: targetChannel,
+                    largeIcon: 'notification_icon',
                 }),
             },
             trigger: Platform.OS === 'android'

@@ -201,6 +201,7 @@ export const runSmartAnalysis = async (params) => {
           data: notification.data,
           ...(Platform.OS === 'android' && {
             channelId: 'wallety-budget',
+            largeIcon: 'notification_icon',
           }),
         },
         trigger: null, // immediate
