@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NativeNotificationService from './NativeNotificationService';
 
 const getYearMonth = (date = new Date()) => {
     const d = new Date(date);
@@ -180,6 +181,13 @@ export const cancelDailyReminder = async () => {
 export const confirmTransaction = async (type, title, amount, currencySymbol = '$') => {
     const isIncome = type === 'income';
     const symbol = currencySymbol || '$';
+    const titleText = isIncome ? '💰 Income Added' : '💸 Expense Logged';
+    const bodyText = `${isIncome ? '✅' : '🔴'} ${symbol}${parseFloat(amount).toFixed(2)} — ${title}`;
+
+    if (NativeNotificationService.showTransactionNotification(titleText, bodyText)) {
+        return;
+    }
+
     try {
         await Notifications.scheduleNotificationAsync({
             content: {
@@ -204,6 +212,15 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
 // ─── Budget warning ────────────────────────────────────────────────────────
 export const sendBudgetWarning = async (category, percentage) => {
     const exceeded = percentage >= 100;
+    const titleText = exceeded ? '🚨 Budget Exceeded!' : '⚠️ Budget Alert';
+    const bodyText = exceeded
+        ? `You've blown your ${category} budget (${percentage}% used)! Time to cut back.`
+        : `${percentage}% of your ${category} budget is used. Slow down! 🐢`;
+
+    if (NativeNotificationService.showBudgetNotification(titleText, bodyText)) {
+        return;
+    }
+
     try {
         await Notifications.scheduleNotificationAsync({
             content: {
@@ -229,7 +246,15 @@ export const sendBudgetWarning = async (category, percentage) => {
 
 // ─── Milestone / savings celebration ──────────────────────────────────────
 export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
+    const isIncome = true;
     const symbol = currencySymbol || '$';
+    const titleText = '🎉 Savings Milestone!';
+    const bodyText = `You saved ${symbol}${savings.toLocaleString()} this month — absolutely crushing it! 🏆`;
+
+    if (NativeNotificationService.showTransactionNotification(titleText, bodyText)) {
+        return;
+    }
+
     try {
         await Notifications.scheduleNotificationAsync({
             content: {
