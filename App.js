@@ -13,6 +13,7 @@ import LimnersLogo from './assets/compay-logo/limners';
 import * as SplashScreen from 'expo-splash-screen';
 import * as NavigationBar from 'expo-navigation-bar';
 import * as Notifications from 'expo-notifications';
+import NativeNotificationService from './src/services/NativeNotificationService';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -198,6 +199,7 @@ export default function App() {
       Purchases.configure({ apiKey: androidApiKey });
       NavigationBar.setBackgroundColorAsync('#ffffff');
       NavigationBar.setButtonStyleAsync('dark');
+      NativeNotificationService.createChannels(); // Initialize Kotlin notification channels
     }
 
   }, []);
