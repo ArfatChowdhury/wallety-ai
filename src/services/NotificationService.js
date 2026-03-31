@@ -20,10 +20,10 @@ Notifications.setNotificationHandler({
 });
 
 // ─── Channel IDs ───────────────────────────────────────────────────────────
-export const CHANNEL_REMINDER = 'wallety-reminder';
-export const CHANNEL_TRANSACTION = 'wallety-transactions';
-export const CHANNEL_BUDGET = 'wallety-budget';
-export const CHANNEL_ALARM = 'wallety-alarm';
+export const CHANNEL_REMINDER = 'wallety-reminder-v2';
+export const CHANNEL_TRANSACTION = 'wallety-transactions-v2';
+export const CHANNEL_BUDGET = 'wallety-budget-v2';
+export const CHANNEL_ALARM = 'wallety-alarm-v2';
 
 // ─── Create all Android channels (idempotent — safe to call on every launch)
 const createAndroidChannels = async () => {
@@ -141,7 +141,7 @@ export const scheduleDailyReminder = async () => {
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: { type: 'daily', hour: 14, minute: 0 },
@@ -158,7 +158,7 @@ export const scheduleDailyReminder = async () => {
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: { type: 'daily', hour: 20, minute: 0 },
@@ -191,7 +191,7 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
                 data: { screen: isIncome ? 'Home' : 'Home' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: null, // immediate
@@ -217,7 +217,7 @@ export const sendBudgetWarning = async (category, percentage) => {
                 data: { screen: 'Budget' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: null,
@@ -241,7 +241,7 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: null,
@@ -290,7 +290,7 @@ export const scheduleMonthlySummaryAlert = async () => {
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: Platform.OS === 'android'
@@ -325,7 +325,7 @@ export const scheduleCustomReminder = async (triggerDate, message, isAlarm = fal
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: targetChannel,
-                    largeIcon: 'notification_icon',
+                    largeIcon: 'wallety_notif_silhouette',
                 }),
             },
             trigger: Platform.OS === 'android'
