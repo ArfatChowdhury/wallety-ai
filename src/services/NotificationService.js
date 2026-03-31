@@ -2,7 +2,6 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NativeNotificationService from './NativeNotificationService';
 
 const getYearMonth = (date = new Date()) => {
     const d = new Date(date);
@@ -142,7 +141,7 @@ export const scheduleDailyReminder = async () => {
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: { type: 'daily', hour: 14, minute: 0 },
@@ -159,7 +158,7 @@ export const scheduleDailyReminder = async () => {
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_REMINDER,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: { type: 'daily', hour: 20, minute: 0 },
@@ -181,12 +180,6 @@ export const cancelDailyReminder = async () => {
 export const confirmTransaction = async (type, title, amount, currencySymbol = '$') => {
     const isIncome = type === 'income';
     const symbol = currencySymbol || '$';
-    const titleText = isIncome ? '💰 Income Added' : '💸 Expense Logged';
-    const bodyText = `${isIncome ? '✅' : '🔴'} ${symbol}${parseFloat(amount).toFixed(2)} — ${title}`;
-
-    if (NativeNotificationService.showTransactionNotification(titleText, bodyText)) {
-        return;
-    }
 
     try {
         await Notifications.scheduleNotificationAsync({
@@ -199,7 +192,7 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
                 data: { screen: isIncome ? 'Home' : 'Home' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: null, // immediate
@@ -212,14 +205,6 @@ export const confirmTransaction = async (type, title, amount, currencySymbol = '
 // ─── Budget warning ────────────────────────────────────────────────────────
 export const sendBudgetWarning = async (category, percentage) => {
     const exceeded = percentage >= 100;
-    const titleText = exceeded ? '🚨 Budget Exceeded!' : '⚠️ Budget Alert';
-    const bodyText = exceeded
-        ? `You've blown your ${category} budget (${percentage}% used)! Time to cut back.`
-        : `${percentage}% of your ${category} budget is used. Slow down! 🐢`;
-
-    if (NativeNotificationService.showBudgetNotification(titleText, bodyText)) {
-        return;
-    }
 
     try {
         await Notifications.scheduleNotificationAsync({
@@ -234,7 +219,7 @@ export const sendBudgetWarning = async (category, percentage) => {
                 data: { screen: 'Budget' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: null,
@@ -246,14 +231,7 @@ export const sendBudgetWarning = async (category, percentage) => {
 
 // ─── Milestone / savings celebration ──────────────────────────────────────
 export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
-    const isIncome = true;
     const symbol = currencySymbol || '$';
-    const titleText = '🎉 Savings Milestone!';
-    const bodyText = `You saved ${symbol}${savings.toLocaleString()} this month — absolutely crushing it! 🏆`;
-
-    if (NativeNotificationService.showTransactionNotification(titleText, bodyText)) {
-        return;
-    }
 
     try {
         await Notifications.scheduleNotificationAsync({
@@ -266,7 +244,7 @@ export const sendMilestoneAlert = async (savings, currencySymbol = '$') => {
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_TRANSACTION,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: null,
@@ -315,7 +293,7 @@ export const scheduleMonthlySummaryAlert = async () => {
                 data: { screen: 'Insight' },
                 ...(Platform.OS === 'android' && { 
                     channelId: CHANNEL_BUDGET,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: Platform.OS === 'android'
@@ -350,7 +328,7 @@ export const scheduleCustomReminder = async (triggerDate, message, isAlarm = fal
                 data: { screen: 'Create' },
                 ...(Platform.OS === 'android' && { 
                     channelId: targetChannel,
-                    largeIcon: 'wallety_notif_silhouette',
+                    largeIcon: 'ic_launcher',
                 }),
             },
             trigger: Platform.OS === 'android'

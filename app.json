@@ -36,7 +36,6 @@
       "favicon": "./assets/favicon.png"
     },
     "notification": {
-      "icon": "./assets/wallety_notif_silhouette.png",
       "color": "#1a1a1a"
     },
     "extra": {
@@ -69,7 +68,8 @@
         {
           "iosUrlScheme": "com.googleusercontent.apps.669641289282-gs5doefjibvuqiskt1avoc5g9cd1ch5k"
         }
-      ]
+      ],
+      "./plugins/withNotificationIcon.js"
     ]
   }
 }

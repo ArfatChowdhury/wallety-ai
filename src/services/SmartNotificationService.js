@@ -1,7 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import NativeNotificationService from './NativeNotificationService';
 import { CHANNEL_BUDGET } from './NotificationService';
 
 /**
@@ -194,10 +193,6 @@ export const runSmartAnalysis = async (params) => {
     if (notification) {
       await AsyncStorage.setItem(notifKey, 'true');
 
-      if (NativeNotificationService.showBudgetNotification(notification.title, notification.body)) {
-        return;
-      }
-
       await Notifications.scheduleNotificationAsync({
         content: {
           title: notification.title,
@@ -207,7 +202,7 @@ export const runSmartAnalysis = async (params) => {
           data: notification.data,
           ...(Platform.OS === 'android' && {
             channelId: 'wallety-budget-v2',
-            largeIcon: 'wallety_notif_silhouette',
+            largeIcon: 'ic_launcher',
           }),
         },
         trigger: null, // immediate
