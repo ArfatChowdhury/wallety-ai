@@ -125,22 +125,14 @@ export class AdService {
   // Show app open ad (once per 24 hours)
   static async showAppOpenAd() {
     try {
-      const lastShown = await AsyncStorage.getItem('last_interstitial');
-      const now = Date.now();
-
-      if (!lastShown || now - parseInt(lastShown) > 86400000) { // 24 hours
-        if (this.appOpenAd?.loaded) {
+      // Show ad every time (throttle removed)
+      if (this.appOpenAd?.loaded) {
           const success = await this.showInterstitialAndWait(this.appOpenAd, 'app-open');
-          if (success) {
-            await AsyncStorage.setItem('last_interstitial', now.toString());
-            console.log('[AdService] App open ad shown');
-          }
           return success;
-        } else {
+      } else {
           console.log('[AdService] App open ad not loaded yet');
           this.appOpenAd?.load(); // Try loading for next time
           return false;
-        }
       }
       return false;
     } catch (error) {

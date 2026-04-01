@@ -63,7 +63,7 @@ export const AppContextProvider = ({ children }) => {
         if (hasRatedApp) return;
         setTimeout(() => {
             setShowRatingPrompt(true);
-        }, 40000);
+        }, 30000);
     }, [hasRatedApp]);
 
     const updateTabLayout = useCallback((name, layout) => {
@@ -335,7 +335,7 @@ export const AppContextProvider = ({ children }) => {
                 const lastPromptTime = parseInt(storedLastRatePrompt);
                 const TWELVE_HOURS = 12 * 60 * 60 * 1000;
                 if (Date.now() - lastPromptTime > TWELVE_HOURS) {
-                    setTimeout(() => setShowRatingPrompt(true), 10000);
+                    setTimeout(() => setShowRatingPrompt(true), 30000);
                 }
             }
 
