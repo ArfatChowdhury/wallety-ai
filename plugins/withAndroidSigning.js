@@ -24,13 +24,12 @@ module.exports = function withAndroidSigning(config) {
       }
 
       // 2. Update gradle.properties with signing variables
-      // We use environment variables or fallback to placeholders
       const gradlePropertiesPath = path.join(platformRoot, 'gradle.properties');
       let gradleProperties = fs.readFileSync(gradlePropertiesPath, 'utf8');
 
       const signingProps = [
         `MYAPP_RELEASE_STORE_FILE=wallety-release.keystore`,
-        `MYAPP_RELEASE_KEY_ALIAS=${process.env.RELEASE_KEY_ALIAS || 'YOUR_KEY_ALIAS'}`,
+        `MYAPP_RELEASE_KEY_ALIAS=${process.env.RELEASE_KEY_ALIAS || 'wallety-key'}`,
         `MYAPP_RELEASE_STORE_PASSWORD=${process.env.RELEASE_STORE_PASSWORD || 'YOUR_STORE_PASSWORD'}`,
         `MYAPP_RELEASE_KEY_PASSWORD=${process.env.RELEASE_KEY_PASSWORD || 'YOUR_KEY_PASSWORD'}`,
       ];
@@ -40,32 +39,20 @@ module.exports = function withAndroidSigning(config) {
         if (!gradleProperties.includes(key)) {
           gradleProperties += `\n${prop}`;
         } else {
-          // Update existing value if using env variables
           gradleProperties = gradleProperties.replace(new RegExp(`${key}=.*`), prop);
         }
       });
 
       fs.writeFileSync(gradlePropertiesPath, gradleProperties);
-      console.log('✅ Updated android/gradle.properties with signing credentials');
+      console.log('✅ Updated android/gradle.properties');
 
-      // 3. Patch app/build.gradle to use the release signing config
+      // 3. Patch app/build.gradle
       const buildGradlePath = path.join(platformRoot, 'app', 'build.gradle');
       let buildGradle = fs.readFileSync(buildGradlePath, 'utf8');
 
-      // Add release signing config if it doesn't exist
-      if (!buildGradle.includes('signingConfigs {')) {
-         // This should normally exist in a standard Expo/RN project
-      }
-
-      if (!buildGradle.includes('release {') || !buildGradle.includes('storeFile file(MYAPP_RELEASE_STORE_FILE)')) {
-        const signingConfigPatch = `
-    signingConfigs {
-        debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
-        }
+      // A. Create the release signing configurations block if needed
+      if (!buildGradle.includes('release {') || !buildGradle.includes('MYAPP_RELEASE_STORE_FILE')) {
+          const releaseSigningBlock = `
         release {
             if (project.hasProperty('MYAPP_RELEASE_STORE_FILE')) {
                 storeFile file(MYAPP_RELEASE_STORE_FILE)
@@ -73,20 +60,27 @@ module.exports = function withAndroidSigning(config) {
                 keyAlias MYAPP_RELEASE_KEY_ALIAS
                 keyPassword MYAPP_RELEASE_KEY_PASSWORD
             }
-        }
-    }`;
-        // Replace the entire signingConfigs block
-        buildGradle = buildGradle.replace(/signingConfigs\s*\{[\s\S]*?\n\s*\}/, signingConfigPatch);
+        }`;
+          
+          // Inject it into the signingConfigs block
+          // We look for signingConfigs { and some content, then inject our release block
+          if (buildGradle.includes('signingConfigs {')) {
+              // Be careful with where we inject to avoid nested block errors
+              // This is a safer injection point: after the debug block
+              buildGradle = buildGradle.replace(/(signingConfigs\s*\{[\s\S]*?debug\s*\{[\s\S]*?\n\s*\})/, `$1${releaseSigningBlock}`);
+          }
       }
 
-      // Ensure release build type uses the release signing config
-      buildGradle = buildGradle.replace(
-        /release\s*\{[\s\S]*?signingConfig\s+signingConfigs\.debug/,
-        (match) => match.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
-      );
+      // B. Ensure release build type uses the release signing config
+      // Expo's default build.gradle often has release { signingConfig signingConfigs.debug }
+      // We want to replace it specifically for the "release" build type block
+      const releaseBuildTypeRegex = /(buildTypes\s*\{[\s\S]*?release\s*\{[\s\S]*?)signingConfig\s+signingConfigs\.debug/;
+      if (releaseBuildTypeRegex.test(buildGradle)) {
+          buildGradle = buildGradle.replace(releaseBuildTypeRegex, '$1signingConfig signingConfigs.release');
+      }
 
       fs.writeFileSync(buildGradlePath, buildGradle);
-      console.log('✅ Patched android/app/build.gradle for release signing');
+      console.log('✅ Patched android/app/build.gradle safely');
 
       return config;
     },
