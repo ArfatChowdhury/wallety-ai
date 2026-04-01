@@ -71,7 +71,18 @@
       ],
       "./plugins/withNotificationIcon.js",
       "./plugins/withWidget.js",
-      "./plugins/withAndroidSigning.js"
+      "./plugins/withAndroidSigning.js",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "abiFilters": [
+              "arm64-v8a",
+              "armeabi-v7a"
+            ]
+          }
+        }
+      ]
     ]
   }
 }
