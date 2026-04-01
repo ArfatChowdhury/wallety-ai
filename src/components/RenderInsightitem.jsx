@@ -3,10 +3,11 @@ import React, { useContext } from 'react'
 import tailwind from 'twrnc'
 import { AppContext } from '../Contex/ContextApi'
 
-const RenderInsightitem = ({ item }) => {
-    const { totalSpent } = useContext(AppContext)
+const RenderInsightitem = ({ item, total }) => {
+    const { totalSpent: contextTotalSpent } = useContext(AppContext)
+    const effectiveTotal = total !== undefined ? total : contextTotalSpent
     const amount = Number(item.amount)
-    const percentage = totalSpent > 0 ? ((amount / totalSpent) * 100).toFixed(0) : 0
+    const percentage = effectiveTotal > 0 ? ((amount / effectiveTotal) * 100).toFixed(0) : 0
 
     return (
         <View style={tailwind`px-5 mt-4`}>
@@ -23,12 +24,11 @@ const RenderInsightitem = ({ item }) => {
                     <Text style={tailwind`text-xs text-gray-400`}>{percentage}%</Text>
                 </View>
             </View>
-            {/* Progress bar */}
-            <View style={tailwind`bg-gray-200 rounded-full h-2 mb-4`}>
+            <View style={tailwind`bg-gray-200 rounded-full h-2 mb-4 overflow-hidden`}>
                 <View
                     style={[
                         tailwind`h-2 rounded-full`,
-                        { width: `${percentage}%`, backgroundColor: item.category.color }
+                        { width: `${Math.min(percentage, 100)}%`, backgroundColor: item.category.color }
                     ]}
                 />
             </View>

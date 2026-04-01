@@ -245,7 +245,7 @@ const Insight = () => {
                 </View>
               );
             }
-            return <RenderInsightitem item={item} />;
+            return <RenderInsightitem item={item} total={periodTotal} />;
           }}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
