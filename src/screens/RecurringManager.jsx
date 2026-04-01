@@ -14,6 +14,7 @@ const RecurringManager = ({ navigation }) => {
     const [editingItem, setEditingItem] = useState(null);
     const [title, setTitle] = useState('');
     const [amount, setAmount] = useState('');
+    const [recurringDay, setRecurringDay] = useState(1);
 
     const handleDelete = (item) => {
         Alert.alert(
@@ -34,6 +35,7 @@ const RecurringManager = ({ navigation }) => {
         setEditingItem(item);
         setTitle(item.title);
         setAmount(item.amount.toString());
+        setRecurringDay(item.recurringDay || 1);
         setModalVisible(true);
     };
 
@@ -44,7 +46,8 @@ const RecurringManager = ({ navigation }) => {
         }
         updateRecurringTransaction(editingItem.id, {
             title: title.trim(),
-            amount: parseFloat(amount)
+            amount: parseFloat(amount),
+            recurringDay: recurringDay
         });
         setModalVisible(false);
         setEditingItem(null);
@@ -57,7 +60,9 @@ const RecurringManager = ({ navigation }) => {
             </View>
             <View style={tailwind`flex-1 ml-4`}>
                 <Text style={styles.title}>{item.title}</Text>
-                <Text style={styles.subtitle}>{item.type === 'income' ? 'Monthly Income' : 'Monthly Expense'}</Text>
+                <Text style={styles.subtitle}>
+                    {item.type === 'income' ? 'Monthly Income' : 'Monthly Expense'} • Day {item.recurringDay || 1}
+                </Text>
             </View>
             <View style={tailwind`items-end mr-3`}>
                 <Text style={[styles.amount, { color: item.type === 'income' ? '#059669' : '#DC2626' }]}>
@@ -148,6 +153,32 @@ const RecurringManager = ({ navigation }) => {
                                     }}
                                     keyboardType="numeric"
                                     placeholder="0.00"
+                                />
+                            </View>
+
+                            <View style={styles.modalInputGroup}>
+                                <Text style={styles.modalLabel}>Recurring Day (1-28)</Text>
+                                <View style={styles.dayChipContainer}>
+                                    {[1, 5, 10, 15, 20, 25].map(d => (
+                                        <TouchableOpacity
+                                            key={d}
+                                            onPress={() => setRecurringDay(d)}
+                                            style={[styles.dayChip, recurringDay === d && styles.dayChipActive]}
+                                        >
+                                            <Text style={[styles.dayChipText, recurringDay === d && styles.dayChipTextActive]}>{d}</Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                                <TextInput
+                                    style={[styles.modalInput, { marginTop: 10 }]}
+                                    value={recurringDay.toString()}
+                                    onChangeText={(val) => {
+                                        const d = parseInt(val);
+                                        if (!isNaN(d) && d >= 1 && d <= 28) setRecurringDay(d);
+                                        else if (val === '') setRecurringDay('');
+                                    }}
+                                    keyboardType="numeric"
+                                    placeholder="Day (1-28)"
                                 />
                             </View>
 
@@ -330,6 +361,31 @@ const styles = StyleSheet.create({
         color: COLORS.white,
         fontWeight: '700',
         fontSize: 16,
+    },
+    dayChipContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    dayChip: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        backgroundColor: COLORS.gray100,
+        borderWidth: 1,
+        borderColor: COLORS.gray200,
+    },
+    dayChipActive: {
+        backgroundColor: COLORS.black,
+        borderColor: COLORS.black,
+    },
+    dayChipText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: COLORS.gray600,
+    },
+    dayChipTextActive: {
+        color: COLORS.white,
     },
 })
 

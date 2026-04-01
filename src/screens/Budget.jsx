@@ -99,14 +99,21 @@ const Budget = () => {
         const isEditing = editingCat === item.name
 
         return (
-            <View style={styles.card}>
+            <View style={[styles.card, isOver && { borderColor: COLORS.expense, borderWidth: 1.5 }]}>
                 <View style={styles.cardTop}>
                     <View style={styles.catInfo}>
                         <View style={[styles.iconBox, { backgroundColor: COLORS.gray100 }]}>
                             <Text style={styles.iconText}>{item.icon}</Text>
                         </View>
                         <View>
-                            <Text style={styles.catName}>{item.name}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={styles.catName}>{item.name}</Text>
+                                {isOver && (
+                                    <View style={styles.exceededBadge}>
+                                        <Text style={styles.exceededBadgeText}>$$</Text>
+                                    </View>
+                                )}
+                            </View>
                             {isOver ? (
                                 <Text style={styles.overText}>⚠️ Exceeded by {currencySymbol}${(spent - budget).toFixed(0)}</Text>
                             ) : (
@@ -255,6 +262,20 @@ const styles = StyleSheet.create({
     limitVal: { fontSize: 12, fontWeight: '600', color: COLORS.textSub },
     progressBarBg: { height: 8, backgroundColor: COLORS.gray100, borderRadius: 4, overflow: 'hidden' },
     progressBarFill: { height: '100%', borderRadius: 4 },
+
+    exceededBadge: {
+        backgroundColor: COLORS.expense + '15',
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: COLORS.expense + '30',
+    },
+    exceededBadgeText: {
+        fontSize: 10,
+        fontWeight: '900',
+        color: COLORS.expense,
+    },
 })
 
 export default Budget

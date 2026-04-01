@@ -280,7 +280,7 @@ const Create = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: COLORS.background },
-  container: { paddingHorizontal: 20, paddingBottom: 100 },
+  container: { paddingHorizontal: 20, paddingBottom: 60 },
 
   header: {
     flexDirection: 'row',
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.border,
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: COLORS.textMain, letterSpacing: -0.5 },
+  headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.textMain, letterSpacing: -0.5 },
   scannedBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#F0FDF4', paddingHorizontal: 8, paddingVertical: 3,
@@ -318,14 +318,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: COLORS.gray100,
     borderRadius: 20,
-    padding: 6,
-    marginBottom: 35,
+    padding: 5,
+    marginBottom: 25,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   toggleBtn: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
     borderRadius: 16,
   },
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
   toggleText: { fontSize: 14, fontWeight: '800', color: COLORS.textSub },
   toggleTextActive: { color: COLORS.white },
 
-  inputGroup: { marginBottom: 30 },
+  inputGroup: { marginBottom: 22 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   label: { fontSize: 14, fontWeight: '800', color: COLORS.gray500, textTransform: 'uppercase', letterSpacing: 1 },
 
@@ -345,8 +345,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    borderRadius: 20,
-    padding: 18,
+    borderRadius: 18,
+    padding: 14,
     fontSize: 16,
     fontWeight: '600',
     color: COLORS.textMain,
@@ -361,15 +361,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    borderRadius: 20,
-    paddingHorizontal: 20,
+    borderRadius: 18,
+    paddingHorizontal: 16,
     ...SHADOW.sm,
   },
-  currency: { fontSize: 28, fontWeight: '900', marginRight: 10, color: COLORS.black },
+  currency: { fontSize: 22, fontWeight: '900', marginRight: 8, color: COLORS.black },
   amountInput: {
     flex: 1,
-    paddingVertical: 20,
-    fontSize: 42,
+    paddingVertical: 16,
+    fontSize: 34,
     fontWeight: '900',
     color: COLORS.black,
   },

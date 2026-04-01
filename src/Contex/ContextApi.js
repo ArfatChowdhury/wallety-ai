@@ -453,17 +453,24 @@ export const AppContextProvider = ({ children }) => {
     };
 
     const processRecurring = async (recurring, monthYear) => {
-        // Idempotency: don't add if recurring items for THIS specific month already exist
-        const alreadyHasRecurring = expenses.some(e => e.id?.startsWith('recurring-') && e.date.startsWith(monthYear)) ||
-            incomes.some(i => i.id?.startsWith('recurring-') && i.date.startsWith(monthYear));
-
-        if (alreadyHasRecurring) return;
-
         const newExpenses = [];
         const newIncomes = [];
-        const date = `${monthYear}-01`;
+        
+        for (const item of recurring) {
+            // Per-item idempotency check
+            const idempotencyKey = `recurring_done_${item.id}_${monthYear}`;
+            const alreadyDone = await AsyncStorage.getItem(idempotencyKey);
+            if (alreadyDone) continue;
 
-        recurring.forEach(item => {
+            const day = String(item.recurringDay || 1).padStart(2, '0');
+            const date = `${monthYear}-${day}`;
+            
+            // Only process if the chosen day has arrived (or it's a past month)
+            const today = new Date();
+            const currentDay = today.getDate();
+            const isFutureDay = monthYear === getYearMonth() && parseInt(day) > currentDay;
+            if (isFutureDay) continue;
+
             const transaction = {
                 id: `recurring-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 title: item.title,
@@ -472,12 +479,17 @@ export const AppContextProvider = ({ children }) => {
                 icon: item.category?.icon || (item.type === 'income' ? '💰' : '📦'),
                 date: date,
             };
+
             if (item.type === 'income') {
                 transaction.source = item.title;
                 newIncomes.push(transaction);
+            } else {
+                newExpenses.push(transaction);
             }
-            else newExpenses.push(transaction);
-        });
+
+            // Mark as done for this month
+            await AsyncStorage.setItem(idempotencyKey, 'true');
+        }
 
         if (newExpenses.length > 0) {
             setExpenses(prev => [...newExpenses, ...prev]);
