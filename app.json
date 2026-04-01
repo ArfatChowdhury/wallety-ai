@@ -70,7 +70,8 @@
         }
       ],
       "./plugins/withNotificationIcon.js",
-      "./plugins/withWidget.js"
+      "./plugins/withWidget.js",
+      "./plugins/withAndroidSigning.js"
     ]
   }
 }
