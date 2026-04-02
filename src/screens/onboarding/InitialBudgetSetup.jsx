@@ -50,18 +50,32 @@ const InitialBudgetSetup = ({ navigation }) => {
         completeOnboarding();
     }
 
+    const handleSkip = async () => {
+        // Just trigger tour and finish onboarding without setting these specific budgets
+        await AsyncStorage.setItem('shouldStartTour', 'true');
+        completeOnboarding();
+    }
+
 
     return (
         <SafeAreaView style={styles.root}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={tailwind`px-6 pt-10 flex-1`}>
-                    <View>
-                        <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}>Step 5 of 5</Text>
-                        <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}>Set Your Monthly Budgets</Text>
-                        <Text style={tailwind`text-base text-gray-500 mt-2`}>
-                            Setting goals helps you save faster. You can always change these later in settings.
-                        </Text>
+                    <View style={tailwind`flex-row justify-between items-start`}>
+                        <View style={tailwind`flex-1`}>
+                            <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}>Step 5 of 5</Text>
+                            <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}>Set Your Monthly Budgets</Text>
+                        </View>
+                        <TouchableOpacity 
+                            onPress={handleSkip}
+                            style={tailwind`bg-gray-100 px-4 py-2 rounded-full`}
+                        >
+                            <Text style={tailwind`text-gray-600 font-bold text-sm`}>Skip</Text>
+                        </TouchableOpacity>
                     </View>
+                    <Text style={tailwind`text-base text-gray-500 mt-2`}>
+                        Setting goals helps you save faster. You can always change these later in settings.
+                    </Text>
 
                     <View style={tailwind`mt-10`}>
                         <BudgetSlider
@@ -100,6 +114,13 @@ const InitialBudgetSetup = ({ navigation }) => {
                         >
                             <Text style={styles.btnText}>Finish Setup</Text>
                             <Ionicons name="sparkles" size={24} color={COLORS.white} />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={tailwind`mt-4 items-center`}
+                            onPress={handleSkip}
+                        >
+                            <Text style={tailwind`text-gray-400 font-medium text-base underline`}>Skip for Now</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

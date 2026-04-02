@@ -26,6 +26,50 @@ const Insight = () => {
     });
   }, [totalIncome, totalSpent, expenses, categoriesWithBudget, prevMonthSummary]);
 
+  const spendingByCategory = useMemo(() => {
+    return (filteredExpenses?.length > 0 ? filteredExpenses : expenses).reduce((acc, expense) => {
+      const categoryName = expense.category?.name || 'Other';
+      const amount = Number(expense.amount) || 0;
+      acc[categoryName] = (acc[categoryName] || 0) + amount;
+      return acc;
+    }, {});
+  }, [filteredExpenses, expenses]);
+
+  const periodTotal = useMemo(() => {
+    return Object.values(spendingByCategory).reduce((sum, val) => sum + val, 0);
+  }, [spendingByCategory]);
+
+  const chartData = useMemo(() => {
+    return Object.keys(spendingByCategory).map((categoryName) => {
+      const amount = spendingByCategory[categoryName]
+      const percentage = Math.round((amount / (periodTotal || 1)) * 100)
+      const categoryInfo = categoriesList.find((cat) => cat.name === categoryName)
+      return {
+        value: percentage,
+        color: categoryInfo?.color || COLORS.gray400,
+        text: `${percentage}%`,
+        label: categoryName
+      }
+    });
+  }, [spendingByCategory, periodTotal, categoriesList]);
+
+  const flatListData = useMemo(() => {
+    return Object.keys(spendingByCategory).map((categoryName) => {
+      const amount = spendingByCategory[categoryName]
+      const categoryInfo = categoriesList.find((cat) => cat.name === categoryName)
+      return {
+        id: categoryName,
+        category: {
+          name: categoryName,
+          color: categoryInfo?.color || COLORS.gray400
+        },
+        amount
+      }
+    }).sort((a, b) => b.amount - a.amount);
+  }, [spendingByCategory, categoriesList]);
+
+  const insightListWithAds = useMemo(() => insertAdsIntoBudgetList(flatListData), [flatListData]);
+
   const handleToggleForecast = async (mode) => {
     if (mode === 'forecast' && viewMode !== 'forecast') {
       const hasSeenAd = await AsyncStorage.getItem('hasSeenAiForecastAd');
@@ -39,55 +83,8 @@ const Insight = () => {
     setViewMode(mode);
   };
 
-  if (totalSpent === 0 || expenses.length === 0) {
-    return (
-      <SafeAreaView style={styles.root}>
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📊</Text>
-          <Text style={styles.emptyTitle}>Insights are empty</Text>
-          <Text style={styles.emptySub}>Add some transactions to see your breakdown</Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  const spendingByCategory = allExpenses.reduce((acc, expense) => {
-    const categoryName = expense.category?.name || 'Other';
-    const amount = Number(expense.amount) || 0;
-    acc[categoryName] = (acc[categoryName] || 0) + amount;
-    return acc;
-  }, {});
-
-  const periodTotal = Object.values(spendingByCategory).reduce((sum, val) => sum + val, 0)
-
-  const chartData = Object.keys(spendingByCategory).map((categoryName) => {
-    const amount = spendingByCategory[categoryName]
-    const percentage = Math.round((amount / (periodTotal || 1)) * 100)
-    const categoryInfo = categoriesList.find((cat) => cat.name === categoryName)
-    return {
-      value: percentage,
-      color: categoryInfo?.color || COLORS.gray400,
-      text: `${percentage}%`,
-      label: categoryName
-    }
-  })
-
-  const flatListData = Object.keys(spendingByCategory).map((categoryName) => {
-    const amount = spendingByCategory[categoryName]
-    const categoryInfo = categoriesList.find((cat) => cat.name === categoryName)
-    return {
-      id: categoryName,
-      category: {
-        name: categoryName,
-        color: categoryInfo?.color || COLORS.gray400
-      },
-      amount
-    }
-  }).sort((a, b) => b.amount - a.amount)
-
-  const insightListWithAds = insertAdsIntoBudgetList(flatListData)
-
   const ListHeader = useMemo(() => {
+    if (totalSpent === 0 || expenses.length === 0) return null;
     return (
       <View style={styles.header}>
         <Text style={styles.title}>History & Insights</Text>
@@ -228,6 +225,18 @@ const Insight = () => {
   const filteredFlatData = selectedCategory
     ? flatListData.filter(item => item.id === selectedCategory)
     : flatListData
+
+  if (totalSpent === 0 || expenses.length === 0) {
+    return (
+      <SafeAreaView style={styles.root}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>📊</Text>
+          <Text style={styles.emptyTitle}>Insights are empty</Text>
+          <Text style={styles.emptySub}>Add some transactions to see your breakdown</Text>
+        </View>
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.root}>

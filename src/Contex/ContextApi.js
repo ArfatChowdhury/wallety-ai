@@ -762,8 +762,8 @@ export const AppContextProvider = ({ children }) => {
                 'expenses', 'incomes', 'budgets', 'appNotifications', 'userName',
                 'lastProcessedMonth', 'prevMonthSummary', 'recurringTransactions',
                 'hasCompletedTour', 'shouldStartTour',
-                'monthlySummaryScheduled', 'dailyReminderScheduledWeek'
-                // NOTE: 'isSetupComplete' intentionally NOT removed so user skips onboarding on re-login
+                'monthlySummaryScheduled', 'dailyReminderScheduledWeek',
+                'isSetupComplete'
             ]);
 
             // Clear today's smart notification key
