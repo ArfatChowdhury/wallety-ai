@@ -910,17 +910,19 @@ export const AppContextProvider = ({ children }) => {
     const categoriesWithBudget = useMemo(() => {
         return categoriesList.map(cat => {
             const budgetLimit = budgets[cat.name] || 0;
-            const amountSpent = expenses
+            // ✅ Only count current month's expenses — prevents previous month's data
+            // from triggering false "Budget Exceeded" warnings in a new month.
+            const amountSpent = monthlyExpenses
                 .filter(exp => exp.category?.name === cat.name)
                 .reduce((sum, exp) => sum + Number(exp.amount), 0);
 
             return {
                 ...cat,
                 budgetLimit,
-            amountSpent
+                amountSpent
             };
         });
-    }, [expenses, budgets, categoriesList]);
+    }, [monthlyExpenses, budgets, categoriesList]);
 
     // ── Helpers ───────────────────────────────────────────────
     const getCategorySuggestion = (text) => {

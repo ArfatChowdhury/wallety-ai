@@ -69,7 +69,19 @@
           "iosUrlScheme": "com.googleusercontent.apps.669641289282-gs5doefjibvuqiskt1avoc5g9cd1ch5k"
         }
       ],
-      "react-native-android-widget",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "ExpenseWidget",
+              "label": "Quick Expense Launcher",
+              "description": "Add expenses from your home screen",
+              "src": "./src/widgets/ExpenseWidget.jsx"
+            }
+          ]
+        }
+      ],
       "./plugins/withNotificationIcon.js",
       "./plugins/withAndroidSigning.js",
       "./plugins/withWhiteLaunchTheme.js",
