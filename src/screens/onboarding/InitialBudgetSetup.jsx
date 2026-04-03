@@ -63,14 +63,14 @@ const InitialBudgetSetup = ({ navigation }) => {
                 <View style={tailwind`px-6 pt-10 flex-1`}>
                     <View style={tailwind`flex-row justify-between items-start`}>
                         <View style={tailwind`flex-1`}>
-                            <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}>Step 5 of 5</Text>
-                            <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}>Set Your Monthly Budgets</Text>
+                            <Text style={[tailwind`text-sm font-bold uppercase tracking-widest`, { color: COLORS.primary }]}>Step 5 of 5</Text>
+                            <Text style={tailwind`text-3xl font-extrabold text-gray-800 mt-2`}>Set Your Monthly Budgets</Text>
                         </View>
                         <TouchableOpacity 
                             onPress={handleSkip}
-                            style={tailwind`bg-gray-100 px-4 py-2 rounded-full`}
+                            style={[tailwind`px-4 py-2 rounded-full`, { backgroundColor: COLORS.gray100, borderWidth: 1, borderColor: COLORS.border }]}
                         >
-                            <Text style={tailwind`text-gray-600 font-bold text-sm`}>Skip</Text>
+                            <Text style={[tailwind`font-bold text-sm`, { color: COLORS.textMain }]}>Skip</Text>
                         </TouchableOpacity>
                     </View>
                     <Text style={tailwind`text-base text-gray-500 mt-2`}>

@@ -4,6 +4,8 @@ import {
   Dimensions, TouchableOpacity, Animated, StatusBar
 } from 'react-native'
 import Svg, { Rect, Circle, Defs, Mask } from 'react-native-svg'
+import { Ionicons } from '@expo/vector-icons'
+import { COLORS, SHADOW } from '../theme'
 
 const { width: W, height: H } = Dimensions.get('window')
 
@@ -59,10 +61,12 @@ const SpotlightTour = ({ steps, currentStep, onNext, onSkip }) => {
     <Modal transparent animationType="fade" visible statusBarTranslucent>
       <StatusBar translucent backgroundColor="transparent" />
       <TouchableWithoutFeedback onPress={() => {
-        if (steps[currentStep].onFinish) steps[currentStep].onFinish();
-        onNext();
+        if (currentStep < steps.length - 1) {
+          if (steps[currentStep].onFinish) steps[currentStep].onFinish();
+          onNext();
+        }
       }}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.1)' }}>
 
           <Svg
             width={W}
@@ -135,71 +139,76 @@ const SpotlightTour = ({ steps, currentStep, onNext, onSkip }) => {
             position: 'absolute',
             left: 28,
             right: 28,
-            top: textOnTop ? Math.max(y - r - 160, 60) : y + r + 30,
+            top: textOnTop ? Math.max(y - r - 200, 60) : y + r + 30,
             opacity: contentOpacity,
-            transform: [{ translateY: contentTranslateY }]
+            transform: [{ translateY: contentTranslateY }],
+            backgroundColor: '#1F2937',
+            borderRadius: 24,
+            padding: 24,
+            ...SHADOW.md,
           }}>
-            <Text style={{
-              color: 'rgba(255,255,255,0.6)',
-              fontSize: 12,
-              fontWeight: '800',
-              textTransform: 'uppercase',
-              letterSpacing: 1.5,
-              marginBottom: 8,
-            }}>
-              Step {currentStep + 1} of {steps.length}
-            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View style={{
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 10,
+              }}>
+                <Text style={{ color: 'white', fontSize: 11, fontWeight: '800' }}>
+                  STEP {currentStep + 1} OF {steps.length}
+                </Text>
+              </View>
+              <TouchableOpacity onPress={onSkip}>
+                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '600' }}>Skip</Text>
+              </TouchableOpacity>
+            </View>
+
             <Text style={{
               color: 'white',
-              fontSize: 24,
-              fontWeight: '800',
-              marginBottom: 10,
-              lineHeight: 32,
+              fontSize: 22,
+              fontWeight: '900',
+              marginBottom: 8,
+              lineHeight: 28,
             }}>
               {title}
             </Text>
+            
             <Text style={{
-              color: 'rgba(255,255,255,0.85)',
-              fontSize: 16,
-              lineHeight: 24,
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: 15,
+              lineHeight: 22,
               fontWeight: '500',
+              marginBottom: 20,
             }}>
               {body}
             </Text>
 
-            <View style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              marginTop: 20,
-              gap: 8,
-            }}>
-              <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: 'white' }} />
-              <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, fontWeight: '600' }}>
-                Tap anywhere to continue
+            <TouchableOpacity
+              onPress={() => {
+                if (steps[currentStep].onFinish) steps[currentStep].onFinish();
+                onNext();
+              }}
+              activeOpacity={0.8}
+              style={{
+                backgroundColor: '#ffffff',
+                paddingVertical: 14,
+                borderRadius: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+              }}
+            >
+              <Text style={{ color: '#000', fontWeight: '800', fontSize: 15 }}>
+                {currentStep === steps.length - 1 ? "Get Started" : "Next Step"}
               </Text>
-            </View>
+              <Ionicons name="arrow-forward" size={18} color="#000" />
+            </TouchableOpacity>
           </Animated.View>
-
-          <TouchableOpacity
-            onPress={() => {
-              if (steps[currentStep].onFinish) steps[currentStep].onFinish();
-              onSkip();
-            }}
-            style={{ position: 'absolute', top: 56, right: 24, padding: 8 }}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Text style={{
-              color: 'rgba(255,255,255,0.5)',
-              fontSize: 14,
-              fontWeight: '600'
-            }}>
-              Skip tour
-            </Text>
-          </TouchableOpacity>
 
           <View style={{
             position: 'absolute',
-            bottom: 50,
+            bottom: 40,
             left: 0,
             right: 0,
             flexDirection: 'row',
@@ -208,12 +217,10 @@ const SpotlightTour = ({ steps, currentStep, onNext, onSkip }) => {
           }}>
             {steps.map((_, i) => (
               <View key={i} style={{
-                width: i === currentStep ? 22 : 6,
+                width: i === currentStep ? 20 : 6,
                 height: 6,
                 borderRadius: 3,
-                backgroundColor: i === currentStep
-                  ? 'white'
-                  : 'rgba(255,255,255,0.25)',
+                backgroundColor: i === currentStep ? '#ffffff' : 'rgba(255,255,255,0.2)',
               }} />
             ))}
           </View>

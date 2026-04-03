@@ -11,7 +11,7 @@ import { getSmartForecastData } from '../services/SmartNotificationService'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 const Insight = () => {
-  const { filteredExpenses, expenses, totalSpent, totalIncome, balance, categoriesList, currencySymbol, monthlyExpenses, categoriesWithBudget, prevMonthSummary } = useContext(AppContext)
+  const { filteredExpenses, expenses, totalSpent, totalIncome, balance, categoriesList, currencySymbol, monthlyExpenses, categoriesWithBudget, prevMonthSummary, isPremium } = useContext(AppContext)
   const [selectedCategory, setSelectedCategory] = React.useState(null)
   const [viewMode, setViewMode] = React.useState('trends') // 'trends' or 'forecast'
   const allExpenses = filteredExpenses?.length > 0 ? filteredExpenses : expenses
@@ -68,12 +68,12 @@ const Insight = () => {
     }).sort((a, b) => b.amount - a.amount);
   }, [spendingByCategory, categoriesList]);
 
-  const insightListWithAds = useMemo(() => insertAdsIntoBudgetList(flatListData), [flatListData]);
+  const insightListWithAds = useMemo(() => insertAdsIntoBudgetList(flatListData), [flatListData, isPremium]);
 
   const handleToggleForecast = async (mode) => {
     if (mode === 'forecast' && viewMode !== 'forecast') {
       const hasSeenAd = await AsyncStorage.getItem('hasSeenAiForecastAd');
-      if (!hasSeenAd) {
+      if (!hasSeenAd && !isPremium) {
         const adShown = await AdService.showAiInsightsAd();
         if (adShown) {
           await AsyncStorage.setItem('hasSeenAiForecastAd', 'true');

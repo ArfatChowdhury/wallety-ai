@@ -72,6 +72,7 @@
       "./plugins/withNotificationIcon.js",
       "./plugins/withWidget.js",
       "./plugins/withAndroidSigning.js",
+      "./plugins/withWhiteLaunchTheme.js",
       [
         "expo-build-properties",
         {

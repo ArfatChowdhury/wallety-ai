@@ -29,6 +29,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                 amount: parseFloat(salary),
                 category: { name: 'Salary', icon: '💰' },
             });
+            handleAddIncome({ amount: salary, source: 'Salary' });
         }
         if (business) {
             addRecurringTransaction({
@@ -38,6 +39,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                 amount: parseFloat(business),
                 category: { name: 'Salary', icon: '🏢' },
             });
+            handleAddIncome({ amount: business, source: 'Business Profit' });
         }
         if (sideHustle) {
             addRecurringTransaction({
@@ -47,6 +49,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                 amount: parseFloat(sideHustle),
                 category: { name: 'Salary', icon: '⚡' },
             });
+            handleAddIncome({ amount: sideHustle, source: 'Side Hustle' });
         }
 
         navigation.navigate('FixedExpensesSetup');

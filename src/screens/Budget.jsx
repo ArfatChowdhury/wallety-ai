@@ -1,5 +1,5 @@
 import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, StatusBar } from 'react-native'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
@@ -8,13 +8,15 @@ import { COLORS, SHADOW } from '../theme'
 import { BannerAdComponent, NativeAdComponent, insertAdsIntoBudgetList, AdService } from '../services/AdService'
 
 const Budget = () => {
-    const { expenses, budgets, setBudget, categoriesList, currencySymbol } = useContext(AppContext)
+    const { expenses, budgets, setBudget, categoriesList, currencySymbol, isPremium } = useContext(AppContext)
     const [editingCat, setEditingCat] = useState(null)
     const [inputValue, setInputValue] = useState('')
 
     React.useEffect(() => {
-        AdService.showBudgetAd();
-    }, []);
+        if (!isPremium) {
+            AdService.showBudgetAd();
+        }
+    }, [isPremium]);
 
     // Date Logic
     const now = new Date()
@@ -84,7 +86,7 @@ const Budget = () => {
     }))
 
     // Insert ads into budget list (every 3rd item)
-    const budgetListWithAds = insertAdsIntoBudgetList(allCategories)
+    const budgetListWithAds = useMemo(() => insertAdsIntoBudgetList(allCategories), [allCategories, isPremium]);
 
     const renderItem = ({ item, index }) => {
         // Render native ad if item type is AD

@@ -18,12 +18,14 @@ import { currencies } from '../constants/currencies'
 import AdService from '../services/AdService'
 import { requestWidgetUpdate } from 'react-native-android-widget'
 import LimnersLogo from '../../assets/compay-logo/limners'
+import RevenueCatService from '../services/RevenueCatService'
 
 const Settings = ({ navigation }) => {
     const {
         expenses, incomes, currency, currencySymbol, setExpenses, setIncomes,
         isDarkMode, toggleDarkMode, recurringTransactions, setRecurringTransactions,
-        handleLogout, userName, setUserName, allTransactions, handleWipeData, startRatingTimer, showGlobalAlert
+        handleLogout, userName, setUserName, allTransactions, handleWipeData, startRatingTimer, showGlobalAlert,
+        isPremium, setIsPremium
     } = useContext(AppContext)
 
     const [tourStep, setTourStep] = useState(-1);
@@ -77,8 +79,8 @@ const Settings = ({ navigation }) => {
                         ...c, x: -1000, y: -1000, width: 0, height: 0
                     })));
 
-                    // Start step 0
-                    setTimeout(() => setTourStep(0), 500);
+                    // Start step 0 - Increased delay significantly (1.5s) to allow Ads to load and push layout
+                    setTimeout(() => setTourStep(0), 1500);
                 }
             };
             checkTour();
@@ -112,7 +114,7 @@ const Settings = ({ navigation }) => {
                             };
                             return newSteps;
                         });
-                    }, 400); // 400ms is enough for scroll animation
+                    }, 800); // 800ms to allow for long scroll animations and Ad layouts to settle
                 },
                 () => { console.warn("Could not measure offset for scroll"); }
             );
@@ -126,6 +128,62 @@ const Settings = ({ navigation }) => {
 
     const [isFeedbackModalVisible, setFeedbackModalVisible] = useState(false)
     const [feedbackMessage, setFeedbackMessage] = useState('')
+
+    const [packages, setPackages] = useState([]);
+    const [isFetchingPackages, setIsFetchingPackages] = useState(true);
+    const [purchaseLoading, setPurchaseLoading] = useState(false);
+
+    React.useEffect(() => {
+        const setupRevenueCat = async () => {
+            try {
+                const active = await RevenueCatService.checkSubscriptionStatus();
+                setIsPremium(active);
+                if (!active) {
+                    const pkgs = await RevenueCatService.getOfferings();
+                    setPackages(pkgs);
+                }
+            } catch (error) {
+                console.error("Error setting up RevenueCat", error);
+            } finally {
+                setIsFetchingPackages(false);
+            }
+        };
+        setupRevenueCat();
+    }, []);
+
+    const handlePurchase = async (pkg) => {
+        setPurchaseLoading(true);
+        try {
+            const result = await RevenueCatService.purchasePackage(pkg);
+            if (result.success) {
+                setIsPremium(true);
+                Alert.alert("Success", "Welcome to Wallety PRO!");
+            } else if (!result.userCancelled) {
+                Alert.alert("Error", result.error || "Purchase failed.");
+            }
+        } catch (error) {
+            console.error("Purchase error", error);
+        } finally {
+            setPurchaseLoading(false);
+        }
+    };
+
+    const handleRestore = async () => {
+        setPurchaseLoading(true);
+        try {
+            const result = await RevenueCatService.restorePurchases();
+            if (result.success) {
+                setIsPremium(true);
+                Alert.alert("Success", "Purchases restored successfully!");
+            } else {
+                Alert.alert("Error", result.error || "No active subscriptions found.");
+            }
+        } catch (error) {
+            console.error("Restore error", error);
+        } finally {
+            setPurchaseLoading(false);
+        }
+    };
 
     const onLogoutPress = () => {
         showGlobalAlert({
@@ -315,8 +373,10 @@ const Settings = ({ navigation }) => {
                     {auth.currentUser?.photoURL ? (
                         <Image source={{ uri: auth.currentUser.photoURL }} style={styles.avatarPic} />
                     ) : (
-                        <View style={styles.avatar}>
-                            <Ionicons name="person" size={40} color="white" />
+                        <View style={[styles.avatar, { backgroundColor: '#4F46E5', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' }]}>
+                            <Text style={{ color: 'white', fontSize: 28, fontWeight: '900' }}>
+                                {(auth.currentUser?.displayName || 'P').charAt(0).toUpperCase()}
+                            </Text>
                         </View>
                     )}
                     <View style={tailwind`flex-1`}>
@@ -324,10 +384,12 @@ const Settings = ({ navigation }) => {
                             <Text style={styles.profileName} numberOfLines={1}>
                                 {auth.currentUser?.displayName || 'Premium User'}
                             </Text>
-                            <View style={styles.premiumBadge}>
-                                <Ionicons name="star" size={10} color={COLORS.black} />
-                                <Text style={styles.premiumText}>PRO</Text>
-                            </View>
+                            {isPremium && (
+                                <View style={styles.premiumBadge}>
+                                    <Ionicons name="star" size={10} color={COLORS.black} />
+                                    <Text style={styles.premiumText}>PRO</Text>
+                                </View>
+                            )}
                         </View>
                         <Text style={styles.profileEmail} numberOfLines={1}>
                             {auth.currentUser?.email || 'Diamond Member'}
@@ -344,10 +406,105 @@ const Settings = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
+                {/* Premium Subscription Section */}
+                {!isPremium ? (
+                    <View style={[styles.section, { paddingHorizontal: 20 }]}>
+                        <View style={{ backgroundColor: COLORS.card, borderRadius: 24, padding: 20, ...SHADOW.md }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
+                                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,215,0,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                    <Ionicons name="star" size={20} color="#FFD700" />
+                                </View>
+                                <View>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: COLORS.white }}>Upgrade to PRO</Text>
+                                    <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Unlock all features</Text>
+                                </View>
+                            </View>
+
+                            <View style={{ marginBottom: 20 }}>
+                                {['Unlimited tracking', 'Advanced AI Analytics', 'Export data to PDF/CSV', 'Priority Support'].map((feat, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                        <Ionicons name="checkmark-circle" size={16} color="#4ADE80" style={{ marginRight: 8 }} />
+                                        <Text style={{ color: 'white', fontSize: 14 }}>{feat}</Text>
+                                    </View>
+                                ))}
+                            </View>
+
+                            {isFetchingPackages ? (
+                                <ActivityIndicator size="small" color="white" style={{ marginVertical: 20 }} />
+                            ) : packages.length > 0 ? (
+                                <View style={{ gap: 10 }}>
+                                    {packages.map((pkg) => {
+                                        const isAnnual = pkg.identifier === 'annual' || pkg.packageType === 'ANNUAL';
+                                        return (
+                                            <TouchableOpacity 
+                                                key={pkg.identifier}
+                                                onPress={() => handlePurchase(pkg)}
+                                                disabled={purchaseLoading}
+                                                style={{ 
+                                                    backgroundColor: isAnnual ? '#FFD700' : 'rgba(255,255,255,0.1)', 
+                                                    borderRadius: 16, 
+                                                    padding: 15,
+                                                    borderWidth: isAnnual ? 0 : 1,
+                                                    borderColor: 'rgba(255,255,255,0.3)',
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}
+                                            >
+                                                <View>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                                        <Text style={{ color: isAnnual ? COLORS.black : 'white', fontSize: 16, fontWeight: '700' }}>
+                                                            {isAnnual ? 'Yearly' : 'Monthly'}
+                                                        </Text>
+                                                        {isAnnual && (
+                                                            <View style={{ backgroundColor: '#FF3B30', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
+                                                                <Text style={{ color: 'white', fontSize: 10, fontWeight: '800' }}>SAVE 30%</Text>
+                                                            </View>
+                                                        )}
+                                                    </View>
+                                                    <Text style={{ color: isAnnual ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 4 }}>
+                                                        {pkg.product.description}
+                                                    </Text>
+                                                </View>
+                                                <Text style={{ color: isAnnual ? COLORS.black : 'white', fontSize: 18, fontWeight: '800' }}>
+                                                    {pkg.product.priceString}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                    
+                                    <TouchableOpacity onPress={handleRestore} disabled={purchaseLoading} style={{ alignItems: 'center', marginTop: 10, padding: 10 }}>
+                                        {purchaseLoading ? (
+                                            <ActivityIndicator size="small" color="white" />
+                                        ) : (
+                                            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: '600' }}>Restore Purchases</Text>
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
+                            ) : (
+                                <Text style={{ color: 'white', textAlign: 'center', opacity: 0.7 }}>No subscription packages available right now.</Text>
+                            )}
+                        </View>
+                        <BannerAdComponent style={{ marginTop: 25, alignSelf: 'center' }} />
+                    </View>
+                ) : (
+                    <View style={[styles.section, { paddingHorizontal: 20 }]}>
+                        <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.1)', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.3)', flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#4ADE80', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                <Ionicons name="star" size={20} color="white" />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontSize: 16, fontWeight: '800', color: COLORS.textMain }}>Premium Active</Text>
+                                <Text style={{ fontSize: 13, color: COLORS.textSub, marginTop: 2 }}>You have access to all PRO features.</Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+
                 {/* Preferences Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Preferences</Text>
-                    <View ref={currencyRef} onLayout={() => {}}>
+                    <View ref={currencyRef} collapsable={false}>
                          <MenuItem
                             icon="cash-outline"
                             label="Currency"
@@ -357,7 +514,7 @@ const Settings = ({ navigation }) => {
                         />
                     </View>
 
-                    <View ref={widgetRef} onLayout={() => {}}>
+                    <View ref={widgetRef} collapsable={false}>
                         <MenuItem
                             icon="apps-outline"
                             label="Add Home Screen Widget"
@@ -383,7 +540,7 @@ const Settings = ({ navigation }) => {
                 {/* Recurring Items Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Recurring & Planning</Text>
-                    <View ref={recurringRef} onLayout={() => {}}>
+                    <View ref={recurringRef} collapsable={false}>
                         <MenuItem
                             icon="calendar-outline"
                             label="Recurring Items"
@@ -403,7 +560,7 @@ const Settings = ({ navigation }) => {
                         subtitle="Share raw transaction data"
                         onPress={handleExportCSV}
                     />
-                    <View ref={exportRef} onLayout={() => {}}>
+                    <View ref={exportRef} collapsable={false}>
                         <MenuItem
                             icon="document-text-outline"
                             label="Export Report (PDF)"
@@ -529,7 +686,7 @@ const Settings = ({ navigation }) => {
                         />
 
                         <TouchableOpacity
-                            style={[styles.modalBtn, styles.saveBtn, { flexDirection: 'row', gap: 8, marginTop: 10 }]}
+                            style={[styles.saveBtn, { flexDirection: 'row', gap: 10, paddingVertical: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 10 }]}
                             onPress={handleSendFeedback}
                         >
                             <Ionicons name="send" size={18} color="white" />
@@ -554,6 +711,7 @@ const Settings = ({ navigation }) => {
                 onPrimaryPress={() => {
                     setShowTourCompleteAlert(false);
                     if (startRatingTimer) startRatingTimer();
+                    navigation.navigate('BottomTabs', { screen: 'Home' });
                 }}
             />
         </SafeAreaView>

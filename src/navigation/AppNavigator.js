@@ -202,7 +202,8 @@ const AppNavigator = () => {
   const { 
     isFirstLaunch, hasFetchedFromCloud, isSetupComplete, 
     showRatingPrompt, setShowRatingPrompt, setHasRatedApp,
-    globalAlert, hideGlobalAlert, expenses, incomes
+    globalAlert, hideGlobalAlert, expenses, incomes,
+    showGlobalAlert
   } = useContext(AppContext)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
@@ -242,7 +243,7 @@ const AppNavigator = () => {
 
   if (isInitializing || isFirstLaunch === null || (isAuthenticated && !hasFetchedFromCloud)) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#F8F9FA' }}>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: '#FFFFFF' }}>
         <ActivityIndicator size="large" color="#000" />
         {isAuthenticated && !hasFetchedFromCloud && (
           <Text style={{ marginTop: 15, fontWeight: '700', color: '#6B7280' }}>Restoring your data...</Text>

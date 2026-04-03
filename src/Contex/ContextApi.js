@@ -7,6 +7,7 @@ import { db, auth } from "../services/firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import AdService from "../services/AdService";
 import { runSmartAnalysis } from "../services/SmartNotificationService";
+import RevenueCatService from "../services/RevenueCatService";
 
 export const AppContext = createContext()
 
@@ -33,6 +34,12 @@ export const AppContextProvider = ({ children }) => {
     const [isSetupComplete, setIsSetupComplete] = useState(false);
     const [lastProcessedMonth, setLastProcessedMonth] = useState(null);
     const [tabLayouts, setTabLayouts] = useState({});
+    const [isPremium, setIsPremium] = useState(false);
+
+    // Sync premium status with AdService
+    useEffect(() => {
+        AdService.isPremiumUser = isPremium;
+    }, [isPremium]);
 
     // ── Rating Prompt ─────────────────────────────────────────
     const [hasRatedApp, setHasRatedApp] = useState(false);
@@ -286,11 +293,20 @@ export const AppContextProvider = ({ children }) => {
         }
     }, [expenses, incomes, budgets, userName, currency, categoriesList, recurringTransactions, prevMonthSummary, isSetupComplete, lastProcessedMonth, isLoading, hasFetchedFromCloud]);
 
-    // Listen for Auth changes to fetch data
+    // Listen for Auth changes to fetch data and sync RevenueCat
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(user => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (user) {
                 fetchFromFirestore(user.uid);
+                try {
+                    await RevenueCatService.logIn(user.uid);
+                    const premium = await RevenueCatService.checkSubscriptionStatus();
+                    setIsPremium(premium);
+                } catch (err) {
+                    console.error("RevenueCat Sync Error:", err);
+                }
+            } else {
+                setIsPremium(false);
             }
         });
         return unsubscribe;
@@ -758,13 +774,17 @@ export const AppContextProvider = ({ children }) => {
             setHasFetchedFromCloud(false); // Reset cloud fetch state on logout
 
             // Clear Local Storage
-            await AsyncStorage.multiRemove([
-                'expenses', 'incomes', 'budgets', 'appNotifications', 'userName',
-                'lastProcessedMonth', 'prevMonthSummary', 'recurringTransactions',
-                'hasCompletedTour', 'shouldStartTour',
-                'monthlySummaryScheduled', 'dailyReminderScheduledWeek',
-                'isSetupComplete'
-            ]);
+            const allKeys = await AsyncStorage.getAllKeys();
+            const keysToRemove = allKeys.filter(key => 
+                [
+                    'expenses', 'incomes', 'budgets', 'appNotifications', 'userName',
+                    'lastProcessedMonth', 'prevMonthSummary', 'recurringTransactions',
+                    'hasCompletedTour', 'shouldStartTour',
+                    'monthlySummaryScheduled', 'dailyReminderScheduledWeek',
+                    'isSetupComplete'
+                ].includes(key) || key.startsWith('recurring_done_')
+            );
+            await AsyncStorage.multiRemove(keysToRemove);
 
             // Clear today's smart notification key
             const today_str = new Date().toISOString().split('T')[0];
@@ -772,8 +792,12 @@ export const AppContextProvider = ({ children }) => {
 
             setIsSetupComplete(false);
 
-            // Reset categories to default if user had custom ones
+            // Refresh local categories
             setCategoriesList(categories);
+
+            // RevenueCat Logout
+            await RevenueCatService.logOut();
+            setIsPremium(false);
 
             return true;
         } catch (error) {
@@ -983,20 +1007,22 @@ export const AppContextProvider = ({ children }) => {
         prevMonthSummary, getCategorySuggestion,
         hasFetchedFromCloud, setHasFetchedFromCloud,
         isSetupComplete, setIsSetupComplete,
-        handleWipeData, checkAndResetMonth,
+        handleLogout, handleWipeData, checkAndResetMonth,
         getLocalDate, getYearMonth,
         refreshData,
         tabLayouts, updateTabLayout,
         hasRatedApp, setHasRatedApp,
         showRatingPrompt, setShowRatingPrompt, startRatingTimer,
-        globalAlert, showGlobalAlert, hideGlobalAlert
+        globalAlert, showGlobalAlert, hideGlobalAlert,
+        isPremium, setIsPremium
     }), [
         expenses, incomes, amount, title, category, editingId, editingType, isLoading, categoriesList,
         selectedPeriod, filteredExpenses, budgets, currency, isDarkMode, isFirstLaunch,
         userName, recurringTransactions, currencySymbol, allTransactions, totalSpent,
         totalIncome, balance, monthlySummary, categoriesWithBudget, appNotifications,
         prevMonthSummary, hasFetchedFromCloud, isSetupComplete, lastProcessedMonth,
-        refreshData, tabLayouts, updateTabLayout, hasRatedApp, showRatingPrompt, startRatingTimer, globalAlert
+        refreshData, tabLayouts, updateTabLayout, hasRatedApp, showRatingPrompt, startRatingTimer, 
+        globalAlert, isPremium
     ]);
 
     return (

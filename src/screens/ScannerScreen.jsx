@@ -10,7 +10,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useContext } from 'react';
 import { AppContext } from '../Contex/ContextApi';
-import { scanReceipt } from '../services/OCRService';
+import { scanReceipt, getDailyScanCount, incrementScanCount, getDailyLimit } from '../services/OCRService';
 import { suggestCategory } from '../Data/categoryKeywords';
 import { COLORS } from '../theme';
 import AdService, { BannerAdComponent } from '../services/AdService';
@@ -268,17 +268,46 @@ const sheetStyles = StyleSheet.create({
 
 // ─── Main ScannerScreen ────────────────────────────────────────────────────
 const ScannerScreen = ({ navigation }) => {
-    const { currencySymbol, categoriesList, handleAddTransaction, getLocalDate } = useContext(AppContext);
+    const { currencySymbol, categoriesList, handleAddTransaction, getLocalDate, isPremium } = useContext(AppContext);
 
     const [image, setImage] = useState(null);
     const [scanning, setScanning] = useState(false);
     const [progress, setProgress] = useState(0);
     const [scannedResult, setScannedResult] = useState(null);
     const [isSheetVisible, setIsSheetVisible] = useState(false);
+    const [scanCount, setScanCount] = useState(0);
 
     const scanLineAnim = useRef(new Animated.Value(0)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const frameAnim = useRef(new Animated.Value(0)).current;
+
+    // Fetch initial scan count
+    useEffect(() => {
+        getDailyScanCount().then(setScanCount);
+    }, []);
+
+    const checkScanLimit = async () => {
+        const count = await getDailyScanCount();
+        const limit = getDailyLimit(isPremium);
+        
+        if (count >= limit) {
+            Alert.alert(
+                isPremium ? '📊 Daily Limit Reached' : '🔒 Daily Limit Reached',
+                isPremium 
+                    ? `You've used all ${limit} AI scans for today. Limits reset at midnight.`
+                    : `Free users get ${limit} AI scans per day. Upgrade to Premium for ${getDailyLimit(true)} scans daily!`,
+                [
+                    { text: 'OK' },
+                    ...(!isPremium ? [{ 
+                        text: 'Upgrade', 
+                        onPress: () => navigation.navigate('BottomTabs', { screen: 'SettingsTab' }) 
+                    }] : [])
+                ]
+            );
+            return false;
+        }
+        return true;
+    };
 
     // Animations
     useEffect(() => {
@@ -299,6 +328,9 @@ const ScannerScreen = ({ navigation }) => {
     }, []);
 
     const pickImage = async () => {
+        const allowed = await checkScanLimit();
+        if (!allowed) return;
+
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
             alert('Gallery permission needed!');
@@ -306,7 +338,9 @@ const ScannerScreen = ({ navigation }) => {
         }
         
         // Show interstitial ad and WAIT before picking image
-        await AdService.showReceiptScanAd();
+        if (!isPremium) {
+            await AdService.showReceiptScanAd();
+        }
         
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -320,6 +354,9 @@ const ScannerScreen = ({ navigation }) => {
     };
 
     const takePhoto = async () => {
+        const allowed = await checkScanLimit();
+        if (!allowed) return;
+
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
             alert('Camera permission needed!');
@@ -327,7 +364,9 @@ const ScannerScreen = ({ navigation }) => {
         }
         
         // Show interstitial ad and WAIT before taking photo
-        await AdService.showReceiptScanAd();
+        if (!isPremium) {
+            await AdService.showReceiptScanAd();
+        }
         
         const result = await ImagePicker.launchCameraAsync({
             allowsEditing: false,
@@ -346,6 +385,10 @@ const ScannerScreen = ({ navigation }) => {
 
         try {
             const result = await scanReceipt(base64Image);
+            await incrementScanCount();
+            const newCount = await getDailyScanCount();
+            setScanCount(newCount);
+            
             Vibration.vibrate(80);
 
             // Pulse on completion
@@ -436,6 +479,11 @@ const ScannerScreen = ({ navigation }) => {
                     <View style={instrStyle.container}>
                         <Text style={instrStyle.main}>Identify Merchant & Total</Text>
                         <Text style={instrStyle.sub}>Take a photo of your receipt for auto-filling</Text>
+                        <View style={{ marginTop: 12, backgroundColor: COLORS.gray100, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}>
+                           <Text style={{ color: COLORS.textSub, fontSize: 11, fontWeight: '700' }}>
+                               {getDailyLimit(isPremium) - scanCount} scans remaining today
+                           </Text>
+                        </View>
                     </View>
                 )}
             </View>

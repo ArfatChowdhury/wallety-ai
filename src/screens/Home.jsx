@@ -139,8 +139,10 @@ const HomeListHeader = React.memo(({
           {auth.currentUser?.photoURL ? (
             <Image source={{ uri: auth.currentUser.photoURL }} style={styles.profilePic} />
           ) : (
-            <View style={[styles.profilePic, { backgroundColor: COLORS.primary, justifyContent: 'center', alignItems: 'center' }]}>
-              <Ionicons name="person" size={20} color={COLORS.black} />
+            <View style={[styles.profilePic, { backgroundColor: '#4F46E5', justifyContent: 'center', alignItems: 'center' }]}>
+              <Text style={{ color: 'white', fontSize: 18, fontWeight: '900' }}>
+                {(auth.currentUser?.displayName || 'P').charAt(0).toUpperCase()}
+              </Text>
             </View>
           )}
           <View>
@@ -152,7 +154,10 @@ const HomeListHeader = React.memo(({
           <TouchableOpacity
             ref={scanBtnRef}
             style={styles.iconBtn}
-            onPress={() => navigation.navigate('Scanner')}
+            onPress={async () => {
+              await AdService.showReceiptScanAd();
+              navigation.navigate('Scanner');
+            }}
             onLayout={() => { }}
           >
             <AntDesign name="scan" size={22} color={COLORS.textMain} />
@@ -178,10 +183,10 @@ const HomeListHeader = React.memo(({
           source={require('../../assets/card-bg.jpg')}
           style={[
             styles.balanceCard,
-            { marginBottom: 0 },
+            { marginBottom: 0, borderRadius: 16 },
             monthlySummary.isDebt && { borderColor: COLORS.expense, borderExtraWidth: 2 }
           ]}
-          imageStyle={{ borderRadius: 32 }}
+          imageStyle={{ borderRadius: 16 }}
         >
           <View style={styles.cardOverlay} />
           <View style={tailwind`w-full flex-row justify-between items-center`}>
@@ -289,7 +294,7 @@ const Home = ({ navigation }) => {
     totalSpent, balance, expenses, allTransactions, handleEdit, handleDelete,
     handleDeleteIncome, categoriesWithBudget, currencySymbol, monthlySummary, appNotifications, logAppNotification,
     prevMonthSummary, checkAndResetMonth, getLocalDate, getYearMonth, refreshData, isSetupComplete,
-    tabLayouts, showGlobalAlert
+    tabLayouts, showGlobalAlert, isPremium
   } = useContext(AppContext)
 
   const [selectedPeriod, setSelectedPeriod] = React.useState('month')
@@ -484,7 +489,7 @@ const Home = ({ navigation }) => {
   // Insert Native Ads every 5th item
   const transactionsWithAds = useMemo(() => {
     return insertAdsIntoTransactionList(filteredTransactions);
-  }, [filteredTransactions]);
+  }, [filteredTransactions, isPremium]);
 
   // Dynamic Totals based on filter
   const displayTotals = useMemo(() => {
@@ -902,7 +907,7 @@ const styles = StyleSheet.create({
   },
 
   balanceCard: {
-    borderRadius: 32,
+    borderRadius: 16,
     padding: 28,
     alignItems: 'center',
     marginBottom: 30,

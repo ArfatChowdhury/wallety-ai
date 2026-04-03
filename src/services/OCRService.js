@@ -1,7 +1,45 @@
 import { Platform } from 'react-native';
 import Groq from 'groq-sdk';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const GROQ_API_KEY = process.env.EXPO_PUBLIC_GROQ_API_KEY || '';
+
+// --- SCAN LIMITS ---
+const FREE_DAILY_LIMIT = 3;
+const PREMIUM_DAILY_LIMIT = 10;
+
+/**
+ * Get current scan count for today
+ */
+export async function getDailyScanCount() {
+    try {
+        const key = `scanCount_${new Date().toISOString().split('T')[0]}`;
+        const raw = await AsyncStorage.getItem(key);
+        return raw ? parseInt(raw, 10) : 0;
+    } catch (e) {
+        return 0;
+    }
+}
+
+/**
+ * Increment today's scan count
+ */
+export async function incrementScanCount() {
+    try {
+        const key = `scanCount_${new Date().toISOString().split('T')[0]}`;
+        const current = await getDailyScanCount();
+        await AsyncStorage.setItem(key, String(current + 1));
+    } catch (e) {
+        console.error('Failed to increment scan count:', e);
+    }
+}
+
+/**
+ * Get the daily limit based on premium status
+ */
+export function getDailyLimit(isPremium) {
+    return isPremium ? PREMIUM_DAILY_LIMIT : FREE_DAILY_LIMIT;
+}
 
 // Initialize Groq client
 const groq = new Groq({

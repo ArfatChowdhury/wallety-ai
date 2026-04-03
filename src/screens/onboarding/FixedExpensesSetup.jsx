@@ -31,6 +31,7 @@ const FixedExpensesSetup = ({ navigation }) => {
                 amount: parseFloat(insurance),
                 category: { name: 'Insurance', icon: '🛡️', color: '#FF8C00' },
             });
+            handleAddExpense({ title: 'Insurance', amount: insurance, category: { name: 'Insurance', icon: '🛡️', color: '#FF8C00' } });
         }
         if (rent) {
             addRecurringTransaction({
@@ -40,6 +41,7 @@ const FixedExpensesSetup = ({ navigation }) => {
                 amount: parseFloat(rent),
                 category: { name: 'Rent', icon: '🏠', color: '#8A2BE2' },
             });
+            handleAddExpense({ title: 'Rent', amount: rent, category: { name: 'Rent', icon: '🏠', color: '#8A2BE2' } });
         }
         if (debt) {
             addRecurringTransaction({
@@ -50,6 +52,7 @@ const FixedExpensesSetup = ({ navigation }) => {
                 category: { name: 'Bills', icon: '🧾', color: '#4ECDC4' },
                 monthsRemaining: debtMonths ? parseInt(debtMonths) : null
             });
+            handleAddExpense({ title: 'Bank Debt', amount: debt, category: { name: 'Bills', icon: '🧾', color: '#4ECDC4' } });
         }
 
         navigation.navigate('InitialBudgetSetup');

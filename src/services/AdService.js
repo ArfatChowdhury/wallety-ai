@@ -16,6 +16,7 @@ import {
 import { View, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
+import { AppContext } from '../Contex/ContextApi';
 
 // TEST AD UNIT IDs (use during development)
 export const AD_UNIT_IDS = {
@@ -36,6 +37,8 @@ const USE_TEST_IDS = true; // SET TO TRUE FOR DEVELOPMENT
 const AD_IDS = USE_TEST_IDS ? AD_UNIT_IDS : PROD_AD_UNIT_IDS;
 
 export class AdService {
+  static isPremiumUser = false; // Set globally from ContextApi
+  
   // Interstitial ad instances
   static appOpenInterstitial = null;
   static receiptScanInterstitial = null;
@@ -124,6 +127,7 @@ export class AdService {
 
   // Show app open ad (once per 24 hours)
   static async showAppOpenAd() {
+    if (this.isPremiumUser) return false;
     try {
       // Show ad every time (throttle removed)
       if (this.appOpenAd?.loaded) {
@@ -143,21 +147,25 @@ export class AdService {
 
   // Show receipt scan interstitial
   static async showReceiptScanAd() {
+    if (this.isPremiumUser) return true;
     return this.showInterstitialAndWait(this.receiptScanInterstitial, 'receipt-scan');
   }
 
   // Show PDF export interstitial
   static async showPdfExportAd() {
+    if (this.isPremiumUser) return true;
     return this.showInterstitialAndWait(this.pdfExportInterstitial, 'pdf-export');
   }
 
   // Show Budget interstitial
   static async showBudgetAd() {
+    if (this.isPremiumUser) return true;
     return this.showInterstitialAndWait(this.budgetInterstitial, 'budget');
   }
 
   // Show AI Insights interstitial
   static async showAiInsightsAd() {
+    if (this.isPremiumUser) return true;
     return this.showInterstitialAndWait(this.aiInsightsInterstitial, 'ai-insights');
   }
 
@@ -180,8 +188,11 @@ export class AdService {
 
 // Banner Ad Component with fallback
 export const BannerAdComponent = ({ style = {} }) => {
+  const { isPremium } = React.useContext(AppContext);
   const [showAd, setShowAd] = React.useState(true);
 
+  if (isPremium) return null;
+  
   try {
     return showAd ? (
       <View style={[{ width: '100%', alignItems: 'center' }, style]}>
@@ -215,8 +226,8 @@ export const insertAdsIntoTransactionList = (transactions) => {
   try {
     if (!transactions || transactions.length === 0) return [];
     return transactions.flatMap((item, index) => {
-      // Insert an ad after every 3rd transaction
-      if ((index + 1) % 3 === 0) {
+      // Insert an ad after every 3rd transaction, but only if NOT premium
+      if (!AdService.isPremiumUser && (index + 1) % 3 === 0) {
         return [item, { type: 'AD', id: `trans_ad_${index}` }];
       }
       return [item];
@@ -232,8 +243,8 @@ export const insertAdsIntoBudgetList = (budgetItems) => {
   try {
     if (!budgetItems || budgetItems.length === 0) return [];
     return budgetItems.flatMap((item, index) => {
-      // Insert every 3rd item
-      if ((index + 1) % 3 === 0) {
+      // Insert every 3rd item, but only if NOT premium
+      if (!AdService.isPremiumUser && (index + 1) % 3 === 0) {
         return [item, { type: 'AD', id: `ad_${index}` }];
       }
       return [item];

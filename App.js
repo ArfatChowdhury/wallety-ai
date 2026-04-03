@@ -128,7 +128,7 @@ const SplashScreenView = ({ onFinish }) => {
         opacity: contentFade 
       }}>
         <Image
-          source={require('./assets/icon.png')}
+          source={require('./assets/adaptive-icon.png')}
           style={{
             width: 90,
             height: 90,
