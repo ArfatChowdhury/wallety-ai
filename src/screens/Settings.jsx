@@ -19,6 +19,7 @@ import AdService from '../services/AdService'
 import { requestWidgetUpdate } from 'react-native-android-widget'
 import LimnersLogo from '../../assets/compay-logo/limners'
 import RevenueCatService from '../services/RevenueCatService'
+import * as WebBrowser from 'expo-web-browser';
 
 const Settings = ({ navigation }) => {
     const {
@@ -183,6 +184,14 @@ const Settings = ({ navigation }) => {
         } finally {
             setPurchaseLoading(false);
         }
+    };
+
+    const openPrivacyPolicy = () => {
+        WebBrowser.openBrowserAsync('https://wallety-nine.vercel.app/privacy');
+    };
+
+    const openTermsOfService = () => {
+        WebBrowser.openBrowserAsync('https://wallety-nine.vercel.app/terms');
     };
 
     const onLogoutPress = () => {
@@ -373,7 +382,7 @@ const Settings = ({ navigation }) => {
                     {auth.currentUser?.photoURL ? (
                         <Image source={{ uri: auth.currentUser.photoURL }} style={styles.avatarPic} />
                     ) : (
-                        <View style={[styles.avatar, { backgroundColor: '#4F46E5', borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' }]}>
+                        <View style={[styles.avatar, { backgroundColor: COLORS.black, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' }]}>
                             <Text style={{ color: 'white', fontSize: 28, fontWeight: '900' }}>
                                 {(auth.currentUser?.displayName || 'P').charAt(0).toUpperCase()}
                             </Text>
@@ -583,6 +592,23 @@ const Settings = ({ navigation }) => {
                         danger
                     />
                     <BannerAdComponent style={{ marginTop: 10 }} />
+                </View>
+
+                {/* Legal Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionHeader}>Legal</Text>
+                    <MenuItem
+                        icon="shield-checkmark-outline"
+                        label="Privacy Policy"
+                        subtitle="How we handle your data"
+                        onPress={openPrivacyPolicy}
+                    />
+                    <MenuItem
+                        icon="document-text-outline"
+                        label="Terms of Service"
+                        subtitle="Our service agreement"
+                        onPress={openTermsOfService}
+                    />
                 </View>
 
                 {/* Footer */}

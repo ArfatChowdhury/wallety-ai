@@ -139,7 +139,7 @@ const HomeListHeader = React.memo(({
           {auth.currentUser?.photoURL ? (
             <Image source={{ uri: auth.currentUser.photoURL }} style={styles.profilePic} />
           ) : (
-            <View style={[styles.profilePic, { backgroundColor: '#4F46E5', justifyContent: 'center', alignItems: 'center' }]}>
+            <View style={[styles.profilePic, { backgroundColor: COLORS.black, justifyContent: 'center', alignItems: 'center' }]}>
               <Text style={{ color: 'white', fontSize: 18, fontWeight: '900' }}>
                 {(auth.currentUser?.displayName || 'P').charAt(0).toUpperCase()}
               </Text>

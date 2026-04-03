@@ -33,7 +33,7 @@ export const PROD_AD_UNIT_IDS = {
 };
 
 // Use test IDs during development
-const USE_TEST_IDS = true; // SET TO TRUE FOR DEVELOPMENT
+const USE_TEST_IDS = false; // SET TO FALSE FOR PRODUCTION
 const AD_IDS = USE_TEST_IDS ? AD_UNIT_IDS : PROD_AD_UNIT_IDS;
 
 export class AdService {
