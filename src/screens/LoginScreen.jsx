@@ -217,16 +217,7 @@ const LoginScreen = ({ onSkip }) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Offline Mode */}
-                <TouchableOpacity
-                    onPress={onSkip}
-                    activeOpacity={0.7}
-                    style={tailwind`items-center py-4 mb-10`}
-                >
-                    <Text style={[tailwind`text-sm font-black tracking-tight opacity-40`, { color: COLORS.textMain, textDecorationLine: 'underline' }]}>
-                        USE AS GUEST (OFFLINE) 🚶
-                    </Text>
-                </TouchableOpacity>
+                {/* Removed Offline Mode */}
 
             </ScrollView>
         </KeyboardAvoidingView >

@@ -1,45 +1,62 @@
-const { withAndroidColors, withAndroidStyles } = require('@expo/config-plugins');
+const { withAndroidColors, withAndroidColorsNight, withAndroidStyles } = require('@expo/config-plugins');
 
 module.exports = (config) => {
+  // 1. Force day colors to white
   config = withAndroidColors(config, (c) => {
     c.modResults.resources.color = c.modResults.resources.color || [];
-    // Ensure splashBackground is defined in colors.xml
-    const existing = c.modResults.resources.color.find(color => color.$.name === 'splashBackground');
-    if (!existing) {
-      c.modResults.resources.color.push({ 
-        $: { name: 'splashBackground' }, 
-        _: '#FFFFFF' 
-      });
-    } else {
-      existing._ = '#FFFFFF';
-    }
+    const setOrUpdateColor = (name, value) => {
+      const existing = c.modResults.resources.color.find(color => color.$.name === name);
+      if (existing) {
+        existing._ = value;
+      } else {
+        c.modResults.resources.color.push({ $: { name }, _: value });
+      }
+    };
+    
+    setOrUpdateColor('splashBackground', '#FFFFFF');
+    setOrUpdateColor('splashscreen_background', '#FFFFFF');
     return c;
   });
 
+  // 2. Force night colors to white as well
+  config = withAndroidColorsNight(config, (c) => {
+    c.modResults = c.modResults || { resources: { color: [] } };
+    c.modResults.resources = c.modResults.resources || { color: [] };
+    c.modResults.resources.color = c.modResults.resources.color || [];
+    
+    const setOrUpdateColor = (name, value) => {
+      const existing = c.modResults.resources.color.find(color => color.$.name === name);
+      if (existing) {
+        existing._ = value;
+      } else {
+        c.modResults.resources.color.push({ $: { name }, _: value });
+      }
+    };
+    
+    setOrUpdateColor('splashBackground', '#FFFFFF');
+    setOrUpdateColor('splashscreen_background', '#FFFFFF');
+    return c;
+  });
+
+  // 3. Update styles sequentially without duplicates
   config = withAndroidStyles(config, (c) => {
     const styles = c.modResults.resources.style || [];
     const splashTheme = styles.find(s => s.$.name?.includes('SplashScreen'));
     if (splashTheme) {
       splashTheme.item = splashTheme.item || [];
-      const bgIndex = splashTheme.item.findIndex(i => i.$.name === 'android:windowBackground');
-      if (bgIndex > -1) {
-        splashTheme.item[bgIndex]._ = '@color/splashBackground';
-      } else {
-        splashTheme.item.push({ 
-          $: { name: 'android:windowBackground' }, 
-          _: '@color/splashBackground' 
-        });
-      }
       
-      // Fix for Android 12+ (forces the native Android 12 splash background to be white)
-      splashTheme.item.push({
-        $: { name: 'android:windowSplashScreenBackground' },
-        _: '@color/splashBackground'
-      });
-      splashTheme.item.push({
-        $: { name: 'windowSplashScreenBackground' },
-        _: '@color/splashBackground'
-      });
+      const setOrUpdateItem = (name, value) => {
+        const bgIndex = splashTheme.item.findIndex(i => i.$.name === name);
+        if (bgIndex > -1) {
+          splashTheme.item[bgIndex]._ = value;
+        } else {
+          splashTheme.item.push({ $: { name }, _: value });
+        }
+      };
+
+      setOrUpdateItem('android:windowBackground', '@color/splashBackground');
+      setOrUpdateItem('android:windowSplashScreenBackground', '@color/splashBackground');
+      setOrUpdateItem('windowSplashScreenBackground', '@color/splashBackground');
     }
     return c;
   });
