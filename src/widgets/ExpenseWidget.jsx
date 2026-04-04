@@ -2,108 +2,77 @@ import React from 'react';
 import {
   FlexWidget,
   TextWidget,
-  SvgWidget,
-  InputWidget,
 } from 'react-native-android-widget';
 
-export function ExpenseWidget() {
+export function ExpenseWidget({ safeDailySpend = 0, currencySymbol = '$', randomQuote = '' }) {
   return (
     <FlexWidget
       style={{
         height: 'match_parent',
         width: 'match_parent',
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        padding: 12,
+        borderRadius: 20,
+        padding: 16,
         flexDirection: 'column',
+        justifyContent: 'space-between',
       }}
     >
-      {/* Header */}
-      <FlexWidget style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      {/* Top Section: AI Data */}
+      <FlexWidget style={{ flexDirection: 'column' }}>
+        <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+          <TextWidget
+            text="✨ AI Forecast"
+            style={{ fontSize: 13, fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}
+          />
+        </FlexWidget>
         <TextWidget
-          text="💰 Quick Expense"
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: '#1e293b',
-          }}
+          text="Safe Daily Spend"
+          style={{ fontSize: 13, color: '#1e293b', fontWeight: '500' }}
+        />
+        <TextWidget
+          text={`${currencySymbol}${Number(safeDailySpend).toFixed(0)}`}
+          style={{ fontSize: 26, fontWeight: '900', color: '#22C55E', marginTop: 2 }}
         />
       </FlexWidget>
 
-      {/* Amount Input */}
-      <InputWidget
-        placeholder="0.00"
-        inputType="numberDecimal"
-        clickAction="SET_AMOUNT"
-        style={{
-          width: 'match_parent',
-          height: 40,
-          backgroundColor: '#f1f5f9',
-          borderRadius: 8,
-          paddingHorizontal: 8,
-          fontSize: 18,
-          color: '#1e293b',
-          marginBottom: 8,
-        }}
-      />
-
-      {/* Categories */}
-      <FlexWidget style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-        {['Food', 'Transport', 'Shopping', 'Other'].map((cat) => (
-          <FlexWidget
-            key={cat}
-            clickAction="SELECT_CATEGORY"
-            clickActionData={{ category: cat }}
-            style={{
-              width: '22%',
-              height: 40,
-              backgroundColor: '#f1f5f9',
-              borderRadius: 8,
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            <TextWidget
-              text={cat === 'Food' ? '🍔' : cat === 'Transport' ? '🚗' : cat === 'Shopping' ? '🛍️' : '📦'}
-              style={{ fontSize: 18 }}
-            />
-          </FlexWidget>
-        ))}
-      </FlexWidget>
-
-      {/* Add Button */}
+      {/* Middle Section: Random Quote */}
       <FlexWidget
-        clickAction="ADD_EXPENSE"
         style={{
-          width: 'match_parent',
-          height: 40,
-          backgroundColor: '#22C55E',
-          borderRadius: 8,
-          justifyContent: 'center',
-          alignItems: 'center',
-          marginBottom: 4,
+          backgroundColor: '#F8FAFC',
+          borderRadius: 12,
+          padding: 12,
+          marginTop: 10,
+          marginBottom: 10,
+          borderWidth: 1,
+          borderColor: '#E2E8F0',
         }}
       >
         <TextWidget
-          text="Add"
+          text={randomQuote || "Track the small things. 🔍"}
+          style={{ fontSize: 12, color: '#475569', fontStyle: 'italic' }}
+        />
+      </FlexWidget>
+
+      {/* Bottom Section: Open App Button */}
+      <FlexWidget
+        clickAction="OPEN_APP"
+        style={{
+          backgroundColor: '#22C55E',
+          borderRadius: 16,
+          paddingVertical: 10,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <TextWidget
+          text="Open Wallety"
           style={{
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: 'bold',
             color: '#FFFFFF',
           }}
         />
       </FlexWidget>
-
-      {/* Footer */}
-      <TextWidget
-        text="Tap to open app for more"
-        style={{
-          fontSize: 10,
-          color: '#64748b',
-          textAlign: 'center',
-          width: 'match_parent',
-        }}
-      />
     </FlexWidget>
   );
 }

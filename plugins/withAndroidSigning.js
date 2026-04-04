@@ -29,9 +29,10 @@ module.exports = function withAndroidSigning(config) {
 
       const signingProps = [
         `MYAPP_RELEASE_STORE_FILE=wallety-release.keystore`,
-        `MYAPP_RELEASE_KEY_ALIAS=${process.env.RELEASE_KEY_ALIAS || 'wallety-key'}`,
+        `MYAPP_RELEASE_KEY_ALIAS=${process.env.RELEASE_KEY_ALIAS || 'wallety-alias'}`,
         `MYAPP_RELEASE_STORE_PASSWORD=${process.env.RELEASE_STORE_PASSWORD || 'YOUR_STORE_PASSWORD'}`,
         `MYAPP_RELEASE_KEY_PASSWORD=${process.env.RELEASE_KEY_PASSWORD || 'YOUR_KEY_PASSWORD'}`,
+        `reactNativeArchitectures=arm64-v8a`,
       ];
 
       signingProps.forEach(prop => {

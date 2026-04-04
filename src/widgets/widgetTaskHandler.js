@@ -1,10 +1,19 @@
+import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { requestWidgetUpdate, navigateToApp } from 'react-native-android-widget';
 import { ExpenseWidget } from './ExpenseWidget';
 
-// Internal state for the widget (per instance if needed, but here we simplify)
-let currentAmount = '';
-let selectedCategory = '';
+const FINANCE_QUOTES = [
+  "Pay yourself first. 💰",
+  "Track the small things. 🔍",
+  "A penny saved is a penny earned. 🐷",
+  "Invest in your future. 🚀",
+  "Beware of little expenses. 💸",
+  "Budgeting is financial freedom. 🔓",
+  "Don't forget to log that coffee! ☕",
+  "Wealth is built daily. 🏗️",
+  "Consistency is key. 🔑",
+];
 
 export async function widgetTaskHandler(props) {
   const { widgetAction, widgetActionData } = props;
@@ -12,43 +21,31 @@ export async function widgetTaskHandler(props) {
   switch (widgetAction) {
     case 'WIDGET_ADDED':
     case 'WIDGET_UPDATE':
+      let safeDailySpend = 0;
+      let currencySymbol = '$';
+      
+      try {
+        const cache = await AsyncStorage.getItem('widget_data_cache');
+        if (cache) {
+          const parsed = JSON.parse(cache);
+          safeDailySpend = parsed.safeDailySpend || 0;
+          currencySymbol = parsed.currencySymbol || '$';
+        }
+      } catch (e) {
+        console.log("Widget Handler Error: ", e);
+      }
+
+      const randomQuote = FINANCE_QUOTES[Math.floor(Math.random() * FINANCE_QUOTES.length)];
+
       await requestWidgetUpdate({
         widgetName: 'ExpenseWidget',
-        renderWidget: () => <ExpenseWidget />,
+        renderWidget: () => <ExpenseWidget safeDailySpend={safeDailySpend} currencySymbol={currencySymbol} randomQuote={randomQuote} />,
         widgetId: props.widgetId,
       });
       break;
 
-    case 'SET_AMOUNT':
-      currentAmount = widgetActionData?.value || '';
-      break;
-
-    case 'SELECT_CATEGORY':
-      selectedCategory = widgetActionData?.category || '';
-      // Visual feedback could be added here if the widget supports it, 
-      // but for now we just store it.
-      break;
-
-    case 'ADD_EXPENSE':
-      if (currentAmount && selectedCategory) {
-        const expense = {
-          amount: parseFloat(currentAmount),
-          category: selectedCategory, // This will be mapped in App.js
-          date: new Date().toISOString(),
-          type: 'expense',
-          note: 'Added from widget',
-          pending: true
-        };
-
-        await AsyncStorage.setItem('widget_pending_expense', JSON.stringify(expense));
-        
-        // Reset state
-        currentAmount = '';
-        selectedCategory = '';
-        
-        // Open the app
-        navigateToApp();
-      }
+    case 'OPEN_APP':
+      navigateToApp();
       break;
 
     default:

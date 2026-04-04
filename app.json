@@ -77,7 +77,9 @@
               "name": "ExpenseWidget",
               "label": "Quick Expense Launcher",
               "description": "Add expenses from your home screen",
-              "src": "./src/widgets/ExpenseWidget.jsx"
+              "src": "./src/widgets/ExpenseWidget.jsx",
+              "minWidth": "250dp",
+              "minHeight": "110dp"
             }
           ]
         }

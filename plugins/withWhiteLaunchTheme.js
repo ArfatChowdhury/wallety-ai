@@ -18,7 +18,6 @@ module.exports = (config) => {
 
   config = withAndroidStyles(config, (c) => {
     const styles = c.modResults.resources.style || [];
-    // Target the splash screen theme (usually contains 'SplashScreen' in its name)
     const splashTheme = styles.find(s => s.$.name?.includes('SplashScreen'));
     if (splashTheme) {
       splashTheme.item = splashTheme.item || [];
@@ -31,6 +30,16 @@ module.exports = (config) => {
           _: '@color/splashBackground' 
         });
       }
+      
+      // Fix for Android 12+ (forces the native Android 12 splash background to be white)
+      splashTheme.item.push({
+        $: { name: 'android:windowSplashScreenBackground' },
+        _: '@color/splashBackground'
+      });
+      splashTheme.item.push({
+        $: { name: 'windowSplashScreenBackground' },
+        _: '@color/splashBackground'
+      });
     }
     return c;
   });

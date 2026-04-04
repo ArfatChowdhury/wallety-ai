@@ -6,7 +6,7 @@ import { registerForPushNotificationsAsync, sendBudgetWarning, scheduleMonthlySu
 import { db, auth } from "../services/firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import AdService from "../services/AdService";
-import { runSmartAnalysis } from "../services/SmartNotificationService";
+import { runSmartAnalysis, getSmartForecastData } from "../services/SmartNotificationService";
 import RevenueCatService from "../services/RevenueCatService";
 
 export const AppContext = createContext()
@@ -851,6 +851,32 @@ export const AppContextProvider = ({ children }) => {
     const totalSpent = monthlyExpenses.reduce((sum, item) => sum + Number(item.amount), 0);
     const totalIncome = monthlyIncomes.reduce((sum, item) => sum + Number(item.amount), 0);
     const balance = totalIncome - totalSpent;
+
+    // Cache Data for Home Screen Widget
+    useEffect(() => {
+        if (isLoading) return;
+        const forecastData = getSmartForecastData({
+            totalIncome,
+            totalSpent,
+            monthlyExpenses,
+            categoriesWithBudget: categoriesList.map(cat => ({
+                ...cat,
+                budgetLimit: budgets[cat.name] || 0,
+                amountSpent: monthlyExpenses
+                    .filter(exp => exp.category?.name === cat.name)
+                    .reduce((sum, exp) => sum + Number(exp.amount), 0)
+            })),
+            prevMonthSummary
+        });
+
+        const widgetCache = {
+            safeDailySpend: forecastData.safeDailySpend,
+            currencySymbol,
+        };
+        AsyncStorage.setItem('widget_data_cache', JSON.stringify(widgetCache))
+            .catch(e => console.log('Error caching widget data:', e));
+
+    }, [totalIncome, totalSpent, expenses, budgets, categoriesList, currencySymbol, isLoading]);
 
     // Smart Insights
     const monthlySummary = useMemo(() => {
