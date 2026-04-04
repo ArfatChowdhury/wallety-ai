@@ -266,7 +266,7 @@ const AppNavigator = () => {
             }} />
           )}
         </Stack.Screen>
-      ) : (!isSetupComplete && expenses.length === 0 && incomes.length === 0) ? (
+      ) : (!isSetupComplete) ? (
         <>
           <Stack.Screen name="Welcome" component={WelcomeScreen} />
           <Stack.Screen name="CurrencySetup" component={CurrencySetup} />

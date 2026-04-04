@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons, AntDesign } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi';
 import { COLORS, SHADOW } from '../theme';
-import { BannerAdComponent } from '../services/AdService';
+import AdService, { BannerAdComponent } from '../services/AdService';
 
 const INCOME_SOURCES = [
   { name: 'Salary', icon: '💼' },
@@ -140,7 +140,10 @@ const Create = ({ navigation, route }) => {
           </View>
           {/* Scan button */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('Scanner')}
+            onPress={async () => {
+              await AdService.showReceiptScanAd();
+              navigation.navigate('Scanner');
+            }}
             style={styles.scanBtn}
             activeOpacity={0.8}
           >

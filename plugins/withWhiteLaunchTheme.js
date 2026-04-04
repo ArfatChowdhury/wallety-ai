@@ -57,6 +57,10 @@ module.exports = (config) => {
       setOrUpdateItem('android:windowBackground', '@color/splashBackground');
       setOrUpdateItem('android:windowSplashScreenBackground', '@color/splashBackground');
       setOrUpdateItem('windowSplashScreenBackground', '@color/splashBackground');
+      
+      // CRITICAL FIX: Removes the automatic white circular/square background 
+      // Android 12+ forces behind the logo image!
+      setOrUpdateItem('android:windowSplashScreenIconBackgroundColor', '@android:color/transparent');
     }
     return c;
   });
