@@ -274,7 +274,9 @@ const Create = ({ navigation, route }) => {
         
         {/* Banner Ad at bottom */}
         <View style={{ backgroundColor: COLORS.background, marginHorizontal: -20, paddingHorizontal: 20 }}>
-          <BannerAdComponent />
+          <View style={{ marginBottom: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <BannerAdComponent />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

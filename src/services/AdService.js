@@ -186,36 +186,50 @@ export class AdService {
   }
 }
 
-// Banner Ad Component with fallback
+// Banner Ad Component with robust error handling and layout stability
 export const BannerAdComponent = ({ style = {} }) => {
   const { isPremium } = React.useContext(AppContext);
-  const [showAd, setShowAd] = React.useState(true);
+  const [adError, setAdError] = React.useState(null);
+  const [isLoaded, setIsLoaded] = React.useState(false);
 
   if (isPremium) return null;
   
-  try {
-    return showAd ? (
-      <View style={[{ width: '100%', alignItems: 'center', minHeight: 60, justifyContent: 'center' }, style]}>
-        <BannerAd
-          unitId={AD_IDS.BANNER}
-          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-          requestOptions={{
-            requestNonPersonalizedAdsOnly: true,
-          }}
-          onAdFailedToLoad={(error) => {
-            console.log('[AdService] Banner ad failed to load:', error);
-            setShowAd(false); // Hide ad slot if it fails
-          }}
-          onAdLoaded={() => {
-            setShowAd(true); // Show ad when loaded
-          }}
-        />
-      </View>
-    ) : null;
-  } catch (error) {
-    console.error('[AdService] Banner ad error:', error);
-    return null;
-  }
+  // If there's an error and it's not a temporary one, we could show a placeholder
+  // but for now we just log it and hide the ad to keep the UI clean.
+  
+  return (
+    <View style={[
+      { 
+        width: '100%', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        minHeight: 60, // Fixed height to prevent layout jumps and provide enough space for AdMob
+        backgroundColor: 'transparent'
+      }, 
+      style
+    ]}>
+      <BannerAd
+        unitId={AD_IDS.BANNER}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        requestOptions={{
+          requestNonPersonalizedAdsOnly: true,
+        }}
+        onAdFailedToLoad={(error) => {
+          console.error('[AdService] Banner ad failed to load:', error.code, error.message);
+          setAdError(error);
+          setIsLoaded(false);
+        }}
+        onAdLoaded={() => {
+          console.log('[AdService] Banner ad successfully loaded');
+          setIsLoaded(true);
+          setAdError(null);
+        }}
+      />
+      
+      {/* Optional: Add a subtle loading indicator or placeholder if needed during dev */}
+      {!isLoaded && !adError && <View style={{ height: 60 }} />}
+    </View>
+  );
 };
 
 // Native Ad Component for Lists with safe implementation

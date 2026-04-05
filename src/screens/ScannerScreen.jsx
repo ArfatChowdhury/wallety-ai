@@ -490,8 +490,8 @@ const ScannerScreen = ({ navigation }) => {
 
             {/* Action Buttons */}
             <View style={actionStyle.container}>
-                {/* Banner Ad above CTA */}
-                <View style={{ marginBottom: 10, alignItems: 'center' }}>
+                {/* Banner Ad above CTA — Standardized container */}
+                <View style={{ marginBottom: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
                     <BannerAdComponent />
                 </View>
 

@@ -263,7 +263,19 @@ const Insight = () => {
         {/* Banner Ad at bottom - shifted up to avoid floating tabbar */}
         {viewMode === 'trends' && (
           <View style={{ backgroundColor: COLORS.background, marginBottom: 110 }}>
-            <BannerAdComponent />
+            <View style={{
+                position: 'absolute',
+                bottom: 20 + 70 + 8, // Matching Home.jsx BOTTOM_AD_MARGIN
+                left: 0,
+                right: 0,
+                height: 65,
+                backgroundColor: COLORS.background,
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 100,
+            }}>
+                <BannerAdComponent />
+            </View>
           </View>
         )}
       </View>

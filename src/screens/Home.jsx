@@ -580,13 +580,17 @@ const Home = ({ navigation }) => {
           }
         />
 
-        {/* Banner Ad — dynamically positioned just above floating tab bar */}
+        {/* Banner Ad — dynamically positioned just above floating tab bar (Standardized) */}
         <View style={{
           position: 'absolute',
           bottom: BOTTOM_AD_MARGIN,
           left: 0,
           right: 0,
+          height: 65,
           backgroundColor: COLORS.background,
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
         }}>
           <BannerAdComponent />
         </View>

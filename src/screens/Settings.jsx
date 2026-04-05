@@ -494,7 +494,9 @@ const Settings = ({ navigation }) => {
                                 <Text style={{ color: 'white', textAlign: 'center', opacity: 0.7 }}>No subscription packages available right now.</Text>
                             )}
                         </View>
-                        <BannerAdComponent style={{ marginTop: 25, alignSelf: 'center' }} />
+                        <View style={{ marginTop: 25, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                            <BannerAdComponent />
+                        </View>
                     </View>
                 ) : (
                     <View style={[styles.section, { paddingHorizontal: 20 }]}>
@@ -531,7 +533,9 @@ const Settings = ({ navigation }) => {
                             onPress={promptAddWidget}
                         />
                     </View>
-                    <BannerAdComponent style={{ marginTop: 10 }} />
+                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        <BannerAdComponent />
+                    </View>
                 </View>
 
                 {/* Support Section */}
@@ -543,7 +547,9 @@ const Settings = ({ navigation }) => {
                         subtitle="Share suggestions or report bugs"
                         onPress={handleFeedback}
                     />
-                    <BannerAdComponent style={{ marginTop: 10 }} />
+                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        <BannerAdComponent />
+                    </View>
                 </View>
 
                 {/* Recurring Items Section */}
@@ -557,7 +563,9 @@ const Settings = ({ navigation }) => {
                             onPress={() => navigation.navigate('RecurringManager')}
                         />
                     </View>
-                    <BannerAdComponent style={{ marginTop: 10 }} />
+                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        <BannerAdComponent />
+                    </View>
                 </View>
 
                 {/* Actions Section */}
@@ -591,7 +599,9 @@ const Settings = ({ navigation }) => {
                         onPress={onLogoutPress}
                         danger
                     />
-                    <BannerAdComponent style={{ marginTop: 10 }} />
+                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        <BannerAdComponent />
+                    </View>
                 </View>
 
                 {/* Legal Section */}
@@ -723,7 +733,7 @@ const Settings = ({ navigation }) => {
             </Modal>
             
             {/* Final Banner Ad at bottom - shifted up for tabbar */}
-            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center', marginBottom: 110 }}>
+            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 110 }}>
                 <BannerAdComponent />
             </View>
 

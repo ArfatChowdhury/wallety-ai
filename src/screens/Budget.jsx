@@ -208,15 +208,18 @@ const Budget = () => {
                         />
                     </View>
 
-                {/* Fixed Banner Ad — above floating tab bar */}
+                {/* Fixed Banner Ad — above floating tab bar (Standardized) */}
                 <View style={{
                     position: 'absolute',
                     bottom: 20 + 70 + 8, // Matching Home.jsx BOTTOM_AD_MARGIN
                     left: 0,
                     right: 0,
+                    height: 65,
                     backgroundColor: COLORS.background,
                     alignItems: 'center',
+                    justifyContent: 'center',
                     paddingVertical: 10,
+                    zIndex: 100,
                 }}>
                     <BannerAdComponent />
                 </View>
