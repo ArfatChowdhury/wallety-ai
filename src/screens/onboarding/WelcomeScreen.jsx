@@ -24,13 +24,13 @@ const WelcomeScreen = ({ navigation }) => {
                                 <Ionicons name="wallet-outline" size={60} color={COLORS.black} />
                             </View>
 
-                            <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest mt-8`}>Step 1 of 5</Text>
-                            <Text style={[tailwind`text-4xl font-extrabold text-gray-900 mt-2`, { lineHeight: 48 }]}>
+                            <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest mt-8`} maxFontSizeMultiplier={1.3}>Step 1 of 5</Text>
+                            <Text style={[tailwind`text-4xl font-extrabold text-gray-900 mt-2`, { lineHeight: 48 }]} maxFontSizeMultiplier={1.3}>
                                 Welcome to{"\n"}
-                                <Text style={{ color: COLORS.primary }}>Wallety</Text>
+                                <Text style={{ color: COLORS.primary }} maxFontSizeMultiplier={1.3}>Wallety</Text>
                             </Text>
 
-                            <Text style={tailwind`text-lg text-gray-500 mt-4 leading-6`}>
+                            <Text style={tailwind`text-lg text-gray-500 mt-4 leading-6`} maxFontSizeMultiplier={1.3}>
                                 Your premium companion for tracking expenses and saving money with ease.
                             </Text>
 
@@ -39,17 +39,17 @@ const WelcomeScreen = ({ navigation }) => {
                                     <View style={tailwind`w-10 h-10 rounded-xl bg-green-100 items-center justify-center`}>
                                         <Ionicons name="flash" size={20} color="#10B981" />
                                     </View>
-                                    <Text style={tailwind`text-base font-bold text-gray-800`}>Quick Smart Setup</Text>
+                                    <Text style={tailwind`text-base font-bold text-gray-800`} maxFontSizeMultiplier={1.3}>Quick Smart Setup</Text>
                                 </View>
-                                <Text style={tailwind`text-sm text-gray-500 leading-5`}>
+                                <Text style={tailwind`text-sm text-gray-500 leading-5`} maxFontSizeMultiplier={1.3}>
                                     We'll help you set up your budget in 2 minutes. Your data stays private on your device.
                                 </Text>
                                 <View style={tailwind`mt-6 pt-6 border-t border-gray-100`}>
                                     <View style={tailwind`flex-row items-center gap-3 mb-2`}>
                                         <Ionicons name="calendar" size={18} color={COLORS.gray400} />
-                                        <Text style={tailwind`text-sm font-bold text-gray-700`}>Auto Month Close</Text>
+                                        <Text style={tailwind`text-sm font-bold text-gray-700`} maxFontSizeMultiplier={1.3}>Auto Month Close</Text>
                                     </View>
-                                    <Text style={tailwind`text-xs text-gray-400 leading-4`}>
+                                    <Text style={tailwind`text-xs text-gray-400 leading-4`} maxFontSizeMultiplier={1.3}>
                                         At the end of each month, Wallety automatically closes your period, saves your summary, and rolls over recurring bills for the next month.
                                     </Text>
                                 </View>
@@ -60,7 +60,7 @@ const WelcomeScreen = ({ navigation }) => {
                             style={styles.btn}
                             onPress={handleNext}
                         >
-                            <Text style={styles.btnText}>Start Quick Setup</Text>
+                            <Text style={styles.btnText} maxFontSizeMultiplier={1.3}>Start Quick Setup</Text>
                             <Ionicons name="arrow-forward" size={24} color={COLORS.white} />
                         </TouchableOpacity>
                     </View>

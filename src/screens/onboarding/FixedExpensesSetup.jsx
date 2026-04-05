@@ -66,24 +66,30 @@ const FixedExpensesSetup = ({ navigation }) => {
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
                     <View style={tailwind`px-6 pt-10 flex-1`}>
-                        <View style={tailwind`flex-row justify-between items-start`}>
+                        <View style={tailwind`flex-row justify-between items-start gap-4`}>
                             <View>
-                                <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}>Step 4 of 5</Text>
-                                <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}>Fixed Expenses</Text>
+                                <Text 
+                                    style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}
+                                    maxFontSizeMultiplier={1.3}
+                                >Step 4 of 5</Text>
+                                <Text 
+                                    style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}
+                                    maxFontSizeMultiplier={1.3}
+                                >Fixed Expenses</Text>
                             </View>
                             <TouchableOpacity
                                 onPress={skipSetup}
                                 style={styles.skipHeaderBtn}
                             >
-                                <Text style={styles.skipHeaderText}>Skip</Text>
+                                <Text style={styles.skipHeaderText} maxFontSizeMultiplier={1.3}>Skip</Text>
                             </TouchableOpacity>
                         </View>
 
                         {/* Smart Info Banner */}
                         <View style={styles.infoBanner}>
                             <Ionicons name="information-circle" size={24} color="#0D9488" />
-                            <Text style={styles.infoText}>
-                                <Text style={{ fontWeight: '800' }}>Auto-Log Enabled:</Text> These items will be automatically added for you at the start of every month.
+                            <Text style={styles.infoText} maxFontSizeMultiplier={1.3}>
+                                <Text style={{ fontWeight: '800' }} maxFontSizeMultiplier={1.3}>Auto-Log Enabled:</Text> These items will be automatically added for you at the start of every month.
                             </Text>
                         </View>
 
@@ -114,7 +120,7 @@ const FixedExpensesSetup = ({ navigation }) => {
                                     <Ionicons name="home-outline" size={24} color={COLORS.black} />
                                 </View>
                                 <View style={tailwind`flex-1 ml-4`}>
-                                    <Text style={styles.label}>Monthly Rent / Mortgage</Text>
+                                    <Text style={styles.label} maxFontSizeMultiplier={1.3}>Monthly Rent / Mortgage</Text>
                                     <TextInput
                                         ref={rentRef}
                                         style={styles.input}
@@ -173,7 +179,7 @@ const FixedExpensesSetup = ({ navigation }) => {
                                 onPress={handleNext}
                                 disabled={!insurance && !rent && !debt}
                             >
-                                <Text style={styles.btnText}>Continue</Text>
+                                <Text style={styles.btnText} maxFontSizeMultiplier={1.3}>Continue</Text>
                                 <Ionicons
                                     name="arrow-forward"
                                     size={24}

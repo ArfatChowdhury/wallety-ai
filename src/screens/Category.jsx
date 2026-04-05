@@ -53,8 +53,8 @@ const Category = ({ navigation }) => {
         >
           <Ionicons name="close-circle" size={32} color={COLORS.textMain} />
         </Pressable>
-        <Text style={tailwind`text-3xl font-bold mt-4 `}>Select Category</Text>
-        <Text style={tailwind`text-base mt-2 text-gray-500 `}>Select a category that describes what you spent money on</Text>
+        <Text style={tailwind`text-3xl font-bold mt-4 `} maxFontSizeMultiplier={1.3}>Select Category</Text>
+        <Text style={tailwind`text-base mt-2 text-gray-500 `} maxFontSizeMultiplier={1.3}>Select a category that describes what you spent money on</Text>
       </View>
 
       <FlatList
@@ -74,10 +74,10 @@ const Category = ({ navigation }) => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New Category</Text>
+            <Text style={styles.modalTitle} maxFontSizeMultiplier={1.3}>New Category</Text>
 
             <View style={styles.iconInputGroup}>
-              <Text style={styles.modalLabel}>Icon</Text>
+              <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Icon</Text>
               <TextInput
                 style={styles.iconInput}
                 value={newCatIcon}
@@ -87,7 +87,7 @@ const Category = ({ navigation }) => {
             </View>
 
             <View style={styles.nameInputGroup}>
-              <Text style={styles.modalLabel}>Category Name</Text>
+              <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Category Name</Text>
               <TextInput
                 style={styles.nameInput}
                 placeholder="e.g. Gym, Pets..."

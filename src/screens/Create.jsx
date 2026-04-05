@@ -128,13 +128,13 @@ const Create = ({ navigation, route }) => {
             <Ionicons name="arrow-back" size={24} color={COLORS.textMain} />
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
-            <Text style={styles.headerTitle}>
+            <Text style={styles.headerTitle} maxFontSizeMultiplier={1.3}>
               {isEditing ? 'Edit Transaction' : 'New Transaction'}
             </Text>
             {isScanned && (
               <Animated.View style={[styles.scannedBadge, { transform: [{ scale: scannedPulse }] }]}>
                 <AntDesign name="scan" size={10} color="#16a34a" />
-                <Text style={styles.scannedBadgeText}>Scanned ✓</Text>
+                <Text style={styles.scannedBadgeText} maxFontSizeMultiplier={1.3}>Scanned ✓</Text>
               </Animated.View>
             )}
           </View>
@@ -157,21 +157,21 @@ const Create = ({ navigation, route }) => {
             onPress={() => setType('expense')}
             style={[styles.toggleBtn, type === 'expense' && styles.toggleBtnActive]}
           >
-            <Text style={[styles.toggleText, type === 'expense' && styles.toggleTextActive]}>Expense</Text>
+            <Text style={[styles.toggleText, type === 'expense' && styles.toggleTextActive]} maxFontSizeMultiplier={1.3}>Expense</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setType('income')}
             style={[styles.toggleBtn, type === 'income' && styles.toggleBtnActiveIncome]}
           >
-            <Text style={[styles.toggleText, type === 'income' && styles.toggleTextActive]}>Income</Text>
+            <Text style={[styles.toggleText, type === 'income' && styles.toggleTextActive]} maxFontSizeMultiplier={1.3}>Income</Text>
           </TouchableOpacity>
         </View>
 
         {/* Amount Input */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Amount</Text>
+          <Text style={styles.label} maxFontSizeMultiplier={1.3}>Amount</Text>
           <View style={[styles.amountInputWrap, activeField === 'amount' && styles.inputActive]}>
-            <Text style={styles.currency}>{currencySymbol}</Text>
+            <Text style={styles.currency} maxFontSizeMultiplier={1.3}>{currencySymbol}</Text>
             <TextInput
               placeholder="0.00"
               style={styles.amountInput}
@@ -193,7 +193,7 @@ const Create = ({ navigation, route }) => {
 
         {/* Title / Source Input */}
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>{type === 'expense' ? 'Title' : 'Source Name'}</Text>
+          <Text style={styles.label} maxFontSizeMultiplier={1.3}>{type === 'expense' ? 'Title' : 'Source Name'}</Text>
           <TextInput
             placeholder={type === 'expense' ? "e.g. Grocery Shopping" : "e.g. Monthly Salary"}
             style={[styles.input, activeField === 'title' && styles.inputActive]}
@@ -209,10 +209,10 @@ const Create = ({ navigation, route }) => {
         {type === 'expense' ? (
           <View style={styles.inputGroup}>
             <View style={styles.labelRow}>
-              <Text style={styles.label}>Category</Text>
+              <Text style={styles.label} maxFontSizeMultiplier={1.3}>Category</Text>
               {isSuggested && (
                 <View style={styles.suggestedBadge}>
-                  <Text style={styles.suggestedText}>✨ Auto-suggested</Text>
+                  <Text style={styles.suggestedText} maxFontSizeMultiplier={1.3}>✨ Auto-suggested</Text>
                 </View>
               )}
             </View>
@@ -222,8 +222,8 @@ const Create = ({ navigation, route }) => {
             >
               <View style={styles.categoryRow}>
                 <View style={styles.catInfo}>
-                  <Text style={styles.catIcon}>{category?.icon || '📁'}</Text>
-                  <Text style={[styles.catName, !category?.name && { color: COLORS.gray400 }]}>
+                  <Text style={styles.catIcon} maxFontSizeMultiplier={1.3}>{category?.icon || '📁'}</Text>
+                  <Text style={[styles.catName, !category?.name && { color: COLORS.gray400 }]} maxFontSizeMultiplier={1.3}>
                     {category?.name || 'Select Category'}
                   </Text>
                 </View>
@@ -233,7 +233,7 @@ const Create = ({ navigation, route }) => {
           </View>
         ) : (
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Quick Select Source</Text>
+            <Text style={styles.label} maxFontSizeMultiplier={1.3}>Quick Select Source</Text>
             <View style={styles.sourceGrid}>
               {INCOME_SOURCES.map(src => (
                 <TouchableOpacity
@@ -244,8 +244,8 @@ const Create = ({ navigation, route }) => {
                     title === src.name ? styles.sourceChipActive : styles.sourceChipInactive
                   ]}
                 >
-                  <Text style={styles.sourceEmoji}>{src.icon}</Text>
-                  <Text style={[styles.sourceLabel, title === src.name && styles.sourceLabelActive]}>{src.name}</Text>
+                  <Text style={styles.sourceEmoji} maxFontSizeMultiplier={1.3}>{src.icon}</Text>
+                  <Text style={[styles.sourceLabel, title === src.name && styles.sourceLabelActive]} maxFontSizeMultiplier={1.3}>{src.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -258,7 +258,7 @@ const Create = ({ navigation, route }) => {
           style={[styles.submitBtn, { backgroundColor: type === 'expense' ? COLORS.black : COLORS.income }]}
           activeOpacity={0.8}
         >
-          <Text style={styles.submitText}>
+          <Text style={styles.submitText} maxFontSizeMultiplier={1.3}>
             {isEditing ? 'Update Transaction' : `Add ${type === 'expense' ? 'Expense' : 'Income'}`}
           </Text>
         </TouchableOpacity>

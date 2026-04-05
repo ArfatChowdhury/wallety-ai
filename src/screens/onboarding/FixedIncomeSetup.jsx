@@ -63,23 +63,29 @@ const FixedIncomeSetup = ({ navigation }) => {
             >
                 <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
                     <View style={tailwind`px-6 pt-10 flex-1`}>
-                        <View style={tailwind`flex-row justify-between items-start`}>
+                        <View style={tailwind`flex-row justify-between items-start gap-4`}>
                             <View>
-                                <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}>Step 3 of 5</Text>
-                                <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}>Monthly Income</Text>
+                                <Text 
+                                    style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}
+                                    maxFontSizeMultiplier={1.3}
+                                >Step 3 of 5</Text>
+                                <Text 
+                                    style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}
+                                    maxFontSizeMultiplier={1.3}
+                                >Monthly Income</Text>
                             </View>
                             <TouchableOpacity
                                 onPress={skipSetup}
                                 style={styles.skipHeaderBtn}
                             >
-                                <Text style={styles.skipHeaderText}>Skip</Text>
+                                <Text style={styles.skipHeaderText} maxFontSizeMultiplier={1.3}>Skip</Text>
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.infoBanner}>
                             <Ionicons name="information-circle" size={24} color="#0D9488" />
-                            <Text style={styles.infoText}>
-                                <Text style={{ fontWeight: '800' }}>Tip:</Text> You can edit or delete these anytime in <Text style={{ fontWeight: '700' }}>Settings {'>'} Recurring Items</Text>.
+                            <Text style={styles.infoText} maxFontSizeMultiplier={1.3}>
+                                <Text style={{ fontWeight: '800' }} maxFontSizeMultiplier={1.3}>Tip:</Text> You can edit or delete these anytime in <Text style={{ fontWeight: '700' }} maxFontSizeMultiplier={1.3}>Settings {'>'} Recurring Items</Text>.
                             </Text>
                         </View>
 
@@ -90,7 +96,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                                     <Ionicons name="cash-outline" size={24} color={COLORS.black} />
                                 </View>
                                 <View style={tailwind`flex-1 ml-4`}>
-                                    <Text style={styles.label}>Salary</Text>
+                                    <Text style={styles.label} maxFontSizeMultiplier={1.3}>Salary</Text>
                                     <TextInput
                                         style={styles.input}
                                         placeholder="0.00"
@@ -110,7 +116,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                                     <Ionicons name="business-outline" size={24} color={COLORS.black} />
                                 </View>
                                 <View style={tailwind`flex-1 ml-4`}>
-                                    <Text style={styles.label}>Business Profit</Text>
+                                    <Text style={styles.label} maxFontSizeMultiplier={1.3}>Business Profit</Text>
                                     <TextInput
                                         ref={businessRef}
                                         style={styles.input}
@@ -131,7 +137,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                                     <Ionicons name="flash-outline" size={24} color={COLORS.black} />
                                 </View>
                                 <View style={tailwind`flex-1 ml-4`}>
-                                    <Text style={styles.label}>Side Hustle / Freelance</Text>
+                                    <Text style={styles.label} maxFontSizeMultiplier={1.3}>Side Hustle / Freelance</Text>
                                     <TextInput
                                         ref={sideHustleRef}
                                         style={styles.input}
@@ -151,7 +157,7 @@ const FixedIncomeSetup = ({ navigation }) => {
                                 onPress={handleNext}
                                 disabled={!salary && !business && !sideHustle}
                             >
-                                <Text style={styles.btnText}>Continue</Text>
+                                <Text style={styles.btnText} maxFontSizeMultiplier={1.3}>Continue</Text>
                                 <Ionicons
                                     name="arrow-forward"
                                     size={24}

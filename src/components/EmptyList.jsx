@@ -5,9 +5,9 @@ import { COLORS } from '../theme'
 const EmptyList = () => {
     return (
         <View style={styles.container}>
-            <Text style={styles.icon}>💸</Text>
-            <Text style={styles.title}>No transactions yet</Text>
-            <Text style={styles.subtitle}>
+            <Text style={styles.icon} maxFontSizeMultiplier={1.3}>💸</Text>
+            <Text style={styles.title} maxFontSizeMultiplier={1.3}>No transactions yet</Text>
+            <Text style={styles.subtitle} maxFontSizeMultiplier={1.3}>
                 Tap "Add" below to record your first expense
             </Text>
         </View>

@@ -195,7 +195,7 @@ export const BannerAdComponent = ({ style = {} }) => {
   
   try {
     return showAd ? (
-      <View style={[{ width: '100%', alignItems: 'center' }, style]}>
+      <View style={[{ width: '100%', alignItems: 'center', minHeight: 60, justifyContent: 'center' }, style]}>
         <BannerAd
           unitId={AD_IDS.BANNER}
           size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}

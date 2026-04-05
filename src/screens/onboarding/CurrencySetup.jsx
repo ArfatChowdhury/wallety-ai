@@ -41,10 +41,10 @@ const CurrencySetup = ({ navigation, route }) => {
     return (
         <SafeAreaView style={styles.root}>
             <View style={tailwind`px-6 pt-10 flex-1`}>
-                <View style={tailwind`flex-row justify-between items-start`}>
+                <View style={tailwind`flex-row justify-between items-start gap-4`}>
                     <View>
-                        {!isSettings && <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`}>Step 2 of 5</Text>}
-                        <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`}>
+                        {!isSettings && <Text style={tailwind`text-sm font-bold text-primary uppercase tracking-widest`} maxFontSizeMultiplier={1.3}>Step 2 of 5</Text>}
+                        <Text style={tailwind`text-3xl font-extrabold text-gray-900 mt-2`} maxFontSizeMultiplier={1.3}>
                             {isSettings ? 'Change Currency' : 'Choose currency'}
                         </Text>
                     </View>
@@ -53,11 +53,11 @@ const CurrencySetup = ({ navigation, route }) => {
                             onPress={skipSetup}
                             style={styles.skipHeaderBtn}
                         >
-                            <Text style={styles.skipHeaderText}>Skip</Text>
+                            <Text style={styles.skipHeaderText} maxFontSizeMultiplier={1.3}>Skip</Text>
                         </TouchableOpacity>
                     )}
                 </View>
-                <Text style={tailwind`text-base text-gray-500 mt-2`}>
+                <Text style={tailwind`text-base text-gray-500 mt-2`} maxFontSizeMultiplier={1.3}>
                     {isSettings ? 'Update your preferred currency symbol.' : 'This will be used for all your budget records.'}
                 </Text>
 
@@ -90,11 +90,11 @@ const CurrencySetup = ({ navigation, route }) => {
                             onPress={() => handleSelect(item.code)}
                         >
                             <View style={styles.symbolContainer}>
-                                <Text style={styles.symbol}>{item.symbol}</Text>
+                                <Text style={styles.symbol} maxFontSizeMultiplier={1.3}>{item.symbol}</Text>
                             </View>
                             <View style={tailwind`flex-1 ml-4`}>
-                                <Text style={styles.currencyName}>{item.name}</Text>
-                                <Text style={styles.currencyCode}>{item.code} • {item.region}</Text>
+                                <Text style={styles.currencyName} maxFontSizeMultiplier={1.3}>{item.name}</Text>
+                                <Text style={styles.currencyCode} maxFontSizeMultiplier={1.3}>{item.code} • {item.region}</Text>
                             </View>
                             {currency === item.code && (
                                 <Ionicons name="checkmark-circle" size={24} color={COLORS.primary} />
@@ -114,7 +114,7 @@ const CurrencySetup = ({ navigation, route }) => {
                     style={styles.btn}
                     onPress={handleNext}
                 >
-                    <Text style={styles.btnText}>{isSettings ? 'Save Changes' : 'Continue'}</Text>
+                    <Text style={styles.btnText} maxFontSizeMultiplier={1.3}>{isSettings ? 'Save Changes' : 'Continue'}</Text>
                     <Ionicons name={isSettings ? "checkmark-done" : "arrow-forward"} size={24} color={COLORS.white} />
                 </TouchableOpacity>
             </View>

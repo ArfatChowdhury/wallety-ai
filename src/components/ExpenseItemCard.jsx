@@ -111,12 +111,12 @@ const ExpenseItemCard = ({ item, onEdit, onDelete }) => {
           <View style={styles.cardContent}>
             <View style={styles.leftSection}>
               <View style={[styles.iconBox, { backgroundColor: isIncome ? '#ECFDF5' : '#F9FAFB' }]}>
-                <Text style={styles.emoji}>{item.icon || (isIncome ? '💰' : '📦')}</Text>
+                <Text style={styles.emoji} maxFontSizeMultiplier={1.3}>{item.icon || (isIncome ? '💰' : '📦')}</Text>
               </View>
               <View style={styles.info}>
-                <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+                <Text style={styles.title} numberOfLines={1} maxFontSizeMultiplier={1.3}>{item.title}</Text>
                 <View style={[styles.catBadge, { backgroundColor: isIncome ? '#D1FAE5' : catColor }]}>
-                  <Text style={[styles.catText, { color: isIncome ? '#065F46' : 'rgba(0,0,0,0.6)' }]}>
+                  <Text style={[styles.catText, { color: isIncome ? '#065F46' : 'rgba(0,0,0,0.6)' }]} maxFontSizeMultiplier={1.3}>
                     {isIncome ? 'Income' : (item.category?.name || 'Uncategorized')}
                   </Text>
                 </View>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 20,
     marginVertical: 8,
-    height: 85,
+    minHeight: 85,
     borderRadius: 20,
   },
   actions: {

@@ -140,14 +140,14 @@ const HomeListHeader = React.memo(({
             <Image source={{ uri: auth.currentUser.photoURL }} style={styles.profilePic} />
           ) : (
             <View style={[styles.profilePic, { backgroundColor: COLORS.black, justifyContent: 'center', alignItems: 'center' }]}>
-              <Text style={{ color: 'white', fontSize: 18, fontWeight: '900' }}>
+              <Text style={{ color: 'white', fontSize: 18, fontWeight: '900' }} maxFontSizeMultiplier={1.3}>
                 {(auth.currentUser?.displayName || 'P').charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
           <View>
-            <Text style={styles.greeting}>Hi, {auth.currentUser?.displayName?.split(" ").pop() || "User"} 👋</Text>
-            <Text style={styles.subGreeting}>Welcome back!</Text>
+            <Text style={styles.greeting} maxFontSizeMultiplier={1.3}>Hi, {auth.currentUser?.displayName?.split(" ").pop() || "User"} 👋</Text>
+            <Text style={styles.subGreeting} maxFontSizeMultiplier={1.3}>Welcome back!</Text>
           </View>
         </View>
         <View style={styles.headerActions}>
@@ -190,7 +190,7 @@ const HomeListHeader = React.memo(({
         >
           <View style={styles.cardOverlay} />
           <View style={tailwind`w-full flex-row justify-between items-center`}>
-            <Text style={styles.balanceLabel}>
+            <Text style={styles.balanceLabel} maxFontSizeMultiplier={1.3}>
               {selectedPeriod === 'all' ? 'Spent so far' : `${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)} Spending`}
             </Text>
             {prevMonthSummary && selectedPeriod === 'month' && (
@@ -200,13 +200,13 @@ const HomeListHeader = React.memo(({
                   size={12}
                   color={displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income}
                 />
-                <Text style={[styles.comparisonText, { color: displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income }]}>
+                <Text style={[styles.comparisonText, { color: displayTotals.spent > prevMonthSummary.totalSpent ? COLORS.expense : COLORS.income }]} maxFontSizeMultiplier={1.3}>
                   {Math.abs(((displayTotals.spent - prevMonthSummary.totalSpent) / (prevMonthSummary.totalSpent || 1)) * 100).toFixed(0)}% vs last
                 </Text>
               </View>
             )}
           </View>
-          <Text style={styles.balanceAmount}>{currencySymbol}{Number(displayTotals.spent).toFixed(2)}</Text>
+          <Text style={styles.balanceAmount} maxFontSizeMultiplier={1.3}>{currencySymbol}{Number(displayTotals.spent).toFixed(2)}</Text>
 
           {/* Budget Progress Bar */}
           <View style={styles.progressContainer}>
@@ -222,8 +222,8 @@ const HomeListHeader = React.memo(({
               ]} />
             </View>
             <View style={tailwind`flex-row justify-between mt-1`}>
-              <Text style={styles.progressLabel}>Income Used</Text>
-              <Text style={styles.progressValue}>
+              <Text style={styles.progressLabel} maxFontSizeMultiplier={1.3}>Income Used</Text>
+              <Text style={styles.progressValue} maxFontSizeMultiplier={1.3}>
                 {totalSpent + balance > 0
                   ? `${Math.round((totalSpent / (totalSpent + balance)) * 100)}%`
                   : '0%'}
@@ -233,17 +233,17 @@ const HomeListHeader = React.memo(({
 
           <View style={[styles.balanceFooter, { justifyContent: 'space-between', flexDirection: 'row', width: '100%' }]}>
             <View style={{ flex: 1, paddingRight: 10 }}>
-              <Text style={styles.footerLabel} numberOfLines={1}>Total Income</Text>
-              <Text style={styles.footerAmount} numberOfLines={1}>
+              <Text style={styles.footerLabel} numberOfLines={1} maxFontSizeMultiplier={1.3}>Total Income</Text>
+              <Text style={styles.footerAmount} numberOfLines={1} maxFontSizeMultiplier={1.3}>
                 {currencySymbol}{Number(displayTotals.income || 0).toFixed(2)}
               </Text>
             </View>
             <View style={{ flex: 1, alignItems: 'flex-end', paddingLeft: 10 }}>
-              <Text style={styles.footerLabel} numberOfLines={1}>Balance Left</Text>
+              <Text style={styles.footerLabel} numberOfLines={1} maxFontSizeMultiplier={1.3}>Balance Left</Text>
               <Text style={[
                 styles.footerAmount,
                 monthlySummary.isDebt && { color: COLORS.expense }
-              ]} numberOfLines={1}>
+              ]} numberOfLines={1} maxFontSizeMultiplier={1.3}>
                 {currencySymbol}{Number(displayTotals.balance).toFixed(2)}
               </Text>
             </View>
@@ -265,11 +265,11 @@ const HomeListHeader = React.memo(({
       {selectedPeriod === 'calendar' && (
         <View style={styles.calendarFilterInfo}>
           <Ionicons name="calendar" size={16} color={COLORS.textSub} />
-          <Text style={styles.calendarFilterText}>
+          <Text style={styles.calendarFilterText} maxFontSizeMultiplier={1.3}>
             Showing: {new Date(selectedMonth + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}
           </Text>
           <TouchableOpacity onPress={() => setShowMonthPicker(true)}>
-            <Text style={styles.changeMonthBtn}>Change</Text>
+            <Text style={styles.changeMonthBtn} maxFontSizeMultiplier={1.3}>Change</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -277,6 +277,7 @@ const HomeListHeader = React.memo(({
       <Text
         ref={transactionsTitleRef}
         style={styles.sectionTitle}
+        maxFontSizeMultiplier={1.3}
       >
         Recent Transactions
       </Text>
@@ -604,7 +605,7 @@ const Home = ({ navigation }) => {
           onPress={() => setShowMonthPicker(false)}
         >
           <View style={styles.monthPickerContainer}>
-            <Text style={styles.monthPickerTitle}>Select Month</Text>
+            <Text style={styles.monthPickerTitle} maxFontSizeMultiplier={1.3}>Select Month</Text>
             <RNScrollView style={styles.monthList}>
               {Array.from({ length: 12 }).map((_, i) => {
                 const d = new Date();
@@ -626,7 +627,7 @@ const Home = ({ navigation }) => {
                     <Text style={[
                       styles.monthItemText,
                       selectedMonth === val && styles.monthItemTextActive
-                    ]}>
+                    ]} maxFontSizeMultiplier={1.3}>
                       {label}
                     </Text>
                     {selectedMonth === val && <Ionicons name="checkmark-circle" size={20} color={COLORS.primary} />}
@@ -684,7 +685,7 @@ const Home = ({ navigation }) => {
               style={styles.closeModalBtn}
               onPress={() => setShowSummaryModal(false)}
             >
-              <Text style={styles.closeModalBtnText}>Got it!</Text>
+              <Text style={styles.closeModalBtnText} maxFontSizeMultiplier={1.3}>Got it!</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -703,13 +704,13 @@ const Home = ({ navigation }) => {
             style={[styles.notificationModalContainer, { paddingBottom: 20, maxHeight: '90%' }]}
           >
             <View style={tailwind`flex-row justify-between items-center w-full mb-4`}>
-              <Text style={styles.notificationModalTitle}>Custom Reminders</Text>
+              <Text style={styles.notificationModalTitle} maxFontSizeMultiplier={1.3}>Custom Reminders</Text>
               <Ionicons name="alarm" size={24} color={COLORS.primary} />
             </View>
 
             <RNScrollView style={tailwind`w-full`} showsVerticalScrollIndicator={false}>
 
-              <Text style={tailwind`text-gray-500 font-bold text-xs mb-2 uppercase`}>Set New Reminder</Text>
+              <Text style={tailwind`text-gray-500 font-bold text-xs mb-2 uppercase`} maxFontSizeMultiplier={1.3}>Set New Reminder</Text>
               <View style={tailwind`bg-white rounded-xl border border-gray-200 p-4 mb-6`}>
                 <TextInput
                   style={[tailwind`w-full bg-gray-50 rounded-xl p-3 mb-4 border border-gray-200`, { color: COLORS.textMain, fontSize: 15 }]}
@@ -725,7 +726,7 @@ const Home = ({ navigation }) => {
                     onPress={() => { setPickerMode('date'); setShowPicker(true); }}
                   >
                     <Ionicons name="calendar" size={18} color={COLORS.primary} style={tailwind`mr-2`} />
-                    <Text style={tailwind`text-blue-700 font-bold text-sm`}>
+                    <Text style={tailwind`text-blue-700 font-bold text-sm`} maxFontSizeMultiplier={1.3}>
                       {reminderDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </Text>
                   </TouchableOpacity>
@@ -735,7 +736,7 @@ const Home = ({ navigation }) => {
                     onPress={() => { setPickerMode('time'); setShowPicker(true); }}
                   >
                     <Ionicons name="time-outline" size={18} color="#7e22ce" style={tailwind`mr-2`} />
-                    <Text style={tailwind`text-purple-700 font-bold text-sm`}>
+                    <Text style={tailwind`text-purple-700 font-bold text-sm`} maxFontSizeMultiplier={1.3}>
                       {reminderDate.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                     </Text>
                   </TouchableOpacity>
@@ -748,7 +749,7 @@ const Home = ({ navigation }) => {
                   >
                     <View style={tailwind`flex-row items-center`}>
                       <Ionicons name="notifications" size={16} color={!isAlarm ? COLORS.primary : COLORS.gray400} style={tailwind`mr-1`} />
-                      <Text style={[tailwind`font-bold text-sm`, { color: !isAlarm ? COLORS.textMain : COLORS.gray400 }]}>Notification</Text>
+                      <Text style={[tailwind`font-bold text-sm`, { color: !isAlarm ? COLORS.textMain : COLORS.gray400 }]} maxFontSizeMultiplier={1.3}>Notification</Text>
                     </View>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -757,7 +758,7 @@ const Home = ({ navigation }) => {
                   >
                     <View style={tailwind`flex-row items-center`}>
                       <Ionicons name="alarm" size={16} color={isAlarm ? COLORS.expense : COLORS.gray400} style={tailwind`mr-1`} />
-                      <Text style={[tailwind`font-bold text-sm`, { color: isAlarm ? COLORS.textMain : COLORS.gray400 }]}>Loud Alarm</Text>
+                      <Text style={[tailwind`font-bold text-sm`, { color: isAlarm ? COLORS.textMain : COLORS.gray400 }]} maxFontSizeMultiplier={1.3}>Loud Alarm</Text>
                     </View>
                   </TouchableOpacity>
                 </View>
@@ -803,7 +804,7 @@ const Home = ({ navigation }) => {
                     }
                   }}>
                   <Ionicons name="checkmark-circle-outline" size={20} color="white" style={tailwind`mr-2`} />
-                  <Text style={tailwind`text-white font-bold text-base`}>Save Reminder</Text>
+                  <Text style={tailwind`text-white font-bold text-base`} maxFontSizeMultiplier={1.3}>Save Reminder</Text>
                 </TouchableOpacity>
               </View>
 
@@ -812,9 +813,9 @@ const Home = ({ navigation }) => {
                 <BannerAdComponent />
               </View>
 
-              <Text style={tailwind`text-gray-500 font-bold text-xs mb-2 uppercase`}>Active Scheduled Reminders</Text>
+              <Text style={tailwind`text-gray-500 font-bold text-xs mb-2 uppercase`} maxFontSizeMultiplier={1.3}>Active Scheduled Reminders</Text>
               {activeReminders.length === 0 ? (
-                <Text style={tailwind`text-gray-400 text-sm font-semibold mb-6`}>No custom reminders coming up.</Text>
+                <Text style={tailwind`text-gray-400 text-sm font-semibold mb-6`} maxFontSizeMultiplier={1.3}>No custom reminders coming up.</Text>
               ) : (
                 activeReminders.map(rem => (
                   <View key={rem.identifier} style={tailwind`flex-row items-center bg-gray-50 border border-gray-100 p-4 rounded-xl mb-3`}>

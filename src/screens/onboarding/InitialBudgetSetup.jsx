@@ -15,9 +15,9 @@ const BudgetSlider = ({ label, value, onValueChange, icon, color, currencySymbol
                 <View style={[styles.iconBox, { backgroundColor: color + '20' }]}>
                     <Ionicons name={icon} size={20} color={color} />
                 </View>
-                <Text style={styles.budgetLabel}>{label}</Text>
+                <Text style={styles.budgetLabel} maxFontSizeMultiplier={1.3}>{label}</Text>
             </View>
-            <Text style={styles.budgetValue}>{currencySymbol}{value}</Text>
+            <Text style={styles.budgetValue} maxFontSizeMultiplier={1.3}>{currencySymbol}{value}</Text>
         </View>
         <Slider
             style={{ width: '100%', height: 40 }}
@@ -61,19 +61,19 @@ const InitialBudgetSetup = ({ navigation }) => {
         <SafeAreaView style={styles.root}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <View style={tailwind`px-6 pt-10 flex-1`}>
-                    <View style={tailwind`flex-row justify-between items-start`}>
+                    <View style={tailwind`flex-row justify-between items-start gap-4`}>
                         <View style={tailwind`flex-1`}>
-                            <Text style={[tailwind`text-sm font-bold uppercase tracking-widest`, { color: COLORS.primary }]}>Step 5 of 5</Text>
-                            <Text style={tailwind`text-3xl font-extrabold text-gray-800 mt-2`}>Set Your Monthly Budgets</Text>
+                            <Text style={[tailwind`text-sm font-bold uppercase tracking-widest`, { color: COLORS.primary }]} maxFontSizeMultiplier={1.3}>Step 5 of 5</Text>
+                            <Text style={tailwind`text-3xl font-extrabold text-gray-800 mt-2`} maxFontSizeMultiplier={1.3}>Set Your Monthly Budgets</Text>
                         </View>
                         <TouchableOpacity 
                             onPress={handleSkip}
                             style={[tailwind`px-4 py-2 rounded-full`, { backgroundColor: COLORS.gray100, borderWidth: 1, borderColor: COLORS.border }]}
                         >
-                            <Text style={[tailwind`font-bold text-sm`, { color: COLORS.textMain }]}>Skip</Text>
+                            <Text style={[tailwind`font-bold text-sm`, { color: COLORS.textMain }]} maxFontSizeMultiplier={1.3}>Skip</Text>
                         </TouchableOpacity>
                     </View>
-                    <Text style={tailwind`text-base text-gray-500 mt-2`}>
+                    <Text style={tailwind`text-base text-gray-500 mt-2`} maxFontSizeMultiplier={1.3}>
                         Setting goals helps you save faster. You can always change these later in settings.
                     </Text>
 
@@ -112,7 +112,7 @@ const InitialBudgetSetup = ({ navigation }) => {
                             style={styles.btn}
                             onPress={handleFinish}
                         >
-                            <Text style={styles.btnText}>Finish Setup</Text>
+                            <Text style={styles.btnText} maxFontSizeMultiplier={1.3}>Finish Setup</Text>
                             <Ionicons name="sparkles" size={24} color={COLORS.white} />
                         </TouchableOpacity>
 
@@ -120,7 +120,7 @@ const InitialBudgetSetup = ({ navigation }) => {
                             style={tailwind`mt-4 items-center`}
                             onPress={handleSkip}
                         >
-                            <Text style={tailwind`text-gray-400 font-medium text-base underline`}>Skip for Now</Text>
+                            <Text style={tailwind`text-gray-400 font-medium text-base underline`} maxFontSizeMultiplier={1.3}>Skip for Now</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
