@@ -554,12 +554,21 @@ export const AppContextProvider = ({ children }) => {
         try {
             const currentMonth = getYearMonth();
 
-            // 1. Process recurring items immediately so they appear on dashboard
-            if (recurringTransactions.length > 0) {
-                await processRecurring(recurringTransactions, currentMonth);
+            // The quick-setup screens (FixedIncomeSetup, FixedExpensesSetup) already
+            // called handleAddIncome / handleAddExpense to add entries dated TODAY.
+            // Calling processRecurring here would create a SECOND set of entries
+            // dated the 1st of the month (recurringDay defaults to 1), producing
+            // duplicates like "Salary on Apr 1 AND Salary on Apr 6".
+            //
+            // Instead, we simply stamp the idempotency keys for this month so that
+            // processRecurring knows these items are already handled and will NOT
+            // double-add them. Next month, the keys won't exist → auto-log runs correctly.
+            for (const item of recurringTransactions) {
+                const idempotencyKey = `recurring_done_${item.id}_${currentMonth}`;
+                await AsyncStorage.setItem(idempotencyKey, 'true');
             }
 
-            // 2. Persist onboarding status
+            // Persist onboarding status
             await AsyncStorage.multiSet([
                 ['isFirstLaunch', JSON.stringify(false)],
                 ['isSetupComplete', JSON.stringify(true)],
@@ -571,7 +580,7 @@ export const AppContextProvider = ({ children }) => {
         } catch (e) {
             console.error('Error completing onboarding', e);
         }
-    }, [recurringTransactions, processRecurring]);
+    }, [recurringTransactions]);
 
     const setUserName = async (name) => {
         setUserNameState(name);

@@ -74,7 +74,7 @@ const Settings = ({ navigation }) => {
                 const shouldStart = await AsyncStorage.getItem('shouldStartSettingsTour');
                 if (shouldStart === 'true') {
                     await AsyncStorage.removeItem('shouldStartSettingsTour');
-                    
+
                     // Initialize empty steps so SpotlightTour knows it has 4 steps
                     setTourSteps(tourStepsConfig.map(c => ({
                         ...c, x: -1000, y: -1000, width: 0, height: 0
@@ -100,7 +100,7 @@ const Settings = ({ navigation }) => {
                 (x, y, w, h) => {
                     // Scroll so item is roughly in the middle of the screen
                     scrollViewRef.current.scrollTo({ y: Math.max(0, y - H / 3), animated: true });
-                    
+
                     // 2. Wait for scroll to finish, then measure absolute screen position
                     setTimeout(async () => {
                         const abs = await measureRefAbsolute(stepConfig.ref);
@@ -271,7 +271,7 @@ const Settings = ({ navigation }) => {
         const subject = 'App Feedback / Support';
         const body = feedbackMessage.trim();
         const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-        
+
         Linking.canOpenURL(url).then(supported => {
             if (supported) {
                 Linking.openURL(url);
@@ -292,12 +292,12 @@ const Settings = ({ navigation }) => {
         ).join('\n')
         const csv = header + expenseRows + (incomeRows ? '\n' + incomeRows : '')
 
-            // Show interstitial ad before exporting CSV
-            await AdService.showPdfExportAd(); // Reusing the same interstitial logic for now
-            Share.share({
-                message: csv,
-                title: 'My Expense Data',
-            })
+        // Show interstitial ad before exporting CSV
+        await AdService.showPdfExportAd(); // Reusing the same interstitial logic for now
+        Share.share({
+            message: csv,
+            title: 'My Expense Data',
+        })
     }
 
     const handleExportPDF = async () => {
@@ -445,13 +445,13 @@ const Settings = ({ navigation }) => {
                                     {packages.map((pkg) => {
                                         const isAnnual = pkg.identifier === 'annual' || pkg.packageType === 'ANNUAL';
                                         return (
-                                            <TouchableOpacity 
+                                            <TouchableOpacity
                                                 key={pkg.identifier}
                                                 onPress={() => handlePurchase(pkg)}
                                                 disabled={purchaseLoading}
-                                                style={{ 
-                                                    backgroundColor: isAnnual ? '#FFD700' : 'rgba(255,255,255,0.1)', 
-                                                    borderRadius: 16, 
+                                                style={{
+                                                    backgroundColor: isAnnual ? '#FFD700' : 'rgba(255,255,255,0.1)',
+                                                    borderRadius: 16,
                                                     padding: 15,
                                                     borderWidth: isAnnual ? 0 : 1,
                                                     borderColor: 'rgba(255,255,255,0.3)',
@@ -481,7 +481,7 @@ const Settings = ({ navigation }) => {
                                             </TouchableOpacity>
                                         );
                                     })}
-                                    
+
                                     <TouchableOpacity onPress={handleRestore} disabled={purchaseLoading} style={{ alignItems: 'center', marginTop: 10, padding: 10 }}>
                                         {purchaseLoading ? (
                                             <ActivityIndicator size="small" color="white" />
@@ -516,7 +516,7 @@ const Settings = ({ navigation }) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionHeader}>Preferences</Text>
                     <View ref={currencyRef} collapsable={false}>
-                         <MenuItem
+                        <MenuItem
                             icon="cash-outline"
                             label="Currency"
                             subtitle={`Currently using ${currency} (${currencySymbol})`}
@@ -626,7 +626,7 @@ const Settings = ({ navigation }) => {
                     <View style={{ width: '50%', height: 40, marginBottom: 15, opacity: 0.6 }}>
                         <LimnersLogo />
                     </View>
-                    <Text style={styles.footerApp}>WALLET APP v1.0.0</Text>
+                    <Text style={styles.footerApp}>WALLET APP v1.0.8</Text>
                     <Text style={styles.footerMoto}>Premium Financial Tracking</Text>
                 </View>
             </ScrollView>
@@ -689,7 +689,7 @@ const Settings = ({ navigation }) => {
                     </View>
                 </View>
             </Modal>
-            
+
             {/* Feedback Modal */}
             <Modal
                 visible={isFeedbackModalVisible}
@@ -731,13 +731,13 @@ const Settings = ({ navigation }) => {
                     </KeyboardAvoidingView>
                 </View>
             </Modal>
-            
+
             {/* Final Banner Ad at bottom - shifted up for tabbar */}
             <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 110 }}>
                 <BannerAdComponent />
             </View>
 
-            <PremiumAlert 
+            <PremiumAlert
                 visible={showTourCompleteAlert}
                 title="Tour Complete!"
                 message="You're all set to manage your finances like a pro."
