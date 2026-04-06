@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { categories } from "../Data/categoriesData";
 import { registerForPushNotificationsAsync, sendBudgetWarning, scheduleMonthlySummaryAlert, scheduleDailyReminder, resetMonthlySummaryScheduleKey } from "../services/NotificationService";
 import { db, auth } from "../services/firebase";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, onSnapshot, collection, getDocs, deleteDoc } from "firebase/firestore";
 import AdService from "../services/AdService";
 import { runSmartAnalysis, getSmartForecastData } from "../services/SmartNotificationService";
 import RevenueCatService from "../services/RevenueCatService";
@@ -821,7 +821,15 @@ export const AppContextProvider = ({ children }) => {
         }
 
         try {
-            const userRef = doc(db, 'users', user.uid);
+            // Block auto-sync BEFORE wiping so the debounced effect
+            // cannot re-write stale in-memory state back to Firestore
+            // during or after the wipe.
+            setHasFetchedFromCloud(false);
+
+            const uid = user.uid;
+            const userRef = doc(db, 'users', uid);
+
+            // 1. Overwrite the main user document with empty data
             await setDoc(userRef, {
                 expenses: [],
                 incomes: [],
@@ -831,13 +839,27 @@ export const AppContextProvider = ({ children }) => {
                 userName: user.displayName || '',
                 currency: currency || 'USD',
                 customCategories: categories,
-                prevMonthSummary: null
+                prevMonthSummary: null,
+                updatedAt: new Date().toISOString()
             });
+
+            // 2. Delete all sub-collection documents (expenses, incomes, settings)
+            const subCollections = ['expenses', 'incomes', 'settings'];
+            await Promise.all(
+                subCollections.map(async (subCol) => {
+                    const colRef = collection(db, 'users', uid, subCol);
+                    const snapshot = await getDocs(colRef);
+                    const deletions = snapshot.docs.map((d) => deleteDoc(d.ref));
+                    await Promise.all(deletions);
+                })
+            );
 
             await handleLogout();
             return true;
         } catch (error) {
             console.error('Error wiping data:', error);
+            // Re-enable sync on failure so the app isn't permanently broken
+            setHasFetchedFromCloud(true);
             return false;
         }
     };

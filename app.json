@@ -2,7 +2,7 @@
   "expo": {
     "name": "Wallety - AI Budget Tracker",
     "slug": "wallety-budget-tracker",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.wallety.budgettracker",
-      "versionCode": 7,
+      "versionCode": 8,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

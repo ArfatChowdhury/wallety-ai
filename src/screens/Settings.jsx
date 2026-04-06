@@ -588,7 +588,7 @@ const Settings = ({ navigation }) => {
                     <MenuItem
                         icon="trash-outline"
                         label="Delete Profile Data"
-                        subtitle="Wipes all local storage"
+                        subtitle="Permanently erases all data from device & cloud"
                         onPress={handleClearAll}
                         danger
                     />
