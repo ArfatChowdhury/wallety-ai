@@ -42,11 +42,14 @@ yarn-error.*
 
 .env
 
-.txt
-
+*.txt
+*.log
 
 google-services.json
 
 GoogleService-Info.plist
 
 *.keystore
+
+google-services.json
+
