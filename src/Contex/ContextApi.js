@@ -248,10 +248,12 @@ export const AppContextProvider = ({ children }) => {
                 ]);
 
                 // ── Trigger Rollover Check ──
-                // Now that cloud data (expenses/recurring) is loaded, check if we need to rollover
+                // FIX: Pass freshRecurring directly — state won't be hydrated yet
+                // when this 1000ms timeout fires (race condition fix).
+                const freshRecurring = data.recurringTransactions || [];
                 const currentMonthYear = getYearMonth();
                 if (data.lastProcessedMonth !== currentMonthYear) {
-                    setTimeout(() => checkAndResetMonth(uid), 1000);
+                    setTimeout(() => checkAndResetMonth(uid, freshRecurring), 1000);
                 }
             }
             setHasFetchedFromCloud(true);
@@ -370,10 +372,11 @@ export const AppContextProvider = ({ children }) => {
             if (userSpecificLastMonth) setLastProcessedMonth(userSpecificLastMonth);
 
             // Auto-log recurring items for current month if not done
+            // FIX: Pass `recurring` directly so checkAndResetMonth doesn't read
+            // stale state (state hasn't hydrated yet when the timeout fires).
             const currentMonthYear = getYearMonth();
             if (userSpecificLastMonth !== currentMonthYear) {
-                // Wait for state to be fully loaded then trigger reset
-                setTimeout(() => checkAndResetMonth(uid), 500);
+                setTimeout(() => checkAndResetMonth(uid, recurring), 500);
             }
         } catch (error) {
             console.log('Error loading data:', error);
@@ -415,10 +418,16 @@ export const AppContextProvider = ({ children }) => {
         }
     };
 
-    const checkAndResetMonth = async (userUid = auth.currentUser?.uid) => {
+    // FIX: Accept recurringOverride so callers can pass a freshly-loaded list
+    // instead of relying on the React state closure which may not be hydrated yet
+    // when the setTimeout fires (race condition that caused recurring to never run).
+    const checkAndResetMonth = async (userUid = auth.currentUser?.uid, recurringOverride = null) => {
         const currentMonthYear = getYearMonth();
         const storageKey = userUid ? `lastProcessedMonth_${userUid}` : 'lastProcessedMonth';
         const storedLastMonth = await AsyncStorage.getItem(storageKey);
+
+        // Use the override if provided, otherwise fall back to current state
+        const recurringToProcess = recurringOverride ?? recurringTransactions;
 
         if (storedLastMonth && storedLastMonth !== currentMonthYear) {
             console.log(`Month changed from ${storedLastMonth} to ${currentMonthYear} for user ${userUid}`);
@@ -441,16 +450,16 @@ export const AppContextProvider = ({ children }) => {
             setPrevMonthSummary(summary);
 
             // 2. Add recurring transactions for new month (Idempotency check inside)
-            if (recurringTransactions.length > 0) {
-                await processRecurring(recurringTransactions, currentMonthYear);
+            if (recurringToProcess.length > 0) {
+                await processRecurring(recurringToProcess, currentMonthYear);
             }
 
             // 3. Log notification
             logAppNotification(
                 "📅 New Month Started",
                 `Welcome to ${new Date().toLocaleString('default', { month: 'long' })}! ` +
-                (recurringTransactions.length > 0
-                    ? `${recurringTransactions.length} recurring items added.`
+                (recurringToProcess.length > 0
+                    ? `${recurringToProcess.length} recurring items added.`
                     : `Start adding your expenses for this month.`),
                 'success'
             );

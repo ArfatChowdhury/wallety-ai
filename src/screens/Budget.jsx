@@ -1,4 +1,4 @@
-import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, StatusBar } from 'react-native'
+import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, StatusBar, KeyboardAvoidingView, Platform } from 'react-native'
 import React, { useContext, useState, useMemo } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -152,6 +152,8 @@ const Budget = () => {
                             value={inputValue}
                             onChangeText={setInputValue}
                             autoFocus
+                            returnKeyType="done"
+                            onSubmitEditing={() => handleSaveBudget(item.name)}
                             placeholderTextColor={COLORS.gray400}
                         />
                         <TouchableOpacity onPress={() => handleSaveBudget(item.name)} style={styles.saveBtn}>
@@ -197,7 +199,10 @@ const Budget = () => {
                 <Text style={styles.subtitle}>Manage your monthly limits</Text>
             </View>
 
-            <View style={{ flex: 1 }}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
                     <View style={{ flex: 1 }}>
                         <FlatList
                             data={budgetListWithAds}
@@ -223,7 +228,7 @@ const Budget = () => {
                 }}>
                     <BannerAdComponent />
                 </View>
-            </View>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     )
 }
