@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, StyleSheet, Modal, TextInput, TouchableOpacity } from 'react-native'
+import { View, Text, Pressable, FlatList, StyleSheet, Modal, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native'
 import React, { useContext, useState } from 'react'
 import tailwind from 'twrnc'
 import RenderItemCard from '../components/RenderItemCard';
@@ -72,47 +72,54 @@ const Category = ({ navigation }) => {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle} maxFontSizeMultiplier={1.3}>New Category</Text>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle} maxFontSizeMultiplier={1.3}>New Category</Text>
 
-            <View style={styles.iconInputGroup}>
-              <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Icon</Text>
-              <TextInput
-                style={styles.iconInput}
-                value={newCatIcon}
-                onChangeText={setNewCatIcon}
-                maxLength={2}
-              />
-            </View>
+              <View style={styles.iconInputGroup}>
+                <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Icon</Text>
+                <TextInput
+                  style={styles.iconInput}
+                  value={newCatIcon}
+                  onChangeText={setNewCatIcon}
+                  maxLength={2}
+                />
+              </View>
 
-            <View style={styles.nameInputGroup}>
-              <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Category Name</Text>
-              <TextInput
-                style={styles.nameInput}
-                placeholder="e.g. Gym, Pets..."
-                value={newCatName}
-                onChangeText={setNewCatName}
-                autoFocus
-              />
-            </View>
+              <View style={styles.nameInputGroup}>
+                <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Category Name</Text>
+                <TextInput
+                  style={styles.nameInput}
+                  placeholder="e.g. Gym, Pets..."
+                  value={newCatName}
+                  onChangeText={setNewCatName}
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={handleCreateCategory}
+                />
+              </View>
 
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.cancelModalBtn]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelModalText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalBtn, styles.createModalBtn]}
-                onPress={handleCreateCategory}
-              >
-                <Text style={styles.createModalText}>Create</Text>
-              </TouchableOpacity>
+              <View style={styles.modalActions}>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.cancelModalBtn]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.cancelModalText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalBtn, styles.createModalBtn]}
+                  onPress={handleCreateCategory}
+                >
+                  <Text style={styles.createModalText}>Create</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   )
