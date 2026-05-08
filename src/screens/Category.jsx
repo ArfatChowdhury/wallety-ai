@@ -7,11 +7,31 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SHADOW } from '../theme';
 
+const EMOJI_LIST = [
+  // Finance & Money
+  '💰', '💵', '💳', '📈', '🏦', '💹', '💎', '🪙', '💸', '🧧',
+  // Shopping & Food
+  '🛒', '🛍️', '🍔', '🍕', '🍎', '🍰', '☕', '🍺', '🍱', '🍿',
+  // Transport & Travel
+  '🚗', '🚲', '🚆', '✈️', '🚢', '🗺️', '⛽', '🚕', '🚌', '🚉',
+  // Home & Bills
+  '🏠', '💡', '📡', '🚿', '🛋️', '🧹', '🔑', '🚪', '🧺', '🪴',
+  // Lifestyle & Entertainment
+  '🎬', '🎮', '⚽', '🎨', '📺', '🎧', '📷', '🎭', '🎻', '🎰',
+  // Personal & Health
+  '🏥', '💊', '💇', '🧖', '💆', '💍', '👗', '👔', '💄', '🧼',
+  // Education & Work
+  '🎓', '📚', '💻', '🖋️', '📎', '💼', '📅', '📞', '📠', '💾',
+  // Misc & Alerts
+  '❤️', '🚨', '📁', '📦', '✨', '🔥', '🚀', '🛠️', '⚙️', '🎁'
+];
+
 const Category = ({ navigation }) => {
   const { categoriesList, handleAddCategory } = useContext(AppContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [newCatIcon, setNewCatIcon] = useState('📁');
+  const [emojiPickerVisible, setEmojiPickerVisible] = useState(false);
 
   const handleCategory = (itemCat) => {
     navigation.popTo('BottomTabs', {
@@ -64,6 +84,7 @@ const Category = ({ navigation }) => {
         numColumns={2}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       />
 
       <Modal
@@ -71,10 +92,11 @@ const Category = ({ navigation }) => {
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
+        statusBarTranslucent
       >
         <KeyboardAvoidingView
           style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -82,12 +104,15 @@ const Category = ({ navigation }) => {
 
               <View style={styles.iconInputGroup}>
                 <Text style={styles.modalLabel} maxFontSizeMultiplier={1.3}>Icon</Text>
-                <TextInput
-                  style={styles.iconInput}
-                  value={newCatIcon}
-                  onChangeText={setNewCatIcon}
-                  maxLength={2}
-                />
+                <TouchableOpacity 
+                  style={styles.iconInputBox}
+                  onPress={() => setEmojiPickerVisible(true)}
+                >
+                  <Text style={styles.iconTextLarge}>{newCatIcon}</Text>
+                  <View style={styles.editBadge}>
+                    <Ionicons name="pencil" size={12} color="white" />
+                  </View>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.nameInputGroup}>
@@ -120,6 +145,82 @@ const Category = ({ navigation }) => {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Centered Emoji Picker Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={emojiPickerVisible}
+        onRequestClose={() => { setEmojiPickerVisible(false); }}
+        statusBarTranslucent
+      >
+        <View style={styles.emojiModalOverlay}>
+          <KeyboardAvoidingView 
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.emojiModalCenteredContent}
+          >
+            <View style={styles.emojiHeader}>
+              <Text style={styles.emojiTitle}>Select Icon</Text>
+              <TouchableOpacity onPress={() => setEmojiPickerVisible(false)}>
+                <Ionicons name="close-circle" size={32} color={COLORS.gray400} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Manual Input Area */}
+            <View style={styles.manualInputContainer}>
+              <Text style={styles.manualLabel}>Type custom or choose below</Text>
+              <TextInput
+                style={styles.manualEmojiInput}
+                value={newCatIcon}
+                onChangeText={setNewCatIcon}
+                maxLength={4}
+                placeholder="📁"
+                placeholderTextColor={COLORS.gray400}
+                textAlign="center"
+                autoFocus
+              />
+            </View>
+            
+            <FlatList
+              data={EMOJI_LIST}
+              numColumns={5}
+              keyExtractor={(item, index) => item + index}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={[
+                    styles.emojiBtn,
+                    newCatIcon === item && { backgroundColor: COLORS.primary + '20', borderColor: COLORS.primary }
+                  ]}
+                  onPress={() => {
+                    setNewCatIcon(item);
+                    setEmojiPickerVisible(false);
+                  }}
+                >
+                  <Text style={{ fontSize: 28 }}>{item}</Text>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={{ paddingBottom: 10 }}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 15 }}>
+              <TouchableOpacity 
+                style={[styles.modalBtnSmall, { backgroundColor: COLORS.gray100 }]}
+                onPress={() => setEmojiPickerVisible(false)}
+              >
+                <Text style={{ color: COLORS.textSub, fontWeight: '700' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.modalBtnSmall, { backgroundColor: COLORS.black, flex: 2 }]}
+                onPress={() => setEmojiPickerVisible(false)}
+              >
+                <Text style={{ color: 'white', fontWeight: '800' }}>Confirm Selection</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </SafeAreaView>
   )
@@ -225,6 +326,103 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  
+  iconInputBox: {
+    backgroundColor: COLORS.gray100,
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  iconTextLarge: {
+    fontSize: 32,
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: -5,
+    right: -5,
+    backgroundColor: COLORS.black,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
+  },
+
+  // Emoji Picker Styles
+  emojiModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emojiModalCenteredContent: {
+    backgroundColor: COLORS.white,
+    width: '100%',
+    height: '80%',
+    borderRadius: 32,
+    padding: 24,
+    ...SHADOW.lg,
+  },
+  emojiHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emojiTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: COLORS.textMain,
+  },
+  manualInputContainer: {
+    backgroundColor: COLORS.gray100,
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  manualLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSub,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+    letterSpacing: 0.5,
+  },
+  manualEmojiInput: {
+    fontSize: 36,
+    color: COLORS.textMain,
+    fontWeight: 'bold',
+    width: '100%',
+  },
+  emojiBtn: {
+    flex: 1,
+    aspectRatio: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
+    backgroundColor: COLORS.gray100,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  modalBtnSmall: {
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
   },
 })
 

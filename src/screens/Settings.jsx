@@ -656,38 +656,43 @@ const Settings = ({ navigation }) => {
                 animationType="fade"
                 onRequestClose={() => setEditModalVisible(false)}
             >
-                <View style={styles.modalBackdrop}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Update Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={newName}
-                            onChangeText={setNewName}
-                            placeholder="Enter your name"
-                            placeholderTextColor={COLORS.gray400}
-                            autoFocus
-                        />
-                        <View style={styles.modalButtons}>
-                            <TouchableOpacity
-                                style={[styles.modalBtn, styles.cancelBtn]}
-                                onPress={() => setEditModalVisible(false)}
-                            >
-                                <Text style={styles.cancelBtnText}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalBtn, styles.saveBtn]}
-                                onPress={handleUpdateName}
-                                disabled={isUpdating}
-                            >
-                                {isUpdating ? (
-                                    <ActivityIndicator size="small" color="white" />
-                                ) : (
-                                    <Text style={styles.saveBtnText}>Save</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={styles.modalBackdrop}
+            >
+                <View style={styles.modalContent}>
+                    <Text style={styles.modalTitle}>Update Name</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={newName}
+                        onChangeText={setNewName}
+                        placeholder="Enter your name"
+                        placeholderTextColor={COLORS.gray400}
+                        autoFocus
+                        returnKeyType="done"
+                        onSubmitEditing={handleUpdateName}
+                    />
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                            style={[styles.modalBtn, styles.cancelBtn]}
+                            onPress={() => setEditModalVisible(false)}
+                        >
+                            <Text style={styles.cancelBtnText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.modalBtn, styles.saveBtn]}
+                            onPress={handleUpdateName}
+                            disabled={isUpdating}
+                        >
+                            {isUpdating ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <Text style={styles.saveBtnText}>Save</Text>
+                            )}
+                        </TouchableOpacity>
                     </View>
                 </View>
+            </KeyboardAvoidingView>
             </Modal>
 
             {/* Feedback Modal */}
@@ -699,7 +704,7 @@ const Settings = ({ navigation }) => {
             >
                 <View style={styles.modalBackdrop}>
                     <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                         style={styles.modalContent}
                     >
                         <View style={tailwind`flex-row justify-between items-center mb-4`}>

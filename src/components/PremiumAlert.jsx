@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import tailwind from 'twrnc';
 import { COLORS, SHADOW } from '../theme';
@@ -25,7 +25,7 @@ const PremiumAlert = ({
     return (
         <Modal transparent animationType="fade" visible={visible} statusBarTranslucent>
             <View style={styles.overlay}>
-                <View style={styles.card}>
+                <View style={[styles.card, { maxHeight: Dimensions.get('window').height * 0.85 }]}>
                     {/* Floating Icon Badge */}
                     <View style={styles.iconContainer}>
                         <View style={[styles.iconInner, { backgroundColor: iconColor }]}>
@@ -33,28 +33,34 @@ const PremiumAlert = ({
                         </View>
                     </View>
 
-                    {/* Content */}
-                    <View style={styles.content}>
-                        <Text style={styles.title}>{title}</Text>
-                        <Text style={styles.message}>{message}</Text>
-                    </View>
-
-                    {/* Interactive Stars */}
-                    {showRatingStars && (
-                        <View style={styles.starsContainer}>
-                            {[1, 2, 3, 4, 5].map((star) => (
-                                <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7} style={{ padding: 4 }}>
-                                    <Ionicons 
-                                        name={star <= rating ? "star" : "star-outline"} 
-                                        size={40} 
-                                        color="#F59E0B" 
-                                    />
-                                </TouchableOpacity>
-                            ))}
+                    <ScrollView 
+                        style={{ width: '100%' }} 
+                        contentContainerStyle={{ alignItems: 'center' }}
+                        showsVerticalScrollIndicator={false}
+                    >
+                        {/* Content */}
+                        <View style={styles.content}>
+                            <Text style={styles.title}>{title}</Text>
+                            <Text style={styles.message}>{message}</Text>
                         </View>
-                    )}
 
-                    {/* Actions */}
+                        {/* Interactive Stars */}
+                        {showRatingStars && (
+                            <View style={styles.starsContainer}>
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7} style={{ padding: 4 }}>
+                                        <Ionicons 
+                                            name={star <= rating ? "star" : "star-outline"} 
+                                            size={40} 
+                                            color="#F59E0B" 
+                                        />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                    </ScrollView>
+
+                    {/* Actions - Kept outside scroll for visibility */}
                     <View style={styles.actions}>
                         {secondaryButtonText && onSecondaryPress && (
                             <TouchableOpacity 
@@ -84,13 +90,16 @@ const PremiumAlert = ({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.45)', // Premium dark blur-like overlay
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 24,
+        paddingHorizontal: 24,
+        paddingTop: 60, // Space for floating icon
+        paddingBottom: 40,
     },
     card: {
-        width: width - 48,
+        width: '100%',
+        maxWidth: 400,
         backgroundColor: COLORS.white,
         borderRadius: 32,
         padding: 24,

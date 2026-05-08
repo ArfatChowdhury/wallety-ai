@@ -1,5 +1,5 @@
 import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View, StatusBar, KeyboardAvoidingView, Platform } from 'react-native'
-import React, { useContext, useState, useMemo } from 'react'
+import React, { useContext, useState, useMemo, useRef } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
@@ -11,6 +11,7 @@ const Budget = () => {
     const { expenses, budgets, setBudget, categoriesList, currencySymbol, isPremium } = useContext(AppContext)
     const [editingCat, setEditingCat] = useState(null)
     const [inputValue, setInputValue] = useState('')
+    const flatListRef = useRef(null)
 
     React.useEffect(() => {
         if (!isPremium) {
@@ -72,6 +73,8 @@ const Budget = () => {
         const val = parseFloat(inputValue)
         if (isNaN(val) || val <= 0) {
             Alert.alert('Error', 'Enter a valid amount')
+            setEditingCat(null)
+            setInputValue('')
             return
         }
         setBudget(catName, val)
@@ -128,14 +131,22 @@ const Budget = () => {
                     
                     {index === 0 ? (
                         <TouchableOpacity
-                            onPress={() => { setEditingCat(item.name); setInputValue(budget > 0 ? budget.toString() : '') }}
+                            onPress={() => {
+                                setEditingCat(item.name);
+                                setInputValue(budget > 0 ? budget.toString() : '');
+                                flatListRef.current?.scrollToIndex({ index, viewPosition: 0.3, animated: true });
+                            }}
                             style={styles.editBtn}
                         >
                             <Ionicons name={budget > 0 ? "pencil" : "add"} size={20} color={COLORS.textMain} />
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
-                            onPress={() => { setEditingCat(item.name); setInputValue(budget > 0 ? budget.toString() : '') }}
+                            onPress={() => {
+                                setEditingCat(item.name);
+                                setInputValue(budget > 0 ? budget.toString() : '');
+                                flatListRef.current?.scrollToIndex({ index, viewPosition: 0.3, animated: true });
+                            }}
                             style={styles.editBtn}
                         >
                             <Ionicons name={budget > 0 ? "pencil" : "add"} size={20} color={COLORS.textMain} />
@@ -205,11 +216,16 @@ const Budget = () => {
             >
                     <View style={{ flex: 1 }}>
                         <FlatList
+                            ref={flatListRef}
                             data={budgetListWithAds}
                             keyExtractor={(item, index) => (item.name || 'ad') + index}
                             renderItem={renderItem}
                             contentContainerStyle={[styles.listContent, { paddingBottom: 120 + 70 + 8 }]}
                             showsVerticalScrollIndicator={false}
+                            keyboardShouldPersistTaps="handled"
+                            onScrollToIndexFailed={info => {
+                                flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
+                            }}
                         />
                     </View>
 

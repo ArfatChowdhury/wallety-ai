@@ -140,6 +140,7 @@ const RecurringManager = ({ navigation }) => {
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
                     contentContainerStyle={tailwind`pb-10 pt-4`}
+                    keyboardShouldPersistTaps="handled"
                     ListEmptyComponent={() => (
                         <View style={tailwind`mt-20 items-center`}>
                             <Ionicons name="calendar-outline" size={60} color="#E5E7EB" />
@@ -156,137 +157,140 @@ const RecurringManager = ({ navigation }) => {
                     transparent={true}
                     visible={modalVisible}
                     onRequestClose={() => setModalVisible(false)}
+                    statusBarTranslucent
                 >
                     <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={{ flex: 1, justifyContent: 'flex-end' }}
                     >
                         <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
                             <View style={styles.modalOverlay} />
                         </TouchableWithoutFeedback>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>
-                                {editingItem ? 'Edit Item' : 'Add Recurring'}
-                            </Text>
+                        <View style={[styles.modalContent, { maxHeight: '90%' }]}>
+                            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+                                <Text style={styles.modalTitle}>
+                                    {editingItem ? 'Edit Item' : 'Add Recurring'}
+                                </Text>
 
-                            {/* Type Toggle */}
-                            <View style={styles.typeToggleRow}>
-                                <TouchableOpacity
-                                    onPress={() => setSelectedType('expense')}
-                                    style={[styles.typeBtn, selectedType === 'expense' && styles.typeBtnExpenseActive]}
-                                >
-                                    <Text style={[styles.typeBtnText, selectedType === 'expense' && { color: '#fff' }]}>
-                                        Expense
-                                    </Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    onPress={() => setSelectedType('income')}
-                                    style={[styles.typeBtn, selectedType === 'income' && styles.typeBtnIncomeActive]}
-                                >
-                                    <Text style={[styles.typeBtnText, selectedType === 'income' && { color: '#fff' }]}>
-                                        Income
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                                {/* Type Toggle */}
+                                <View style={styles.typeToggleRow}>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedType('expense')}
+                                        style={[styles.typeBtn, selectedType === 'expense' && styles.typeBtnExpenseActive]}
+                                    >
+                                        <Text style={[styles.typeBtnText, selectedType === 'expense' && { color: '#fff' }]}>
+                                            Expense
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedType('income')}
+                                        style={[styles.typeBtn, selectedType === 'income' && styles.typeBtnIncomeActive]}
+                                    >
+                                        <Text style={[styles.typeBtnText, selectedType === 'income' && { color: '#fff' }]}>
+                                            Income
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
 
-                            {/* Category Quick Picker (expense only) */}
-                            {selectedType === 'expense' && (
+                                {/* Category Quick Picker (expense only) */}
+                                {selectedType === 'expense' && (
+                                    <View style={styles.modalInputGroup}>
+                                        <Text style={styles.modalLabel}>Category</Text>
+                                        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                                {(categoriesList || []).slice(0, 12).map(cat => (
+                                                    <TouchableOpacity
+                                                        key={cat.name}
+                                                        onPress={() => setSelectedCategory(cat)}
+                                                        style={[
+                                                            styles.catChip,
+                                                            selectedCategory?.name === cat.name && styles.catChipActive
+                                                        ]}
+                                                    >
+                                                        <Text style={{ fontSize: 16 }}>{cat.icon}</Text>
+                                                        <Text style={[
+                                                            styles.catChipText,
+                                                            selectedCategory?.name === cat.name && { color: '#fff' }
+                                                        ]}>
+                                                            {cat.name}
+                                                        </Text>
+                                                    </TouchableOpacity>
+                                                ))}
+                                            </View>
+                                        </ScrollView>
+                                    </View>
+                                )}
+
                                 <View style={styles.modalInputGroup}>
-                                    <Text style={styles.modalLabel}>Category</Text>
-                                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                        <View style={{ flexDirection: 'row', gap: 8 }}>
-                                            {(categoriesList || []).slice(0, 12).map(cat => (
-                                                <TouchableOpacity
-                                                    key={cat.name}
-                                                    onPress={() => setSelectedCategory(cat)}
-                                                    style={[
-                                                        styles.catChip,
-                                                        selectedCategory?.name === cat.name && styles.catChipActive
-                                                    ]}
-                                                >
-                                                    <Text style={{ fontSize: 16 }}>{cat.icon}</Text>
-                                                    <Text style={[
-                                                        styles.catChipText,
-                                                        selectedCategory?.name === cat.name && { color: '#fff' }
-                                                    ]}>
-                                                        {cat.name}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </View>
-                                    </ScrollView>
+                                    <Text style={styles.modalLabel}>Title</Text>
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        value={title}
+                                        onChangeText={setTitle}
+                                        placeholder="e.g. Rent, Salary"
+                                    />
                                 </View>
-                            )}
 
-                            <View style={styles.modalInputGroup}>
-                                <Text style={styles.modalLabel}>Title</Text>
-                                <TextInput
-                                    style={styles.modalInput}
-                                    value={title}
-                                    onChangeText={setTitle}
-                                    placeholder="e.g. Rent, Salary"
-                                />
-                            </View>
-
-                            <View style={styles.modalInputGroup}>
-                                <Text style={styles.modalLabel}>Monthly Amount ({currencySymbol})</Text>
-                                <TextInput
-                                    style={styles.modalInput}
-                                    value={amount}
-                                    onChangeText={(val) => {
-                                        if (val === '' || val === '.') { setAmount(val); return; }
-                                        const num = parseFloat(val);
-                                        if (!isNaN(num) && num <= 999999999) setAmount(val);
-                                    }}
-                                    keyboardType="numeric"
-                                    placeholder="0.00"
-                                    returnKeyType="done"
-                                />
-                            </View>
-
-                            <View style={styles.modalInputGroup}>
-                                <Text style={styles.modalLabel}>Recurring Day (1-28)</Text>
-                                <View style={styles.dayChipContainer}>
-                                    {[1, 5, 10, 15, 20, 25].map(d => (
-                                        <TouchableOpacity
-                                            key={d}
-                                            onPress={() => setRecurringDay(d)}
-                                            style={[styles.dayChip, recurringDay === d && styles.dayChipActive]}
-                                        >
-                                            <Text style={[styles.dayChipText, recurringDay === d && styles.dayChipTextActive]}>{d}</Text>
-                                        </TouchableOpacity>
-                                    ))}
+                                <View style={styles.modalInputGroup}>
+                                    <Text style={styles.modalLabel}>Monthly Amount ({currencySymbol})</Text>
+                                    <TextInput
+                                        style={styles.modalInput}
+                                        value={amount}
+                                        onChangeText={(val) => {
+                                            if (val === '' || val === '.') { setAmount(val); return; }
+                                            const num = parseFloat(val);
+                                            if (!isNaN(num) && num <= 999999999) setAmount(val);
+                                        }}
+                                        keyboardType="numeric"
+                                        placeholder="0.00"
+                                        returnKeyType="done"
+                                    />
                                 </View>
-                                <TextInput
-                                    style={[styles.modalInput, { marginTop: 10 }]}
-                                    value={recurringDay.toString()}
-                                    onChangeText={(val) => {
-                                        const d = parseInt(val);
-                                        if (!isNaN(d) && d >= 1 && d <= 28) setRecurringDay(d);
-                                        else if (val === '') setRecurringDay('');
-                                    }}
-                                    keyboardType="numeric"
-                                    placeholder="Day (1-28)"
-                                    returnKeyType="done"
-                                />
-                            </View>
 
-                            <View style={styles.modalBtnRow}>
-                                <TouchableOpacity
-                                    style={[styles.modalBtn, styles.cancelBtn]}
-                                    onPress={() => setModalVisible(false)}
-                                >
-                                    <Text style={styles.cancelBtnText}>Cancel</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={[styles.modalBtn, styles.saveBtn]}
-                                    onPress={handleSave}
-                                >
-                                    <Text style={styles.saveBtnText}>
-                                        {editingItem ? 'Save Changes' : 'Add Item'}
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                                <View style={styles.modalInputGroup}>
+                                    <Text style={styles.modalLabel}>Recurring Day (1-28)</Text>
+                                    <View style={styles.dayChipContainer}>
+                                        {[1, 5, 10, 15, 20, 25].map(d => (
+                                            <TouchableOpacity
+                                                key={d}
+                                                onPress={() => setRecurringDay(d)}
+                                                style={[styles.dayChip, recurringDay === d && styles.dayChipActive]}
+                                            >
+                                                <Text style={[styles.dayChipText, recurringDay === d && styles.dayChipTextActive]}>{d}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                    <TextInput
+                                        style={[styles.modalInput, { marginTop: 10 }]}
+                                        value={recurringDay.toString()}
+                                        onChangeText={(val) => {
+                                            const d = parseInt(val);
+                                            if (!isNaN(d) && d >= 1 && d <= 28) setRecurringDay(d);
+                                            else if (val === '') setRecurringDay('');
+                                        }}
+                                        keyboardType="numeric"
+                                        placeholder="Day (1-28)"
+                                        returnKeyType="done"
+                                    />
+                                </View>
+
+                                <View style={styles.modalBtnRow}>
+                                    <TouchableOpacity
+                                        style={[styles.modalBtn, styles.cancelBtn]}
+                                        onPress={() => setModalVisible(false)}
+                                    >
+                                        <Text style={styles.cancelBtnText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.modalBtn, styles.saveBtn]}
+                                        onPress={handleSave}
+                                    >
+                                        <Text style={styles.saveBtnText}>
+                                            {editingItem ? 'Save Changes' : 'Add Item'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </ScrollView>
                         </View>
                     </KeyboardAvoidingView>
                 </Modal>

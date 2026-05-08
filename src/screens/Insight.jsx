@@ -1,6 +1,6 @@
 import { FlatList, StyleSheet, Text, View, StatusBar, TouchableOpacity } from 'react-native'
 import React, { useContext, useMemo } from 'react'
-import { PieChart } from 'react-native-gifted-charts'
+import { PieChart, BarChart } from 'react-native-gifted-charts'
 import { AppContext } from '../Contex/ContextApi'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -52,6 +52,32 @@ const Insight = () => {
       }
     });
   }, [spendingByCategory, periodTotal, categoriesList]);
+
+  const historicalData = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthYear = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = d.toLocaleString('default', { month: 'short' });
+      
+      const total = expenses
+        .filter(e => e.date.startsWith(monthYear))
+        .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      
+      months.push({
+        value: total,
+        label: monthName,
+        frontColor: i === 0 ? COLORS.primary : '#E2E8F0',
+        topLabelComponent: () => (
+          <Text style={{ fontSize: 10, color: COLORS.textSub, marginBottom: 4, fontWeight: '700' }}>
+            {total > 0 ? `${currencySymbol}${total > 1000 ? (total/1000).toFixed(1) + 'k' : total.toFixed(0)}` : ''}
+          </Text>
+        ),
+      });
+    }
+    return months;
+  }, [expenses, currencySymbol]);
 
   const flatListData = useMemo(() => {
     return Object.keys(spendingByCategory).map((categoryName) => {
@@ -131,6 +157,25 @@ const Insight = () => {
             </View>
 
             <View style={styles.chartWrapper}>
+              <Text style={styles.chartTitle}>Spending Trend (Last 6 Months)</Text>
+              <BarChart
+                data={historicalData}
+                barWidth={35}
+                spacing={15}
+                roundedTop
+                hideRules
+                hideYAxisText
+                yAxisThickness={0}
+                xAxisThickness={0}
+                noOfSections={3}
+                maxValue={Math.max(...historicalData.map(d => d.value)) * 1.2 || 100}
+                isAnimated
+                animationDuration={800}
+              />
+            </View>
+
+            <View style={styles.chartWrapper}>
+              <Text style={styles.chartTitle}>Category Distribution</Text>
               <PieChart
                 donut
                 isAnimated={false}
@@ -328,13 +373,24 @@ const styles = StyleSheet.create({
 
   chartWrapper: {
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 10,
     backgroundColor: COLORS.white,
     borderRadius: 32,
     borderWidth: 1,
     borderColor: COLORS.border,
-    marginBottom: 30,
+    marginBottom: 20,
     ...SHADOW.sm,
+  },
+  chartTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textSub,
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+    marginLeft: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   chartTotal: { fontSize: 24, fontWeight: '900', color: COLORS.textMain },
   chartLabel: { fontSize: 12, color: COLORS.textSub, fontWeight: '600' },
