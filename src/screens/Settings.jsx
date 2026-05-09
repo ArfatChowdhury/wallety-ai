@@ -611,16 +611,13 @@ const Settings = ({ navigation }) => {
                     </View>
                 </View>
 
-                {/* Single Banner at bottom for cleaner UI */}
-                <View style={{ marginVertical: 20, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                    <BannerAdComponent />
-                </View>
-
-                <View style={[styles.footer, { paddingBottom: 40 }]}>
+                <View style={[styles.footer, { paddingBottom: 130 }]}>
                     <Text style={styles.footerApp}>WALLETY v1.2.0</Text>
                     <Text style={styles.footerMoto}>Precision in every penny</Text>
                 </View>
             </ScrollView>
+
+            {/* Fixed Banner Ad handled globally in AppNavigator */}
 
             {tourStep >= 0 && (
                 <SpotlightTour

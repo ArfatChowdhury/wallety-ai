@@ -9,6 +9,7 @@ import * as Notifications from "expo-notifications"
 import { useNavigationContainerRef } from "@react-navigation/native"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import PremiumAlert from "../components/PremiumAlert"
+import { BannerAdComponent } from "../services/AdService"
 
 import Home from "../screens/Home"
 import Create from "../screens/Create"
@@ -203,8 +204,9 @@ const AppNavigator = () => {
     isFirstLaunch, hasFetchedFromCloud, isSetupComplete, 
     showRatingPrompt, setShowRatingPrompt, setHasRatedApp,
     globalAlert, hideGlobalAlert, expenses, incomes,
-    showGlobalAlert
+    showGlobalAlert, isPremium
   } = useContext(AppContext)
+  const insets = useSafeAreaInsets()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isInitializing, setIsInitializing] = useState(true)
 
@@ -285,6 +287,25 @@ const AppNavigator = () => {
       )}
       <Stack.Screen name="SettingsCurrency" component={CurrencySetup} />
     </Stack.Navigator>
+
+      {/* Global Bottom Banner — Positioned above TabBar */}
+      {isAuthenticated && isSetupComplete && !isPremium && (
+        <View style={{
+          position: 'absolute',
+          bottom: 20 + 70 + 8 + insets.bottom, // Fixed 20 + 70 Height + 8 Gap + Safe Area
+          left: 0,
+          right: 0,
+          height: 65,
+          backgroundColor: '#FFFFFF', // Matching app background
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99,
+          borderTopWidth: 1,
+          borderColor: '#F3F4F6'
+        }}>
+          <BannerAdComponent />
+        </View>
+      )}
 
       <PremiumAlert
         visible={showRatingPrompt}
