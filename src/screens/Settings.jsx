@@ -337,11 +337,11 @@ const Settings = ({ navigation }) => {
         }
     }
 
-    const MenuItem = ({ icon, label, subtitle, onPress, danger, isSwitch, customIcon }) => (
+    const MenuItem = ({ icon, label, subtitle, onPress, danger, isSwitch, customIcon, hideBorder }) => (
         <TouchableOpacity
             onPress={onPress}
             disabled={!onPress && !isSwitch}
-            style={styles.menuItem}
+            style={[styles.menuItem, hideBorder && { borderWidth: 0, marginBottom: 0, marginHorizontal: 0, shadowOpacity: 0, elevation: 0 }]}
             activeOpacity={0.7}
         >
             <View style={[styles.iconBox, danger ? styles.dangerIcon : styles.neutralIcon]}>
@@ -359,14 +359,13 @@ const Settings = ({ navigation }) => {
                 <Switch
                     value={isDarkMode}
                     onValueChange={toggleDarkMode}
-                    trackColor={{ false: COLORS.gray200, true: COLORS.black }}
-                    thumbColor="#ffffff"
+                    trackColor={{ false: '#D1D5DB', true: COLORS.black }}
                 />
-            ) : onPress ? (
+            ) : (
                 <Ionicons name="chevron-forward" size={18} color={COLORS.gray400} />
-            ) : null}
+            )}
         </TouchableOpacity>
-    )
+    );
 
     return (
         <SafeAreaView style={styles.root}>
@@ -418,30 +417,30 @@ const Settings = ({ navigation }) => {
                 {/* Premium Subscription Section */}
                 {!isPremium ? (
                     <View style={[styles.section, { paddingHorizontal: 20 }]}>
-                        <View style={{ backgroundColor: COLORS.card, borderRadius: 24, padding: 20, ...SHADOW.md }}>
+                        <View style={{ backgroundColor: COLORS.card, borderRadius: 28, padding: 22, ...SHADOW.lg }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-                                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,215,0,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
-                                    <Ionicons name="star" size={20} color="#FFD700" />
+                                <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,215,0,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                    <Ionicons name="star" size={22} color="#FFD700" />
                                 </View>
                                 <View>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: COLORS.white }}>Upgrade to PRO</Text>
-                                    <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Unlock all features</Text>
+                                    <Text style={{ fontSize: 18, fontWeight: '900', color: COLORS.white }}>Upgrade to PRO</Text>
+                                    <Text style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>Unlock all premium features</Text>
                                 </View>
                             </View>
 
                             <View style={{ marginBottom: 20 }}>
-                                {['Unlimited tracking', 'Advanced AI Analytics', 'Export data to PDF/CSV', 'Priority Support'].map((feat, idx) => (
-                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                        <Ionicons name="checkmark-circle" size={16} color="#4ADE80" style={{ marginRight: 8 }} />
-                                        <Text style={{ color: 'white', fontSize: 14 }}>{feat}</Text>
+                                {['Unlimited tracking', 'Advanced AI Analytics', 'Export data to PDF/CSV'].map((feat, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                        <Ionicons name="checkmark-circle" size={14} color="#4ADE80" style={{ marginRight: 8 }} />
+                                        <Text style={{ color: 'white', fontSize: 13, fontWeight: '600' }}>{feat}</Text>
                                     </View>
                                 ))}
                             </View>
 
                             {isFetchingPackages ? (
-                                <ActivityIndicator size="small" color="white" style={{ marginVertical: 20 }} />
+                                <ActivityIndicator size="small" color="white" style={{ marginVertical: 10 }} />
                             ) : packages.length > 0 ? (
-                                <View style={{ gap: 10 }}>
+                                <View style={{ gap: 8 }}>
                                     {packages.map((pkg) => {
                                         const isAnnual = pkg.identifier === 'annual' || pkg.packageType === 'ANNUAL';
                                         return (
@@ -450,184 +449,176 @@ const Settings = ({ navigation }) => {
                                                 onPress={() => handlePurchase(pkg)}
                                                 disabled={purchaseLoading}
                                                 style={{
-                                                    backgroundColor: isAnnual ? '#FFD700' : 'rgba(255,255,255,0.1)',
+                                                    backgroundColor: isAnnual ? '#FFD700' : 'rgba(255,255,255,0.08)',
                                                     borderRadius: 16,
-                                                    padding: 15,
+                                                    padding: 14,
                                                     borderWidth: isAnnual ? 0 : 1,
-                                                    borderColor: 'rgba(255,255,255,0.3)',
+                                                    borderColor: 'rgba(255,255,255,0.2)',
                                                     flexDirection: 'row',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center'
                                                 }}
                                             >
                                                 <View>
-                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                                                        <Text style={{ color: isAnnual ? COLORS.black : 'white', fontSize: 16, fontWeight: '700' }}>
+                                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                                        <Text style={{ color: isAnnual ? COLORS.black : 'white', fontSize: 15, fontWeight: '800' }}>
                                                             {isAnnual ? 'Yearly' : 'Monthly'}
                                                         </Text>
                                                         {isAnnual && (
                                                             <View style={{ backgroundColor: '#FF3B30', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 }}>
-                                                                <Text style={{ color: 'white', fontSize: 10, fontWeight: '800' }}>SAVE 30%</Text>
+                                                                <Text style={{ color: 'white', fontSize: 9, fontWeight: '900' }}>SAVE 30%</Text>
                                                             </View>
                                                         )}
                                                     </View>
-                                                    <Text style={{ color: isAnnual ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)', fontSize: 12, marginTop: 4 }}>
+                                                    <Text style={{ color: isAnnual ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.5)', fontSize: 11, marginTop: 2 }}>
                                                         {pkg.product.description}
                                                     </Text>
                                                 </View>
-                                                <Text style={{ color: isAnnual ? COLORS.black : 'white', fontSize: 18, fontWeight: '800' }}>
+                                                <Text style={{ color: isAnnual ? COLORS.black : 'white', fontSize: 16, fontWeight: '900' }}>
                                                     {pkg.product.priceString}
                                                 </Text>
                                             </TouchableOpacity>
                                         );
                                     })}
 
-                                    <TouchableOpacity onPress={handleRestore} disabled={purchaseLoading} style={{ alignItems: 'center', marginTop: 10, padding: 10 }}>
-                                        {purchaseLoading ? (
-                                            <ActivityIndicator size="small" color="white" />
-                                        ) : (
-                                            <Text style={{ color: 'rgba(255,255,255,0.6)', fontSize: 14, fontWeight: '600' }}>Restore Purchases</Text>
-                                        )}
+                                    <TouchableOpacity onPress={handleRestore} disabled={purchaseLoading} style={{ alignItems: 'center', marginTop: 5 }}>
+                                        <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: '700' }}>Restore Purchases</Text>
                                     </TouchableOpacity>
                                 </View>
-                            ) : (
-                                <Text style={{ color: 'white', textAlign: 'center', opacity: 0.7 }}>No subscription packages available right now.</Text>
-                            )}
-                        </View>
-                        <View style={{ marginTop: 25, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                            <BannerAdComponent />
+                            ) : null}
                         </View>
                     </View>
                 ) : (
                     <View style={[styles.section, { paddingHorizontal: 20 }]}>
-                        <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.1)', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.3)', flexDirection: 'row', alignItems: 'center' }}>
-                            <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#4ADE80', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
-                                <Ionicons name="star" size={20} color="white" />
+                        <View style={{ backgroundColor: 'rgba(74, 222, 128, 0.05)', borderRadius: 24, padding: 16, borderWidth: 1, borderColor: 'rgba(74, 222, 128, 0.2)', flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#4ADE80', justifyContent: 'center', alignItems: 'center', marginRight: 15 }}>
+                                <Ionicons name="star" size={18} color="white" />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={{ fontSize: 16, fontWeight: '800', color: COLORS.textMain }}>Premium Active</Text>
-                                <Text style={{ fontSize: 13, color: COLORS.textSub, marginTop: 2 }}>You have access to all PRO features.</Text>
+                                <Text style={{ fontSize: 15, fontWeight: '800', color: COLORS.textMain }}>Premium Active</Text>
+                                <Text style={{ fontSize: 12, color: COLORS.textSub, marginTop: 1 }}>You have full access to PRO features.</Text>
                             </View>
                         </View>
                     </View>
                 )}
 
-                {/* Preferences Section */}
+                {/* Main Settings Group */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Preferences</Text>
-                    <View ref={currencyRef} collapsable={false}>
-                        <MenuItem
-                            icon="cash-outline"
-                            label="Currency"
-                            subtitle={`Currently using ${currency} (${currencySymbol})`}
-                            onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
-                            customIcon={currencySymbol}
-                        />
-                    </View>
-
-                    <View ref={widgetRef} collapsable={false}>
-                        <MenuItem
-                            icon="apps-outline"
-                            label="Add Home Screen Widget"
-                            subtitle="Log expenses without opening the app"
-                            onPress={promptAddWidget}
-                        />
-                    </View>
-                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                        <BannerAdComponent />
+                    <Text style={styles.sectionHeader}>Preferences & Tools</Text>
+                    <View style={styles.groupCard}>
+                        <View ref={currencyRef} collapsable={false}>
+                            <MenuItem
+                                icon="cash-outline"
+                                label="Currency"
+                                subtitle={`${currency} (${currencySymbol})`}
+                                onPress={() => navigation.navigate('SettingsCurrency', { isSettings: true })}
+                                customIcon={currencySymbol}
+                                hideBorder
+                            />
+                        </View>
+                        <View style={styles.divider} />
+                        <View ref={widgetRef} collapsable={false}>
+                            <MenuItem
+                                icon="apps-outline"
+                                label="Home Screen Widget"
+                                subtitle="Quick log from home"
+                                onPress={promptAddWidget}
+                                hideBorder
+                            />
+                        </View>
+                        <View style={styles.divider} />
+                        <View ref={recurringRef} collapsable={false}>
+                            <MenuItem
+                                icon="calendar-outline"
+                                label="Recurring Items"
+                                subtitle={`${recurringTransactions.length} items active`}
+                                onPress={() => navigation.navigate('RecurringManager')}
+                                hideBorder
+                            />
+                        </View>
                     </View>
                 </View>
 
-                {/* Support Section */}
+                {/* Data & Export Group */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Support & Feedback</Text>
-                    <MenuItem
-                        icon="chatbubble-outline"
-                        label="Give Feedback"
-                        subtitle="Share suggestions or report bugs"
-                        onPress={handleFeedback}
-                    />
-                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                        <BannerAdComponent />
-                    </View>
-                </View>
-
-                {/* Recurring Items Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Recurring & Planning</Text>
-                    <View ref={recurringRef} collapsable={false}>
+                    <Text style={styles.sectionHeader}>Data & Reports</Text>
+                    <View style={styles.groupCard}>
                         <MenuItem
-                            icon="calendar-outline"
-                            label="Recurring Items"
-                            subtitle={`${recurringTransactions.length} items auto-logged monthly`}
-                            onPress={() => navigation.navigate('RecurringManager')}
+                            icon="cloud-download-outline"
+                            label="Export Data (CSV)"
+                            onPress={handleExportCSV}
+                            hideBorder
                         />
-                    </View>
-                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                        <BannerAdComponent />
+                        <View style={styles.divider} />
+                        <View ref={exportRef} collapsable={false}>
+                            <MenuItem
+                                icon="document-text-outline"
+                                label="Export Report (PDF)"
+                                onPress={handleExportPDF}
+                                hideBorder
+                            />
+                        </View>
                     </View>
                 </View>
 
-                {/* Actions Section */}
+                {/* Support & Account Group */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Data & Security</Text>
-                    <MenuItem
-                        icon="cloud-download-outline"
-                        label="Export Data (CSV)"
-                        subtitle="Share raw transaction data"
-                        onPress={handleExportCSV}
-                    />
-                    <View ref={exportRef} collapsable={false}>
+                    <Text style={styles.sectionHeader}>Support & Account</Text>
+                    <View style={styles.groupCard}>
+                        <MenuItem
+                            icon="chatbubble-outline"
+                            label="Give Feedback"
+                            onPress={handleFeedback}
+                            hideBorder
+                        />
+                        <View style={styles.divider} />
+                        <MenuItem
+                            icon="shield-checkmark-outline"
+                            label="Privacy Policy"
+                            onPress={openPrivacyPolicy}
+                            hideBorder
+                        />
+                        <View style={styles.divider} />
                         <MenuItem
                             icon="document-text-outline"
-                            label="Export Report (PDF)"
-                            subtitle="Professional transaction summary"
-                            onPress={handleExportPDF}
+                            label="Terms of Service"
+                            onPress={openTermsOfService}
+                            hideBorder
+                        />
+                        <View style={styles.divider} />
+                        <MenuItem
+                            icon="log-out-outline"
+                            label="Logout"
+                            onPress={onLogoutPress}
+                            danger
+                            hideBorder
                         />
                     </View>
-                    <MenuItem
-                        icon="trash-outline"
-                        label="Delete Profile Data"
-                        subtitle="Permanently erases all data from device & cloud"
-                        onPress={handleClearAll}
-                        danger
-                    />
-                    <MenuItem
-                        icon="log-out-outline"
-                        label="Logout"
-                        subtitle="Sign out of your account"
-                        onPress={onLogoutPress}
-                        danger
-                    />
-                    <View style={{ marginTop: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                        <BannerAdComponent />
+                </View>
+
+                {/* Danger Zone */}
+                <View style={[styles.section, { marginBottom: 10 }]}>
+                    <Text style={styles.sectionHeader}>Danger Zone</Text>
+                    <View style={styles.groupCard}>
+                        <MenuItem
+                            icon="trash-outline"
+                            label="Delete Profile Data"
+                            subtitle="Permanently erase everything"
+                            onPress={handleClearAll}
+                            danger
+                            hideBorder
+                        />
                     </View>
                 </View>
 
-                {/* Legal Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionHeader}>Legal</Text>
-                    <MenuItem
-                        icon="shield-checkmark-outline"
-                        label="Privacy Policy"
-                        subtitle="How we handle your data"
-                        onPress={openPrivacyPolicy}
-                    />
-                    <MenuItem
-                        icon="document-text-outline"
-                        label="Terms of Service"
-                        subtitle="Our service agreement"
-                        onPress={openTermsOfService}
-                    />
+                {/* Single Banner at bottom for cleaner UI */}
+                <View style={{ marginVertical: 20, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                    <BannerAdComponent />
                 </View>
 
-                {/* Footer */}
-                <View style={[styles.footer, { paddingBottom: 20 }]}>
-                    <View style={{ width: '50%', height: 40, marginBottom: 15, opacity: 0.6 }}>
-                        <LimnersLogo />
-                    </View>
-                    <Text style={styles.footerApp}>WALLET APP v1.0.8</Text>
-                    <Text style={styles.footerMoto}>Premium Financial Tracking</Text>
+                <View style={[styles.footer, { paddingBottom: 40 }]}>
+                    <Text style={styles.footerApp}>WALLETY v1.2.0</Text>
+                    <Text style={styles.footerMoto}>Precision in every penny</Text>
                 </View>
             </ScrollView>
 
@@ -737,11 +728,6 @@ const Settings = ({ navigation }) => {
                 </View>
             </Modal>
 
-            {/* Final Banner Ad at bottom - shifted up for tabbar */}
-            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center', marginBottom: 110 }}>
-                <BannerAdComponent />
-            </View>
-
             <PremiumAlert
                 visible={showTourCompleteAlert}
                 title="Tour Complete!"
@@ -769,13 +755,13 @@ const styles = StyleSheet.create({
     profileCard: {
         backgroundColor: COLORS.card,
         marginHorizontal: 20,
-        borderRadius: 24,
+        borderRadius: 28,
         padding: 24,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 20,
-        marginBottom: 35,
-        ...SHADOW.md,
+        marginBottom: 25,
+        ...SHADOW.lg,
     },
     avatar: { width: 70, height: 70, borderRadius: 35, backgroundColor: 'rgba(255,255,255,0.1)', justifyContent: 'center', alignItems: 'center' },
     avatarPic: { width: 70, height: 70, borderRadius: 35, borderWidth: 2, borderColor: 'rgba(255,255,255,0.2)' },
@@ -820,8 +806,19 @@ const styles = StyleSheet.create({
     saveBtn: { backgroundColor: COLORS.black },
     saveBtnText: { color: COLORS.white, fontWeight: '700' },
 
-    section: { marginBottom: 35 },
-    sectionHeader: { fontSize: 12, fontWeight: '800', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 15, paddingHorizontal: 25 },
+    section: { marginBottom: 28 },
+    sectionHeader: { fontSize: 12, fontWeight: '900', color: COLORS.gray400, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 12, paddingHorizontal: 25 },
+
+    groupCard: {
+        backgroundColor: COLORS.white,
+        marginHorizontal: 20,
+        borderRadius: 24,
+        paddingVertical: 4,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        ...SHADOW.sm,
+    },
+    divider: { height: 1, backgroundColor: COLORS.border, marginLeft: 80, marginRight: 20 },
 
     currencyGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 20 },
     currencyBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: COLORS.border, backgroundColor: COLORS.white },
@@ -832,14 +829,7 @@ const styles = StyleSheet.create({
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
-        marginHorizontal: 20,
         padding: 16,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        marginBottom: 12,
-        ...SHADOW.sm,
     },
     iconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center', marginRight: 16 },
     neutralIcon: { backgroundColor: COLORS.gray100 },
@@ -847,7 +837,7 @@ const styles = StyleSheet.create({
     menuContent: { flex: 1 },
     menuLabel: { fontSize: 16, fontWeight: '700', color: COLORS.textMain },
     dangerLabel: { color: COLORS.expense },
-    menuSubtitle: { fontSize: 12, color: COLORS.textSub, marginTop: 2, fontWeight: '600' },
+    menuSubtitle: { fontSize: 12, color: COLORS.textSub, marginTop: 1, fontWeight: '600' },
 
     footer: { alignItems: 'center', marginTop: 20 },
     footerApp: { fontSize: 11, fontWeight: '800', color: COLORS.gray400, letterSpacing: 1 },
