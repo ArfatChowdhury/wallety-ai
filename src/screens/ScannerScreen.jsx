@@ -491,9 +491,11 @@ const ScannerScreen = ({ navigation }) => {
             {/* Action Buttons */}
             <View style={actionStyle.container}>
                 {/* Banner Ad above CTA — Standardized container */}
-                <View style={{ marginBottom: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-                    <BannerAdComponent />
-                </View>
+                {!isPremium && (
+                    <View style={{ marginBottom: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                        <BannerAdComponent />
+                    </View>
+                )}
 
                 <TouchableOpacity style={actionStyle.primaryBtn} onPress={takePhoto} disabled={scanning}>
                     <LinearGradient colors={['#22C55E', '#16a34a']} style={actionStyle.btnGrad} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}>

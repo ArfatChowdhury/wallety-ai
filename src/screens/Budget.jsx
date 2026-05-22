@@ -220,7 +220,7 @@ const Budget = () => {
                             data={budgetListWithAds}
                             keyExtractor={(item, index) => (item.name || 'ad') + index}
                             renderItem={renderItem}
-                            contentContainerStyle={[styles.listContent, { paddingBottom: 120 + 70 + 8 }]}
+                            contentContainerStyle={[styles.listContent, { paddingBottom: 170 }]}
                             showsVerticalScrollIndicator={false}
                             keyboardShouldPersistTaps="handled"
                             onScrollToIndexFailed={info => {

@@ -8,7 +8,7 @@ import { AppContext } from '../Contex/ContextApi'
 import { BannerAdComponent } from '../services/AdService'
 
 const RecurringManager = ({ navigation }) => {
-    const { recurringTransactions, deleteRecurringTransaction, updateRecurringTransaction, addRecurringTransaction, currencySymbol, categoriesList } = useContext(AppContext);
+    const { recurringTransactions, deleteRecurringTransaction, updateRecurringTransaction, addRecurringTransaction, currencySymbol, categoriesList, isPremium } = useContext(AppContext);
 
     const [modalVisible, setModalVisible] = useState(false);
     const [editingItem, setEditingItem] = useState(null); // null = adding new, object = editing
@@ -297,9 +297,11 @@ const RecurringManager = ({ navigation }) => {
             </View>
 
             {/* Banner Ad at bottom */}
-            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
-                <BannerAdComponent />
-            </View>
+            {!isPremium && (
+                <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
+                    <BannerAdComponent />
+                </View>
+            )}
         </SafeAreaView>
     )
 }

@@ -10,7 +10,7 @@ import { AppContext } from '../../Contex/ContextApi'
 import { currencies } from '../../constants/currencies'
 
 const CurrencySetup = ({ navigation, route }) => {
-    const { currency, setCurrency } = useContext(AppContext);
+    const { currency, setCurrency, isPremium } = useContext(AppContext);
     const [searchQuery, setSearchQuery] = useState('');
     const isSettings = route.params?.isSettings;
 
@@ -120,9 +120,11 @@ const CurrencySetup = ({ navigation, route }) => {
             </View>
 
             {/* Banner Ad at bottom */}
-            <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
-                <BannerAdComponent />
-            </View>
+            {!isPremium && (
+                <View style={{ backgroundColor: COLORS.background, paddingVertical: 10, alignItems: 'center' }}>
+                    <BannerAdComponent />
+                </View>
+            )}
         </SafeAreaView>
     )
 }

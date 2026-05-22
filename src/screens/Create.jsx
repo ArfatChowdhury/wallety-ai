@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons, AntDesign } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi';
 import { COLORS, SHADOW } from '../theme';
-import AdService, { BannerAdComponent } from '../services/AdService';
+import AdService from '../services/AdService';
 
 const INCOME_SOURCES = [
   { name: 'Salary', icon: '💼' },
@@ -271,13 +271,7 @@ const Create = ({ navigation, route }) => {
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
         )}
-        
-        {/* Banner Ad at bottom */}
-        <View style={{ backgroundColor: COLORS.background, marginHorizontal: -20, paddingHorizontal: 20 }}>
-          <View style={{ marginBottom: 10, height: 65, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <BannerAdComponent />
-          </View>
-        </View>
+
       </ScrollView>
     </SafeAreaView>
   )

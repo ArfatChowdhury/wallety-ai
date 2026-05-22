@@ -224,9 +224,11 @@ const Insight = () => {
               </Text>
             </View>
 
-            <View style={{ marginVertical: 10 }}>
-              <BannerAdComponent />
-            </View>
+            {!isPremium && (
+              <View style={{ marginVertical: 10 }}>
+                <BannerAdComponent />
+              </View>
+            )}
 
             <View style={styles.statsGrid}>
               <View style={styles.statBox}>

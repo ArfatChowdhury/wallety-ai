@@ -8,7 +8,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons'
 import { AppContext } from '../Contex/ContextApi'
-import { BannerAdComponent } from '../services/AdService'
 import { COLORS, SHADOW } from '../theme'
 import { auth } from '../services/firebase'
 import { updateProfile } from 'firebase/auth'

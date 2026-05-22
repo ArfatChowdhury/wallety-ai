@@ -4,7 +4,6 @@ import { createStackNavigator } from "@react-navigation/stack"
 import { Platform, TouchableOpacity, View, Text, ActivityIndicator, StyleSheet, Dimensions, Keyboard, Linking } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import Svg, { Path } from "react-native-svg"
-import { BlurView } from "expo-blur"
 import * as Notifications from "expo-notifications"
 import { useNavigationContainerRef } from "@react-navigation/native"
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -26,39 +25,47 @@ import AsyncStorage from "@react-native-async-storage/async-storage"
 
 
 const { width } = Dimensions.get("window")
-const TAB_BAR_WIDTH = width - 40
-const TAB_BAR_HEIGHT = 70
+const BAR_HEIGHT = 65            // Visible bar height (excluding safe area + overhang)
+const NOTCH_OVERHANG = 26        // How far above the bar the center circle protrudes
+const NOTCH_WIDTH = 88           // Width of the curved cutout
+const NOTCH_DEPTH = 32           // How deep the cutout dips into the bar (must clear the circle)
 
 const Tab = createBottomTabNavigator()
 const Stack = createStackNavigator()
 
 /* ---------------- NOTCH BACKGROUND ---------------- */
 
-const NotchedBackground = () => {
-  const center = TAB_BAR_WIDTH / 2
-  const r = 40
-  const corner = 30
+const NotchedBackground = ({ width, totalHeight }) => {
+  const cx = width / 2;
+  const top = NOTCH_OVERHANG;
+  const bottom = totalHeight;
+  const halfNotch = NOTCH_WIDTH / 1.5;
+  const dipBottom = top + NOTCH_DEPTH;
 
-  const path = `
-    M ${corner} 0
-    H ${center - r}
-    A ${r} ${r} 0 0 1 ${center + r} 0
-    H ${TAB_BAR_WIDTH - corner}
-    Q ${TAB_BAR_WIDTH} 0 ${TAB_BAR_WIDTH} ${corner}
-    V ${TAB_BAR_HEIGHT - corner}
-    Q ${TAB_BAR_WIDTH} ${TAB_BAR_HEIGHT} ${TAB_BAR_WIDTH - corner} ${TAB_BAR_HEIGHT}
-    H ${corner}
-    Q 0 ${TAB_BAR_HEIGHT} 0 ${TAB_BAR_HEIGHT - corner}
-    V ${corner}
-    Q 0 0 ${corner} 0
-    Z
-  `
+  const barShapePath = [
+    `M 0 ${top}`,
+    `L ${cx - halfNotch} ${top}`,
+    `C ${cx - halfNotch * 0.45} ${top}, ${cx - halfNotch * 0.55} ${dipBottom}, ${cx} ${dipBottom}`,
+    `C ${cx + halfNotch * 0.55} ${dipBottom}, ${cx + halfNotch * 0.45} ${top}, ${cx + halfNotch} ${top}`,
+    `L ${width} ${top}`,
+    `L ${width} ${bottom}`,
+    `L 0 ${bottom}`,
+    "Z",
+  ].join(" ");
+
+  const topEdgePath = [
+    `M 0 ${top}`,
+    `L ${cx - halfNotch} ${top}`,
+    `C ${cx - halfNotch * 0.45} ${top}, ${cx - halfNotch * 0.55} ${dipBottom}, ${cx} ${dipBottom}`,
+    `C ${cx + halfNotch * 0.55} ${dipBottom}, ${cx + halfNotch * 0.45} ${top}, ${cx + halfNotch} ${top}`,
+    `L ${width} ${top}`,
+  ].join(" ");
 
   return (
-    <View style={styles.svgWrapper}>
-      <BlurView intensity={90} tint="light" style={StyleSheet.absoluteFill} />
-      <Svg width={TAB_BAR_WIDTH} height={TAB_BAR_HEIGHT}>
-        <Path d={path} fill="#F8F9FA" stroke="#E5E7EB" strokeWidth={1.5} />
+    <View style={StyleSheet.absoluteFillObject}>
+      <Svg width={width} height={totalHeight} style={StyleSheet.absoluteFill}>
+        <Path d={barShapePath} fill="#F8F9FA" />
+        <Path d={topEdgePath} fill="none" stroke="#E5E7EB" strokeWidth={1.5} />
       </Svg>
     </View>
   )
@@ -85,7 +92,7 @@ function MyTabs() {
 /* ---------------- FLOATING TAB ---------------- */
 
 const FloatingTabBar = ({ state, descriptors, navigation }) => {
-  const { updateTabLayout } = useContext(AppContext)
+  const { updateTabLayout, isPremium } = useContext(AppContext)
   const insets = useSafeAreaInsets()
   const [keyboardVisible, setKeyboardVisible] = useState(false)
   const tabRefs = useRef({}).current
@@ -105,10 +112,10 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
   const handleLayout = (name) => {
     // Increased delay to 400ms to ensure ads and layout have fully settled
     setTimeout(() => {
-      tabRefs[name]?.measureInWindow((x, y, width, height) => {
+      tabRefs[name]?.measureInWindow((x, y, w, h) => {
         if (x !== undefined && y !== undefined) {
           // Removed manual +8 offset; y + height/2 marks the exact center
-          updateTabLayout(name, { x: x + width / 2, y: y + height / 2, width, height })
+          updateTabLayout(name, { x: x + w / 2, y: y + h / 2, width: w, height: h })
         }
       })
     }, 400)
@@ -116,51 +123,86 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
 
   if (keyboardVisible) return null
 
+  const safeBottom = Math.max(insets.bottom, 8)
+  const totalHeight = NOTCH_OVERHANG + BAR_HEIGHT + safeBottom
+
   return (
-    <View style={[styles.container, { bottom: 20 + insets.bottom }]}>
-      <NotchedBackground />
-      <View style={styles.row}>
-        {state.routes.map((route, index) => {
-          const isFocused = state.index === index
-          const isCreate = route.name === "Create"
+    <View style={{
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      zIndex: 99,
+    }}
+    pointerEvents="box-none"
+    >
+      {/* Centralized Banner Ad — ONLY on Tab screens, auto-sizes when ad loads */}
+      {!isPremium && <BannerAdComponent />}
 
-          let icon, label
-          switch (route.name) {
-            case "Home": icon = isFocused ? "home" : "home-outline"; label = "Home"; break
-            case "Insight": icon = isFocused ? "stats-chart" : "stats-chart-outline"; label = "Insights"; break
-            case "Budget": icon = isFocused ? "wallet" : "wallet-outline"; label = "Budget"; break
-            case "SettingsTab": icon = isFocused ? "person" : "person-outline"; label = "Account"; break
-          }
+      {/* Tab Bar Container */}
+      <View style={{
+        width: width,
+        height: totalHeight,
+        backgroundColor: 'transparent',
+      }}
+      pointerEvents="box-none"
+      >
+        <NotchedBackground width={width} totalHeight={totalHeight} />
+        <View style={[styles.row, {
+          height: BAR_HEIGHT,
+          paddingBottom: safeBottom,
+          marginTop: NOTCH_OVERHANG,
+        }]}
+        pointerEvents="box-none"
+        >
+          {state.routes.map((route, index) => {
+            const isFocused = state.index === index
+            const isCreate = route.name === "Create"
 
-          const onPress = () => {
-            const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true })
-            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name)
-          }
+            let icon, label
+            switch (route.name) {
+              case "Home": icon = isFocused ? "home" : "home-outline"; label = "Home"; break
+              case "Insight": icon = isFocused ? "stats-chart" : "stats-chart-outline"; label = "Insights"; break
+              case "Budget": icon = isFocused ? "wallet" : "wallet-outline"; label = "Budget"; break
+              case "SettingsTab": icon = isFocused ? "person" : "person-outline"; label = "Account"; break
+            }
 
-          if (isCreate) {
+            const onPress = () => {
+              const event = navigation.emit({ type: "tabPress", target: route.key, canPreventDefault: true })
+              if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name)
+            }
+
+            if (isCreate) {
+              return (
+                <View key={index} style={styles.centerWrapper}>
+                  <TouchableOpacity 
+                    onPress={onPress} 
+                    activeOpacity={0.8} 
+                    style={styles.centerButton}
+                    hitSlop={{ top: NOTCH_OVERHANG + 12, bottom: 6, left: 8, right: 8 }}
+                  >
+                    <Ionicons name="add" size={32} color="#FFF" />
+                  </TouchableOpacity>
+                </View>
+              )
+            }
+             
             return (
-              <View key={index} style={styles.centerWrapper}>
-                <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.centerButton}>
-                  <Ionicons name="add" size={32} color="#FFF" />
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity 
+                key={index} 
+                style={styles.tab} 
+                onPress={onPress} 
+                activeOpacity={0.7}
+                ref={el => tabRefs[route.name] = el}
+                onLayout={() => handleLayout(route.name)}
+              >
+                <Ionicons name={icon} size={22} color={isFocused ? "#000" : "#9CA3AF"} />
+                <Text style={[styles.label, isFocused && styles.activeLabel]}>{label}</Text>
+              </TouchableOpacity>
             )
-          }
-           
-          return (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.tab} 
-              onPress={onPress} 
-              activeOpacity={0.7}
-              ref={el => tabRefs[route.name] = el}
-              onLayout={() => handleLayout(route.name)}
-            >
-              <Ionicons name={icon} size={22} color={isFocused ? "#000" : "#9CA3AF"} />
-              <Text style={[styles.label, isFocused && styles.activeLabel]}>{label}</Text>
-            </TouchableOpacity>
-          )
-        })}
+          })}
+        </View>
       </View>
     </View>
   )
@@ -169,22 +211,24 @@ const FloatingTabBar = ({ state, descriptors, navigation }) => {
 /* ---------------- STYLES ---------------- */
 
 const styles = StyleSheet.create({
-  container: {
-    position: "absolute", bottom: 20, left: 20, right: 20, height: TAB_BAR_HEIGHT,
-    shadowColor: "#000", shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.2, shadowRadius: 18, elevation: 20,
-  },
-  svgWrapper: { ...StyleSheet.absoluteFillObject, borderRadius: 30, overflow: "hidden" },
   row: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15 },
   tab: { flex: 1, alignItems: "center", justifyContent: "center" },
   label: { fontSize: 10, fontWeight: "700", color: "#9CA3AF", marginTop: 2 },
   activeLabel: { color: "#000" },
   centerWrapper: { flex: 1, alignItems: "center", justifyContent: "center" },
   centerButton: {
-    width: 65, height: 65, borderRadius: 33, backgroundColor: "#000000ff",
-    justifyContent: "center", alignItems: "center", marginTop: -40,
-    shadowColor: "#1E1B4B", shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5, shadowRadius: 12, elevation: 20,
+    width: 65,
+    height: 65,
+    borderRadius: 33,
+    backgroundColor: "#000000ff",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: -40,
+    shadowColor: "#1E1B4B",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 20,
   },
 })
 
@@ -288,24 +332,7 @@ const AppNavigator = () => {
       <Stack.Screen name="SettingsCurrency" component={CurrencySetup} />
     </Stack.Navigator>
 
-      {/* Global Bottom Banner — Positioned above TabBar */}
-      {isAuthenticated && isSetupComplete && !isPremium && (
-        <View style={{
-          position: 'absolute',
-          bottom: 20 + 70 + 8 + insets.bottom, // Fixed 20 + 70 Height + 8 Gap + Safe Area
-          left: 0,
-          right: 0,
-          height: 65,
-          backgroundColor: '#FFFFFF', // Matching app background
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 99,
-          borderTopWidth: 1,
-          borderColor: '#F3F4F6'
-        }}>
-          <BannerAdComponent />
-        </View>
-      )}
+
 
       <PremiumAlert
         visible={showRatingPrompt}
